@@ -1,0 +1,26 @@
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0,
+    "analysis": {
+      "analyzer": {
+        "de": { "type": "german" }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "id": { "type": "keyword" },
+      "title": {
+        "type": "text",
+        "analyzer": "german",
+        "fields": { "kw": { "type": "keyword", "ignore_above": 256 } }
+      },
+      "content": { "type": "text", "analyzer": "german" },
+      "category": { "type": "keyword" },
+      "tags": { "type": "keyword" },
+      "published": { "type": "date" },
+      "location": { "type": "geo_point" }
+    }
+  }
+}

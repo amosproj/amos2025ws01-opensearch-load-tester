@@ -1,0 +1,4 @@
+cluster.name: os-dev
+network.host: 0.0.0.0
+discovery.type: single-node
+plugins.security.disabled: true

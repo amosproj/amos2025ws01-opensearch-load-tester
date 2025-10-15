@@ -1,0 +1,21 @@
+services:
+  opensearch:
+    image: opensearchproject/opensearch:latest
+    platform: linux/amd64
+    container_name: opensearch
+    ports: ["9200:9200", "9600:9600"] # REST + Perf-Analyzer-Port
+    environment:
+      - bootstrap.memory_lock=true
+      - OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g
+    ulimits:
+      memlock: { soft: -1, hard: -1 }
+    volumes:
+      - ./opensearch.yml:/usr/share/opensearch/config/opensearch.yml:ro
+  dashboards:
+    image: opensearchproject/opensearch-dashboards:latest
+    container_name: dashboards
+    ports: ["5601:5601"]
+    depends_on: [opensearch]
+    volumes:
+      - ./opensearch_dashboards.yml:/usr/share/opensearch-dashboards/config/opensearch_dashboards.yml:ro
+  # load-runner comes later as a separate container

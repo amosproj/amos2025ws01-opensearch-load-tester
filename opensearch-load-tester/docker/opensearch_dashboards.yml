@@ -1,0 +1,3 @@
+server.host: "0.0.0.0"
+opensearch.hosts: ["http://opensearch:9200"]
+opensearch_security.enabled: false
