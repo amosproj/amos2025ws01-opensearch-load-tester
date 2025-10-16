@@ -1,6 +1,6 @@
 services:
   opensearch:
-    image: opensearchproject/opensearch:latest
+    image: opensearchproject/opensearch:2.16.0
     platform: linux/amd64
     container_name: opensearch
     ports: ["9200:9200", "9600:9600"] # REST + Perf-Analyzer-Port
