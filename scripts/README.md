@@ -69,9 +69,12 @@ The `@mentions` are case-insensitive.
 
 **Do NOT add Co-Authored-By manually!**
 
+If you add manual `Co-Authored-By` trailers, the hook will **abort the commit** with an error message.
+
 **Wrong:**
 
 ```bash
+# ❌ This will ABORT the commit
 git commit -m "feat: feature
 
 Co-Authored-By: Person <email@example.com>"
@@ -80,6 +83,7 @@ Co-Authored-By: Person <email@example.com>"
 **Correct:**
 
 ```bash
+# ✅ This works
 git commit -m "Add feature @username"
 ```
 

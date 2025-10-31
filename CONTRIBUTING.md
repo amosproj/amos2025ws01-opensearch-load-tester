@@ -85,11 +85,7 @@ Signed-off-by: Your Name <your.email@example.com>
 
 **Do NOT add Co-Authored-By trailers manually!**
 
-If you try to add them manually in your commit message, the Git hook will:
-
-1.  ❌ Detect the manual trailers
-2.  ⚠️ Try to show a warning message
-3.       abort the commit
+If you try to add them manually, the Git hook will **abort the commit** and show an error message
 
 **Example of what NOT to do:**
 
@@ -300,7 +296,7 @@ Fixes #123
 ### Don'ts ❌
 
 - ❌ Large commits with many unrelated changes
-- ❌ Push directly to `main`
+- ❌ Push directly to `main` (forbidden)
 - ❌ Commits without descriptions
 - ❌ Code without tests
 - ❌ Commit debugging code
