@@ -1,0 +1,169 @@
+#!/bin/bash
+
+# prepare-commit-msg hook
+# Automatically adds Co-Authored-By and Signed-off-by trailers based on @mentions in commit messages
+# Cross-platform compatible (macOS, Linux, Windows Git Bash)
+
+COMMIT_MSG_FILE="$1"
+COMMIT_SOURCE="$2"
+
+# Skip if this is an amended, merge, or squash commit
+if [ "$COMMIT_SOURCE" = "merge" ] || [ "$COMMIT_SOURCE" = "squash" ]; then
+    exit 0
+fi
+
+# Read the original commit message
+ORIGINAL_MSG=$(cat "$COMMIT_MSG_FILE")
+
+# Skip if message is empty or just comments
+if ! echo "$ORIGINAL_MSG" | grep -qv '^#'; then
+    exit 0
+fi
+
+# Check for manual Co-Authored-By trailers - ABORT if found
+if echo "$ORIGINAL_MSG" | grep -qiE 'Co-Authored-By:'; then
+    echo ""
+    echo "❌ ERROR: Manual Co-Authored-By trailer detected!"
+    echo ""
+    echo "Please DO NOT add Co-Authored-By manually."
+    echo ""
+    echo "✅ Instead, use @mentions in your commit message:"
+    echo "   Example: git commit -m 'feat: add feature @username'"
+    echo ""
+    echo "The hook will automatically add Co-Authored-By trailers defined in the .coauthors file."
+    echo ""
+    exit 1
+fi
+
+# Find the .coauthors config file (walk up directory tree)
+find_config() {
+    local dir="$PWD"
+    while [ "$dir" != "/" ]; do
+        if [ -f "$dir/.coauthors" ]; then
+            echo "$dir/.coauthors"
+            return 0
+        fi
+        dir=$(dirname "$dir")
+    done
+    
+    # Try git root as fallback
+    local git_root=$(git rev-parse --show-toplevel 2>/dev/null)
+    if [ -n "$git_root" ] && [ -f "$git_root/.coauthors" ]; then
+        echo "$git_root/.coauthors"
+        return 0
+    fi
+    
+    return 1
+}
+
+CONFIG_FILE=$(find_config)
+if [ -z "$CONFIG_FILE" ]; then
+    echo "Warning: .coauthors config file not found. Skipping co-author detection."
+    # Continue without co-authors, just add Signed-off-by
+    NAME=$(git config user.name)
+    EMAIL=$(git config user.email)
+    
+    if [ -z "$NAME" ] || [ -z "$EMAIL" ]; then
+        echo "Error: Git user.name or user.email not configured"
+        exit 1
+    fi
+    
+    git interpret-trailers --if-exists doNothing --trailer \
+        "Signed-off-by: $NAME <$EMAIL>" \
+        --in-place "$COMMIT_MSG_FILE"
+    exit 0
+fi
+
+# Extract all @mentions from commit message (case-insensitive)
+MENTIONS=$(echo "$ORIGINAL_MSG" | grep -oiE '@[a-zA-Z0-9_-]+' | tr '[:upper:]' '[:lower:]' | sort -u)
+
+# Build case-insensitive pattern for sed (portable across bash/zsh/sh)
+ci_pattern() {
+    local s="$1" out="" ch lower upper
+    local i=0
+    while [ $i -lt ${#s} ]; do
+        ch="${s:$i:1}"
+        lower=$(printf "%s" "$ch" | tr '[:upper:]' '[:lower:]')
+        upper=$(printf "%s" "$ch" | tr '[:lower:]' '[:upper:]')
+        if printf "%s" "$ch" | grep -q '[A-Za-z]'; then
+            out="${out}[${lower}${upper}]"
+        else
+            out="${out}${ch}"
+        fi
+        i=$((i + 1))
+    done
+    printf "%s" "$out"
+}
+
+# Remove @mention from message (case-insensitive)
+remove_mention() {
+    local msg="$1"
+    local mention="$2"
+    local pat="$(ci_pattern "$mention")"
+    printf "%s" "$msg" | sed "s/${pat}//g"
+}
+
+# Process @mentions
+COAUTHORS_LIST=""
+CLEANED_MSG="$ORIGINAL_MSG"
+
+if [ -n "$MENTIONS" ]; then
+    while IFS= read -r mention; do
+        # Remove @ prefix and convert to lowercase for lookup
+        username=$(echo "$mention" | sed 's/^@//' | tr '[:upper:]' '[:lower:]')
+        
+        # Look up in config file (format: username=Name <email>)
+        coauthor=$(grep -i "^${username}=" "$CONFIG_FILE" | head -n1 | cut -d'=' -f2-)
+        
+        if [ -n "$coauthor" ]; then
+            # Add to co-authors list if not already present
+            if ! echo "$COAUTHORS_LIST" | grep -qF "$coauthor"; then
+                COAUTHORS_LIST="${COAUTHORS_LIST}${coauthor}
+"
+            fi
+        else
+            # Warn about unknown @mention
+            echo "⚠️  Warning: Unknown @mention: $mention (not found in .coauthors)"
+        fi
+        
+        # Remove this mention from the message
+        CLEANED_MSG=$(remove_mention "$CLEANED_MSG" "$mention")
+    done <<< "$MENTIONS"
+fi
+
+# Clean up extra whitespace
+CLEANED_MSG=$(echo "$CLEANED_MSG" | sed 's/  */ /g' | sed 's/^ *//;s/ *$//')
+
+# Write the cleaned message back
+echo "$CLEANED_MSG" > "$COMMIT_MSG_FILE"
+
+# Add all co-author trailers
+if [ -n "$COAUTHORS_LIST" ]; then
+    while IFS= read -r coauthor; do
+        if [ -n "$coauthor" ]; then
+            git interpret-trailers --if-exists add --trailer \
+                "Co-Authored-By: $coauthor" \
+                --in-place "$COMMIT_MSG_FILE"
+        fi
+    done <<< "$COAUTHORS_LIST"
+fi
+
+# Finally add Signed-off-by as the last trailer
+NAME=$(git config user.name)
+EMAIL=$(git config user.email)
+
+if [ -z "$NAME" ]; then
+    echo "Error: git config user.name is empty"
+    exit 1
+fi
+
+if [ -z "$EMAIL" ]; then
+    echo "Error: git config user.email is empty"
+    exit 1
+fi
+
+git interpret-trailers --if-exists doNothing --trailer \
+    "Signed-off-by: $NAME <$EMAIL>" \
+    --in-place "$COMMIT_MSG_FILE"
+
+exit 0
