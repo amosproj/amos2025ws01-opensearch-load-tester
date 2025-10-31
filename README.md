@@ -17,12 +17,21 @@ The **OpenSearch Load Tester** is a tool designed to evaluate the performance li
 
 ### Clone the Repository
 
-```
-bash
-
+```bash
 git clone https://github.com/amosproj/amos2025ws01-opensearch-load-tester.git
-Navigate to the repository.
+cd amos2025ws01-opensearch-load-tester
 ```
+
+### Setup Git Hooks (once only)
+
+Install the Git hooks for automatic co-author management:
+
+```bash
+cd scripts
+./setup-hooks.sh
+```
+
+See [scripts/README.md](scripts/README.md) for details on using `@mentions` in commits.
 
 ### Run the Test Manager
 
