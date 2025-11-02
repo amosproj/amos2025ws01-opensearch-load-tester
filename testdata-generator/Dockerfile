@@ -1,4 +1,4 @@
-# Multi-stage build for Load Generator
+# Multi-stage build for Test Data Generator
 FROM maven:3.9-eclipse-temurin-25 AS build
 
 WORKDIR /app
