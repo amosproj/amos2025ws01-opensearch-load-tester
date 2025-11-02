@@ -1,6 +1,5 @@
 package com.opensearchloadtester.testdatagenerator.model;
 
-import com.opensearchloadtester.testdatagenerator.model.Recordable;
 import java.time.Instant;
 
 public class AnoRecord implements Recordable {

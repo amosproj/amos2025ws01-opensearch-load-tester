@@ -13,7 +13,7 @@ public interface DataGenerator {
     /**
      * Generates a list of test data records.
      *
-     * @param number of records to generate
+     * @param count of records to generate
      * @return list of Recordable objects
      */
     List<Recordable> generateData(int count);
