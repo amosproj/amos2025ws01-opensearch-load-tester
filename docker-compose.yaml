@@ -1,0 +1,108 @@
+services:
+  testdata-generator:
+    build:
+      context: ./testdata-generator
+      dockerfile: Dockerfile
+    container_name: opensearch-testdata-generator
+    environment:
+      - SPRING_APPLICATION_NAME=testdata-generator
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_PASSWD:-amos2@25SWS01}
+      - OPENSEARCH_URL=${OPENSEARCH_URL:-http://opensearch:9200}
+    networks:
+      - opensearch-loadtester-network
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "app.jar"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  load-generator:
+    build:
+      context: ./load-generator
+      dockerfile: Dockerfile
+    container_name: opensearch-load-generator
+    deploy:
+      replicas: ${REPLICAS:-1}
+    environment:
+      - SPRING_APPLICATION_NAME=load-generator
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_PASSWD:-amos2@25WS01}
+    networks:
+      - opensearch-loadtester-network
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "app.jar"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    depends_on:
+      testdata-generator:
+        condition: service_completed_successfully
+
+  metric-reporter:
+    build:
+      context: ./metric-reporter
+      dockerfile: Dockerfile
+    container_name: opensearch-metric-reporter
+    environment:
+      - SPRING_APPLICATION_NAME=metric-reporter
+      - REPLICAS=${REPLICAS:-1}
+    networks:
+      - opensearch-loadtester-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8081/actuator/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      testdata-generator:
+        condition: service_completed_successfully
+      load-generator:
+        condition: service_healthy
+
+  opensearch:
+    image: opensearchproject/opensearch:2.16.0
+    container_name: opensearch
+    restart: unless-stopped
+    profiles:
+      - opensearch
+    environment:
+      - discovery.type=single-node
+      - plugins.security.disabled=true
+      - bootstrap.memory_lock=true
+      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_PASSWD:-amos2@25WS01}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    #volumes:
+    #  - opensearch-data:/usr/share/opensearch/data
+    networks:
+      - opensearch-loadtester-network
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sS http://localhost:9200/_cluster/health?local=true | grep -q 'green' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  opensearch-loadtester-network:
+    driver: bridge
+
+#volumes:
+#  opensearch-data:
+#    driver: local
