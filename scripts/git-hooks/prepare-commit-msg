@@ -13,7 +13,8 @@ if [ "$COMMIT_SOURCE" = "merge" ] || [ "$COMMIT_SOURCE" = "squash" ]; then
 fi
 
 # Read the original commit message
-ORIGINAL_MSG=$(cat "$COMMIT_MSG_FILE")
+# Remove CRLF line endings for Windows compatibility (Git Bash may have CRLF)
+ORIGINAL_MSG=$(cat "$COMMIT_MSG_FILE" | tr -d '\r')
 
 # Skip if message is empty or just comments
 if ! echo "$ORIGINAL_MSG" | grep -qv '^#'; then
@@ -23,11 +24,11 @@ fi
 # Check for manual Co-Authored-By trailers - ABORT if found
 if echo "$ORIGINAL_MSG" | grep -qiE 'Co-Authored-By:'; then
     echo ""
-    echo "❌ ERROR: Manual Co-Authored-By trailer detected!"
+    echo "ERROR: Manual Co-Authored-By trailer detected!"
     echo ""
     echo "Please DO NOT add Co-Authored-By manually."
     echo ""
-    echo "✅ Instead, use @mentions in your commit message:"
+    echo "Instead, use @mentions in your commit message:"
     echo "   Example: git commit -m 'feat: add feature @username'"
     echo ""
     echo "The hook will automatically add Co-Authored-By trailers defined in the .coauthors file."
@@ -123,7 +124,7 @@ if [ -n "$MENTIONS" ]; then
             fi
         else
             # Warn about unknown @mention
-            echo "⚠️  Warning: Unknown @mention: $mention (not found in .coauthors)"
+            echo "Warning: Unknown @mention: $mention (not found in .coauthors)"
         fi
         
         # Remove this mention from the message
