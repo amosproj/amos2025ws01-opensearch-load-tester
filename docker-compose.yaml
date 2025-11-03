@@ -42,7 +42,7 @@ services:
 
   metric-reporter:
     build:
-      context: ./metric-reporter
+      context: ./metrics-reporter
       dockerfile: Dockerfile
     container_name: metric-reporter
     environment:
