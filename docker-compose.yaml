@@ -70,15 +70,14 @@ services:
       load-generator:
         condition: service_healthy
 
-  opensearch:
+  test-target-opensearch:
     image: opensearchproject/opensearch:2.16.0
-    container_name: opensearch
+    container_name: test-target-opensearch
     restart: unless-stopped
     profiles:
       - opensearch
     environment:
       - discovery.type=single-node
-      - plugins.security.disabled=true
       - bootstrap.memory_lock=true
       - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
       - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_PASSWD:-amos2@25WS01}
@@ -90,11 +89,20 @@ services:
     #  - opensearch-data:/usr/share/opensearch/data
     networks:
       - opensearch-loadtester-network
+    ###
+    # Example Usage:
+    # curl -k -u admin:amos2@25WS01 -X PUT "https://localhost:9200/test-index"
+    ##
     ports:
-      - "9200:9200"
-      - "9600:9600"
+      - "9200:9200" # OpenSearch REST API
+      #- "9600:9600" # OpenSearch Performance Analyzer
     healthcheck:
-      test: ["CMD-SHELL", "curl -sS http://localhost:9200/_cluster/health?local=true | grep -q 'green' || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "curl -k -s -u admin:${OPENSEARCH_PASSWD:-amos2@25WS01} \
+           https://localhost:9200/_cluster/health | grep green || exit 1",
+        ]
       interval: 10s
       timeout: 5s
       retries: 3
