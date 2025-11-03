@@ -36,9 +36,13 @@ services:
       timeout: 10s
       retries: 3
       start_period: 5s
-    depends_on:
-      testdata-generator:
-        condition: service_completed_successfully
+    ############
+    # Makes load-generator wait for testdata-generator to complete
+    # cant be used now bc testdata-generator is designed to run continuously
+    ############
+    #depends_on:
+    #  testdata-generator:
+    #    condition: service_completed_successfully
 
   metric-reporter:
     build:
@@ -64,9 +68,13 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    ############
+    # Makes load-generator wait for testdata-generator to complete
+    # cant be used now bc testdata-generator is designed to run continuously
+    ############
     depends_on:
-      testdata-generator:
-        condition: service_completed_successfully
+      #testdata-generator:
+      #  condition: service_completed_successfully
       load-generator:
         condition: service_healthy
 
@@ -78,13 +86,8 @@ services:
       - opensearch
     environment:
       - discovery.type=single-node
-      - bootstrap.memory_lock=true
       - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
       - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_PASSWD:-amos2@25WS01}
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
     #volumes:
     #  - opensearch-data:/usr/share/opensearch/data
     networks:
