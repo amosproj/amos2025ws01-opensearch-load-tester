@@ -12,7 +12,7 @@ import java.util.List;
  * On subsequent runs, existing data is reused unless deleted manually.
  */
 @Service
-public class PersistentDataGenerator implements DataGenerator {
+public class PersistentDataGeneratorService implements DataGenerator {
 
     private final FileStorageService storageService;
 
@@ -20,7 +20,7 @@ public class PersistentDataGenerator implements DataGenerator {
     @Value("${data.output.path:data/testdata.json}")
     private String outputPath;
 
-    public PersistentDataGenerator() {
+    public PersistentDataGeneratorService() {
         this.storageService = new FileStorageService();
     }
 

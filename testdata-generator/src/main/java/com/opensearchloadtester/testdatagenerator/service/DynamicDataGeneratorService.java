@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 @Service
-public class DynamicDataGenerator implements DataGenerator {
+public class DynamicDataGeneratorService implements DataGenerator {
 
     /**
      * Generates random data dynamically at start of application (not persisted).
