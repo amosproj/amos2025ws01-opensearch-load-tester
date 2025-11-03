@@ -1,10 +1,10 @@
-package com.opensearchloadtester.testmanager;
+package com.opensearchloadtester.testdatagenerator;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class TestManagerApplicationTests {
+class TestdataGeneratorApplicationTests {
 
 	@Test
 	void contextLoads() {

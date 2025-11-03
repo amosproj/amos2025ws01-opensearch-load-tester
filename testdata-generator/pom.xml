@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.opensearchloadtester</groupId>
-	<artifactId>testmanager</artifactId>
+	<artifactId>testdatagenerator</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>test-manager</name>
-	<description>test-manager</description>
+	<name>testdata-generator</name>
+	<description>testdata-generator</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -40,12 +40,6 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.8.13</version>
-        </dependency>
 	</dependencies>
 
 	<build>
