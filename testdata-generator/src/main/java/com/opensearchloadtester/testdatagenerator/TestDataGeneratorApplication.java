@@ -2,8 +2,8 @@ package com.opensearchloadtester.testdatagenerator;
 
 import com.opensearchloadtester.testdatagenerator.model.Recordable;
 import com.opensearchloadtester.testdatagenerator.service.DataGenerator;
-import com.opensearchloadtester.testdatagenerator.service.DynamicDataGenerator;
-import com.opensearchloadtester.testdatagenerator.service.PersistentDataGenerator;
+import com.opensearchloadtester.testdatagenerator.service.DynamicDataGeneratorService;
+import com.opensearchloadtester.testdatagenerator.service.PersistentDataGeneratorService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -28,9 +28,9 @@ public class TestDataGeneratorApplication implements CommandLineRunner {
         System.out.println("Starting Test Data Generation...");
 
         if ("dynamic".equalsIgnoreCase(mode)) {
-            this.dataGenerator = new DynamicDataGenerator();
+            this.dataGenerator = new DynamicDataGeneratorService();
         } else {
-            this.dataGenerator = new PersistentDataGenerator();
+            this.dataGenerator = new PersistentDataGeneratorService();
         }
 
         List<Recordable> data = dataGenerator.generateData(10); //example value 10

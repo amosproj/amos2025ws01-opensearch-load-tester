@@ -36,7 +36,7 @@ public class PersistentDataGeneratorService implements DataGenerator {
                 System.out.println("Loaded existing test data (" + existingData.size() + " records)");
                 return existingData;
             }else{
-                return new DynamicDataGenerator().generateData(count);
+                return new DynamicDataGeneratorService().generateData(count);
             }
         } catch (IOException e) {
             throw new RuntimeException("Error when generating data", e);
