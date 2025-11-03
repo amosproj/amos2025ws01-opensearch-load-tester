@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # prepare-commit-msg hook
 # Automatically adds Co-Authored-By and Signed-off-by trailers based on @mentions in commit messages
