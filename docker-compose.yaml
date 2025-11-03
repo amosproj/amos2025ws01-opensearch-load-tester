@@ -1,9 +1,11 @@
+---
+name: amos2025ws01
 services:
   testdata-generator:
     build:
       context: ./testdata-generator
       dockerfile: Dockerfile
-    container_name: opensearch-testdata-generator
+    container_name: testdata-generator
     environment:
       - SPRING_APPLICATION_NAME=testdata-generator
       - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_PASSWD:-amos2@25SWS01}
@@ -21,7 +23,6 @@ services:
     build:
       context: ./load-generator
       dockerfile: Dockerfile
-    container_name: opensearch-load-generator
     deploy:
       replicas: ${REPLICAS:-1}
     environment:
@@ -43,7 +44,7 @@ services:
     build:
       context: ./metric-reporter
       dockerfile: Dockerfile
-    container_name: opensearch-metric-reporter
+    container_name: metric-reporter
     environment:
       - SPRING_APPLICATION_NAME=metric-reporter
       - REPLICAS=${REPLICAS:-1}

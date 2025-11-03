@@ -1,9 +1,10 @@
 # OpenSearch Load Tester (AMOS WS 2025)
 
-The **OpenSearch Load Tester** is a tool designed to evaluate the performance limits of a single OpenSearch instance. It consists of two separate Spring Boot projects:
+The **OpenSearch Load Tester** is a tool designed to evaluate the performance limits of a single OpenSearch instance. It consists of three separate Spring Boot projects:
 
-- **Test Manager** - Responsible for configuring, orchestrating and managing test scenarios.
-- **Load Generator** - Executes the actual load by sending parallel queries against an OpenSearch instance.
+- **Test Data Manager** - Responsible for indexing test data into OpenSearch.
+- **Load Generator** - Executes the actual load by sending parallel queries to an OpenSearch instance.
+- **Metrics Reporter** - Responsible for collecting and exporting the test results.
 
 ---
 
@@ -28,19 +29,16 @@ cd amos2025ws01-opensearch-load-tester
 
 ### Run with Docker Compose
 
-The easiest way to start both services with automatic port management:
+The easiest way to start these three services with automatic port management:
 
 ```bash
-docker-compose up --build
+docker-compose up --build -d
 ```
 
 This will start:
 
-- **Test Manager** on `http://localhost:8080`
-- **Load Generator** on `http://localhost:8081`
-
-Access the Test Manager API documentation via Swagger UI:
-👉 **http://localhost:8080/test-manager-swagger-ui.html**
+1. The import of test data via the **Test Data Manager**.
+2. The **Metrics Reporter** and one instance of the **Load Generator** after the test data has been imported.
 
 ### Stop the Services
 
@@ -53,7 +51,25 @@ docker-compose down
 To run multiple Load Generator instances:
 
 ```bash
-docker-compose up --scale load-generator=3
+REPLICAS=3 docker-compose up --build -d
+```
+
+### Run the Whole Stack with Integrated OpenSearch
+
+```bash
+REPLICAS=3 OPENSEARCH_PASSWD="<pleaseChangeMe>" docker-compose --profile opensearch up --build -d
+```
+
+The password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a digit, and a special character.
+
+> ❗ **Note:** If you do not provide a password, it will default to `amos2@25WS01`.
+
+Example Usage: `curl -k -u admin:amos2@25WS01 -X PUT "https://localhost:9200/test-index"`
+
+### Remove all Docker Resources
+
+```bash
+docker-compose --profile opensearch down --volumes --rmi local --remove-orphans
 ```
 
 ---
