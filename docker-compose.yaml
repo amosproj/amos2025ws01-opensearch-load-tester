@@ -1,5 +1,4 @@
 ---
-name: amos2025ws01
 services:
   testdata-generator:
     build:
