@@ -57,14 +57,10 @@ REPLICAS=3 docker-compose up --build -d
 ### Run the Whole Stack with Integrated OpenSearch
 
 ```bash
-REPLICAS=3 OPENSEARCH_PASSWD="<pleaseChangeMe>" docker-compose --profile opensearch up --build -d
+REPLICAS=3 docker-compose --profile opensearch up --build -d
 ```
 
-The password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a digit, and a special character.
-
-> ❗ **Note:** If you do not provide a password, it will default to `amos2@25WS01`.
-
-Example Usage: `curl -k -u admin:amos2@25WS01 -X PUT "https://localhost:9200/test-index"`
+Example Usage: `curl -X PUT "http://localhost:9200/test-index"`
 
 ### Remove all Docker Resources
 

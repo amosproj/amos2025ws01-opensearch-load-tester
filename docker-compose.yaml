@@ -7,7 +7,6 @@ services:
     container_name: testdata-generator
     environment:
       - SPRING_APPLICATION_NAME=testdata-generator
-      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_PASSWD:-amos2@25WS01}
       - OPENSEARCH_URL=${OPENSEARCH_URL:-http://test-target-opensearch:9200}
     networks:
       - opensearch-loadtester-network
@@ -26,7 +25,6 @@ services:
       replicas: ${REPLICAS:-1}
     environment:
       - SPRING_APPLICATION_NAME=load-generator
-      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_PASSWD:-amos2@25WS01}
     networks:
       - opensearch-loadtester-network
     healthcheck:
@@ -84,10 +82,9 @@ services:
     profiles:
       - opensearch
     environment:
-      - plugins.security.disabled=true
+      - DISABLE_SECURITY_PLUGIN=true
       - discovery.type=single-node
       - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
-      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_PASSWD:-amos2@25WS01}
     #volumes:
     #  - opensearch-data:/usr/share/opensearch/data
     networks:
