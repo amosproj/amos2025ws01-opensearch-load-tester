@@ -1,0 +1,117 @@
+---
+services:
+  testdata-generator:
+    build:
+      context: ./testdata-generator
+      dockerfile: Dockerfile
+    container_name: testdata-generator
+    environment:
+      - SPRING_APPLICATION_NAME=testdata-generator
+      - OPENSEARCH_URL=${OPENSEARCH_URL:-http://test-target-opensearch:9200}
+    networks:
+      - opensearch-loadtester-network
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "app.jar"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  load-generator:
+    build:
+      context: ./load-generator
+      dockerfile: Dockerfile
+    deploy:
+      replicas: ${REPLICAS:-1}
+    environment:
+      - SPRING_APPLICATION_NAME=load-generator
+    networks:
+      - opensearch-loadtester-network
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "app.jar"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    ############
+    # Makes load-generator wait for testdata-generator to complete
+    # cant be used now bc testdata-generator is designed to run continuously
+    ############
+    #depends_on:
+    #  testdata-generator:
+    #    condition: service_completed_successfully
+
+  metrics-reporter:
+    build:
+      context: ./metrics-reporter
+      dockerfile: Dockerfile
+    container_name: metrics-reporter
+    environment:
+      - SPRING_APPLICATION_NAME=metrics-reporter
+      - LOAD_GENERATOR_REPLICAS=${REPLICAS:-1}
+    networks:
+      - opensearch-loadtester-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8081/actuator/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    ############
+    # Makes load-generator wait for testdata-generator to complete
+    # cant be used now bc testdata-generator is designed to run continuously
+    ############
+    depends_on:
+      #testdata-generator:
+      #  condition: service_completed_successfully
+      load-generator:
+        condition: service_healthy
+
+  test-target-opensearch:
+    image: opensearchproject/opensearch:2.16.0
+    container_name: test-target-opensearch
+    restart: unless-stopped
+    profiles:
+      - opensearch
+    environment:
+      - DISABLE_SECURITY_PLUGIN=true
+      - discovery.type=single-node
+      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+    #volumes:
+    #  - opensearch-data:/usr/share/opensearch/data
+    networks:
+      - opensearch-loadtester-network
+    ###
+    # Example Usage:
+    # curl -X PUT "http://localhost:9200/test-index"
+    ##
+    ports:
+      - "9200:9200" # OpenSearch REST API
+      #- "9600:9600" # OpenSearch Performance Analyzer
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s \
+           http://test-target-opensearch:9200/_cluster/health | grep green || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  opensearch-loadtester-network:
+    driver: bridge
+
+#volumes:
+#  opensearch-data:
+#    driver: local
