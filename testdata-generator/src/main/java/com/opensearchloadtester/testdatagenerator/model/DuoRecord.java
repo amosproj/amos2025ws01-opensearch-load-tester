@@ -3,7 +3,9 @@ package com.opensearchloadtester.testdatagenerator.model;
 import lombok.Data;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 @Data
 public class DuoRecord implements Recordable {
@@ -33,26 +35,26 @@ public class DuoRecord implements Recordable {
 
     // Method to generate a random DuoRecord Object
     public static DuoRecord random() {
-        // TODO implement random values
+        Random rand = new Random();
         DuoRecord res = new DuoRecord();
-        res.id = "id-" + Math.random();
-        res.customAll = "Sample text";
+        res.id = "id-" + rand.nextInt(100000);
+        res.customAll = "This is customAll from "+res.id;
         res.lastDocumentChange = Instant.now();
-        res.dssDataspaceId = "dataspace-" + Math.random();
-        res.dssDocumentId = "doc-" + Math.random();
-        res.dssDocumentName = "Document 1";
-        res.contentLength = 1L;
-        res.ocrFulltext = "OCR text";
-        res.contentType = "text";
-        res.etag = "etag-" + Math.random();
-        res.dssVersion = "1";
-        res.dssLastModifiedUserIdKey = "user-" + Math.random();
+        res.dssDataspaceId = "dataspace-" + rand.nextInt(1001);
+        res.dssDocumentId = "document-" + rand.nextInt(10000);
+        res.dssDocumentName = "Payroll-"+res.dssDocumentId+"-random";
+        res.contentLength = rand.nextLong(10000);;
+        res.ocrFulltext = "This is OCR fulltext from "+res.id;
+        res.contentType = "Document";
+        res.etag = "etag-" + rand.nextInt(100000000);
+        res.dssVersion = "1.0";
+        res.dssLastModifiedUserIdKey = "user-random";
         res.dssLastModifiedDatetime = Instant.now();
         res.dssCustomMetadataDuo = DuoMetadata.random();
-        res.dssCreationUserDisplayName = "User 1";
-        res.dssLastModifiedUserDisplayName = "User 1";
-        res.dssCreationUserIdKey = "user-" + Math.random();
-        res.dssProcessingFlagOwner = "ownerflag";
+        res.dssCreationUserDisplayName = "RandomGenerator";
+        res.dssLastModifiedUserDisplayName = "RandomGenerator";
+        res.dssCreationUserIdKey = "user-random";
+        res.dssProcessingFlagOwner = "owner-random";
         return res;
     }
 
@@ -94,34 +96,44 @@ public class DuoRecord implements Recordable {
 
         // Method to generate a random DuoMetadata Object
         public static DuoMetadata random() {
-            // TODO implement random values
+            Random rand = new Random();
             DuoMetadata meta = new DuoMetadata();
-            meta.bookingState = "Open";
+            List<String> states = List.of("Open", "Paid", "Closed");
+            meta.bookingState = states.get(rand.nextInt(states.size()));
             meta.bookingStateChangedAt = Instant.now();
-            meta.companyId = 1L;
-            meta.currency = "EUR";
-            meta.customerNumber = "Customer 1";
-            meta.deletedAt = Instant.now();
-            meta.documentType = 1;
+            meta.companyId = rand.nextLong(10000);
+            List<String> curr = List.of("EUR", "USD");
+            meta.currency = curr.get(rand.nextInt(curr.size()));
+            meta.customerNumber = "customer-" +  rand.nextInt(10000);
+            meta.deletedAt = Instant.MAX;
+            meta.documentType = rand.nextInt(6);
             meta.documentCategory = "Invoice";
-            meta.documentInvoiceType = "Standard";
-            meta.einvoiceFulltext = "Fulltext";
+            List<String> invTypes = List.of("Standard", "Urgent", "Reminder");
+            meta.documentInvoiceType = invTypes.get(rand.nextInt(invTypes.size()));
+            meta.einvoiceFulltext = "This is fulltext of invoice " + meta.invoiceNumber;
             meta.hasPositionCorrection = false;
-            meta.invoiceBusinessPartner = "Partner 1";
-            meta.invoiceBusinessPartnerId = 1L;
+            meta.invoiceBusinessPartnerId = rand.nextLong(10000);
+            meta.invoiceBusinessPartner = "partner-" + meta.invoiceBusinessPartnerId.toString();
             meta.invoiceDate = Instant.now();
-            meta.invoiceNumber = "Invoice 1";
+            meta.invoiceNumber = "inv-"+rand.nextInt(10000);
             meta.lastModifiedDatetime = Instant.now();
-            meta.lastModifiedUserIdKey = "user-" + Math.random();
-            meta.location = "Germany";
+            meta.lastModifiedUserIdKey = "user-random";
+            List<String> loc = List.of("Germany", "England", "Spain", "France");
+            meta.location = loc.get(rand.nextInt(loc.size()));
             meta.paidAt = Instant.now();
-            meta.paidStatus = "Paid";
-            meta.totalGrossAmount = 100.0;
-            meta.uploaderScId = "Uploader-" + Math.random();
+            meta.paidStatus = states.get(rand.nextInt(states.size()));
+            List<Position> pos = new ArrayList<>();
+            int numPos = rand.nextInt(50);
+            for(int i = 0; i < numPos; i++) {
+                pos.add(Position.random());
+            }
+            meta.positions = pos;
+            meta.totalGrossAmount = rand.nextDouble(10000000);
+            meta.uploaderScId = "up-" + rand.nextInt(1000);
             meta.timeOfUpload = Instant.now();
-            meta.documentApprovalState = "Approved";
-            meta.transactionIds = "Trans-" + Math.random();
-            meta.positions = List.of(Position.random(), Position.random());
+            List<String> appStates = List.of("Approved", "Not approved", "In progress");
+            meta.documentApprovalState = appStates.get(rand.nextInt(appStates.size()));
+            meta.transactionIds = "trans-" + rand.nextInt(10000000);
             return meta;
         }
     }
@@ -142,11 +154,11 @@ public class DuoRecord implements Recordable {
 
         // Method to generate a random Position Object
         public static Position random() {
-            // TODO implement random values
+            Random rand = new Random();
             Position res = new Position();
-            res.note = "Sample Note";
-            res.costCenter1 = "Costcenter-" + Math.random();
-            res.costCenter2 = "Costcenter-" + Math.random();
+            res.note = "This is a sample note " + rand.nextInt(10000);
+            res.costCenter1 = "cc-" + rand.nextInt(10000);
+            res.costCenter2 = "cc-" + rand.nextInt(10000);
             res.serviceDate = Instant.now();
             return res;
         }

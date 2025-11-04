@@ -23,7 +23,7 @@ public interface Recordable {
      *
      * @return Id of the record
      */
-    public String getId();
+    //public String getId();
 
     /**
      * Generates a new Record filled with random values.
