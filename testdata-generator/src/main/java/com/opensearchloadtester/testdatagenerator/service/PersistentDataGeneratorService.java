@@ -43,7 +43,7 @@ public class PersistentDataGeneratorService implements DataGenerator {
             }else{
                 List<Recordable> list = new DynamicDataGeneratorService().generateData(count);
                 storageService.save(list, outputPath);
-                System.out.println("Generated new test data (" + existingData.size() + " records)");
+                System.out.println("Generated new test data (" + list.size() + " records)");
                 return list;
             }
         } catch (IOException e) {
