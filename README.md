@@ -23,6 +23,18 @@ git clone https://github.com/amosproj/amos2025ws01-opensearch-load-tester.git
 cd amos2025ws01-opensearch-load-tester
 ```
 
+### Setup Git Hooks (once only)
+
+Install the Git hooks for automatic co-author management:
+
+```bash
+cd scripts
+./setup-hooks.sh
+```
+
+See [scripts/README.md](scripts/README.md) for details on using `@mentions` in commits.
+
+
 ---
 
 ## 🐳 Docker Setup (Recommended)
