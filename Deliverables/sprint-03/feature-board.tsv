@@ -1,0 +1,25 @@
+Title	URL	Assignees	Status	Estimated size	Real size
+MetricsCollector Prototype Implementation 	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/19		Product Backlog		
+Decide Integration of Load Testing Framework	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/18		Product Backlog		
+QueryExecution Component Prototype Implementation	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/35		Product Backlog		
+LoadRunner Component Prototype Implementation	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/36		Product Backlog		
+Logging Mechanism Implementation	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/37		Product Backlog		
+ReportCreator Component Prototype Implementation	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/38		Product Backlog		
+Data Generation <-> OpenSearch Client Integration	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/44		Product Backlog		
+Research - OpenSearch	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/7	BeEugen, Carlit0, Leolingio, SaraBelz, SeboKnt	Sprint Backlog	3	
+OpenSearchClient prototype	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/20	BeEugen	In Progress	3	
+Research - Benchmark Tools for OpenSearch Load Tester	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/4	BeEugen, Carlit0, Leolingio, SaraBelz, SeboKnt	In Progress	3	
+Define Representative Query Scenarios	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/17	SaraBelz	In Progress	5	
+Prepare Build Process Review	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/16	Leolingio, SeboKnt	In Progress	2	
+Github Signoff/Co-Author Automation	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/31	Carlit0	Awaiting Review	1	
+Project Achitecture Adaptation	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/32	BeEugen, SeboKnt	Awaiting Review	2	
+Build Process Implementation	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/5	SeboKnt	Awaiting Review	2	
+Data Generation Prototype	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/15	Leolingio	Awaiting Review	3	
+Build Process Decision	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/3	Carlit0, Leolingio, SeboKnt	Awaiting Review	2	
+Research - Understand DATEV Data Structure (Industry Partner Input) for Load Tester Query Design	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/9	BeEugen, Carlit0, Leolingio, SaraBelz, SeboKnt	Feature Archive	2	2
+Developer environment setup	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/2	BeEugen, Carlit0, Leolingio, SaraBelz, SeboKnt	Feature Archive	1	1
+Github Repository Management Decision	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/13	Carlit0	Feature Archive		2
+Architecture evaluation/decision	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/1	BeEugen, SeboKnt	Feature Archive	2	5
+Design Team Shirt	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/14	SaraBelz	Feature Archive		1
+Initialize SBOM	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/12	SaraBelz	Feature Archive		
+Minimal Module Initialization	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/6	BeEugen	Feature Archive	2	2
