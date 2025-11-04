@@ -48,7 +48,7 @@ services:
     container_name: metrics-reporter
     environment:
       - SPRING_APPLICATION_NAME=metrics-reporter
-      - REPLICAS=${REPLICAS:-1}
+      - LOAD_GENERATOR_REPLICAS=${REPLICAS:-1}
     networks:
       - opensearch-loadtester-network
     healthcheck:
