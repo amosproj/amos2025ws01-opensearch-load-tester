@@ -7,7 +7,7 @@ services:
     container_name: testdata-generator
     environment:
       - SPRING_APPLICATION_NAME=testdata-generator
-      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_PASSWD:-amos2@25SWS01}
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_PASSWD:-amos2@25WS01}
       - OPENSEARCH_URL=${OPENSEARCH_URL:-http://test-target-opensearch:9200}
     networks:
       - opensearch-loadtester-network
