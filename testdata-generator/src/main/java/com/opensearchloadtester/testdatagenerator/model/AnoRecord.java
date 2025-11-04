@@ -39,6 +39,106 @@ public class AnoRecord implements Recordable {
     private String etag;
     private Instant lastDocumentChange;
 
+    public String getId() {
+        return id;
+    }
+
+    public String getCustomAll() {
+        return customAll;
+    }
+
+    public Long getContentLength() {
+        return contentLength;
+    }
+
+    public String getContentType() {
+        return contentType;
+    }
+
+    public Instant getDssCreationDatetime() {
+        return dssCreationDatetime;
+    }
+
+    public String getDssCreationUserDisplayName() {
+        return dssCreationUserDisplayName;
+    }
+
+    public String getDssCreationUserIdKey() {
+        return dssCreationUserIdKey;
+    }
+
+    public PayrollInfo getDssCustomMetadataPayrollInfo() {
+        return dssCustomMetadataPayrollInfo;
+    }
+
+    public String getDssDataspaceId() {
+        return dssDataspaceId;
+    }
+
+    public Instant getDssDeleteRetentionMinRetention() {
+        return dssDeleteRetentionMinRetention;
+    }
+
+    public String getDssDocumentId() {
+        return dssDocumentId;
+    }
+
+    public String getDssDocumentName() {
+        return dssDocumentName;
+    }
+
+    public Long getDssDocumentOrientation() {
+        return dssDocumentOrientation;
+    }
+
+    public String getDssDocumentPath() {
+        return dssDocumentPath;
+    }
+
+    public String getDssDocumentSource() {
+        return dssDocumentSource;
+    }
+
+    public Instant getDssLastModifiedDatetime() {
+        return dssLastModifiedDatetime;
+    }
+
+    public Instant getDssLastModifiedUserDatetime() {
+        return dssLastModifiedUserDatetime;
+    }
+
+    public String getDssLastModifiedUserDisplayName() {
+        return dssLastModifiedUserDisplayName;
+    }
+
+    public String getDssLastModifiedUserIdKey() {
+        return dssLastModifiedUserIdKey;
+    }
+
+    public String getDssOriginalFilename() {
+        return dssOriginalFilename;
+    }
+
+    public String getDssProcessingFlagOwner() {
+        return dssProcessingFlagOwner;
+    }
+
+    public Boolean getDssRecyclebin() {
+        return dssRecyclebin;
+    }
+
+    public String getDssVersion() {
+        return dssVersion;
+    }
+
+    public String getEtag() {
+        return etag;
+    }
+
+    public Instant getLastDocumentChange() {
+        return lastDocumentChange;
+    }
+
     // Method to generate a random AnoRecord Object
     public static AnoRecord random() {
         Random rand = new Random();
@@ -87,6 +187,30 @@ public class AnoRecord implements Recordable {
         private String language;
         private String payrollType;
         private Instant provisionDate;
+
+        public Integer getAccountingMonth() {
+            return accountingMonth;
+        }
+
+        public Integer getAccountingYear() {
+            return accountingYear;
+        }
+
+        public Instant getFirstAccess() {
+            return firstAccess;
+        }
+
+        public String getLanguage() {
+            return language;
+        }
+
+        public String getPayrollType() {
+            return payrollType;
+        }
+
+        public Instant getProvisionDate() {
+            return provisionDate;
+        }
 
         // Method to generate a random PayrollInfo Object
         public static PayrollInfo random() {

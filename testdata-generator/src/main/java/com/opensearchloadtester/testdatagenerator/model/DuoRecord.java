@@ -28,6 +28,79 @@ public class DuoRecord implements Recordable {
     private String dssLastModifiedUserIdKey;
     private Instant dssLastModifiedDatetime;
     private DuoMetadata dssCustomMetadataDuo;
+
+    public String getId() {
+        return id;
+    }
+
+    public String getCustomAll() {
+        return customAll;
+    }
+
+    public Instant getLastDocumentChange() {
+        return lastDocumentChange;
+    }
+
+    public String getDssDataspaceId() {
+        return dssDataspaceId;
+    }
+
+    public String getDssDocumentId() {
+        return dssDocumentId;
+    }
+
+    public String getDssDocumentName() {
+        return dssDocumentName;
+    }
+
+    public Long getContentLength() {
+        return contentLength;
+    }
+
+    public String getOcrFulltext() {
+        return ocrFulltext;
+    }
+
+    public String getContentType() {
+        return contentType;
+    }
+
+    public String getEtag() {
+        return etag;
+    }
+
+    public String getDssVersion() {
+        return dssVersion;
+    }
+
+    public String getDssLastModifiedUserIdKey() {
+        return dssLastModifiedUserIdKey;
+    }
+
+    public Instant getDssLastModifiedDatetime() {
+        return dssLastModifiedDatetime;
+    }
+
+    public DuoMetadata getDssCustomMetadataDuo() {
+        return dssCustomMetadataDuo;
+    }
+
+    public String getDssCreationUserDisplayName() {
+        return dssCreationUserDisplayName;
+    }
+
+    public String getDssLastModifiedUserDisplayName() {
+        return dssLastModifiedUserDisplayName;
+    }
+
+    public String getDssCreationUserIdKey() {
+        return dssCreationUserIdKey;
+    }
+
+    public String getDssProcessingFlagOwner() {
+        return dssProcessingFlagOwner;
+    }
+
     private String dssCreationUserDisplayName;
     private String dssLastModifiedUserDisplayName;
     private String dssCreationUserIdKey;
@@ -94,6 +167,110 @@ public class DuoRecord implements Recordable {
         private String documentApprovalState;
         private String transactionIds;
 
+        public String getBookingState() {
+            return bookingState;
+        }
+
+        public Instant getBookingStateChangedAt() {
+            return bookingStateChangedAt;
+        }
+
+        public Long getCompanyId() {
+            return companyId;
+        }
+
+        public String getCurrency() {
+            return currency;
+        }
+
+        public String getCustomerNumber() {
+            return customerNumber;
+        }
+
+        public Instant getDeletedAt() {
+            return deletedAt;
+        }
+
+        public Integer getDocumentType() {
+            return documentType;
+        }
+
+        public String getDocumentCategory() {
+            return documentCategory;
+        }
+
+        public String getDocumentInvoiceType() {
+            return documentInvoiceType;
+        }
+
+        public String getEinvoiceFulltext() {
+            return einvoiceFulltext;
+        }
+
+        public Boolean getHasPositionCorrection() {
+            return hasPositionCorrection;
+        }
+
+        public String getInvoiceBusinessPartner() {
+            return invoiceBusinessPartner;
+        }
+
+        public Long getInvoiceBusinessPartnerId() {
+            return invoiceBusinessPartnerId;
+        }
+
+        public Instant getInvoiceDate() {
+            return invoiceDate;
+        }
+
+        public String getInvoiceNumber() {
+            return invoiceNumber;
+        }
+
+        public Instant getLastModifiedDatetime() {
+            return lastModifiedDatetime;
+        }
+
+        public String getLastModifiedUserIdKey() {
+            return lastModifiedUserIdKey;
+        }
+
+        public String getLocation() {
+            return location;
+        }
+
+        public Instant getPaidAt() {
+            return paidAt;
+        }
+
+        public String getPaidStatus() {
+            return paidStatus;
+        }
+
+        public List<Position> getPositions() {
+            return positions;
+        }
+
+        public Double getTotalGrossAmount() {
+            return totalGrossAmount;
+        }
+
+        public String getUploaderScId() {
+            return uploaderScId;
+        }
+
+        public Instant getTimeOfUpload() {
+            return timeOfUpload;
+        }
+
+        public String getDocumentApprovalState() {
+            return documentApprovalState;
+        }
+
+        public String getTransactionIds() {
+            return transactionIds;
+        }
+
         // Method to generate a random DuoMetadata Object
         public static DuoMetadata random() {
             Random rand = new Random();
@@ -151,6 +328,22 @@ public class DuoRecord implements Recordable {
         private String costCenter1;
         private String costCenter2;
         private Instant serviceDate;
+
+        public String getNote() {
+            return note;
+        }
+
+        public String getCostCenter1() {
+            return costCenter1;
+        }
+
+        public String getCostCenter2() {
+            return costCenter2;
+        }
+
+        public Instant getServiceDate() {
+            return serviceDate;
+        }
 
         // Method to generate a random Position Object
         public static Position random() {
