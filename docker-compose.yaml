@@ -8,7 +8,7 @@ services:
     environment:
       - SPRING_APPLICATION_NAME=testdata-generator
       - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_PASSWD:-amos2@25SWS01}
-      - OPENSEARCH_URL=${OPENSEARCH_URL:-http://opensearch:9200}
+      - OPENSEARCH_URL=${OPENSEARCH_URL:-http://test-target-opensearch:9200}
     networks:
       - opensearch-loadtester-network
     healthcheck:
@@ -43,13 +43,13 @@ services:
     #  testdata-generator:
     #    condition: service_completed_successfully
 
-  metric-reporter:
+  metrics-reporter:
     build:
       context: ./metrics-reporter
       dockerfile: Dockerfile
-    container_name: metric-reporter
+    container_name: metrics-reporter
     environment:
-      - SPRING_APPLICATION_NAME=metric-reporter
+      - SPRING_APPLICATION_NAME=metrics-reporter
       - REPLICAS=${REPLICAS:-1}
     networks:
       - opensearch-loadtester-network
@@ -84,6 +84,7 @@ services:
     profiles:
       - opensearch
     environment:
+      - plugins.security.disabled=true
       - discovery.type=single-node
       - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
       - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_PASSWD:-amos2@25WS01}
@@ -93,7 +94,7 @@ services:
       - opensearch-loadtester-network
     ###
     # Example Usage:
-    # curl -k -u admin:amos2@25WS01 -X PUT "https://localhost:9200/test-index"
+    # curl -X PUT "http://localhost:9200/test-index"
     ##
     ports:
       - "9200:9200" # OpenSearch REST API
@@ -102,8 +103,8 @@ services:
       test:
         [
           "CMD-SHELL",
-          "curl -k -s -u admin:${OPENSEARCH_PASSWD:-amos2@25WS01} \
-           https://localhost:9200/_cluster/health | grep green || exit 1",
+          "curl -s \
+           http://test-target-opensearch:9200/_cluster/health | grep green || exit 1",
         ]
       interval: 10s
       timeout: 5s
