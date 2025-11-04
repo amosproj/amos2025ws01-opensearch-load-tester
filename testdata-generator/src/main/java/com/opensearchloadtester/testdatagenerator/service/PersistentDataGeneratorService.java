@@ -15,13 +15,11 @@ import java.util.List;
 public class PersistentDataGeneratorService implements DataGenerator {
 
     private final FileStorageService storageService;
+    private final String outputPath;
 
-    // Value taken from application.properties, default: data/testdata.json
-    @Value("${data.output.path:data/testdata.json}")
-    private String outputPath;
-
-    public PersistentDataGeneratorService() {
-        this.storageService = new FileStorageService();
+    public PersistentDataGeneratorService(FileStorageService storageService, @Value("${data.output.path:data/testdata.json}") String outputPath) {
+        this.storageService = storageService;
+        this.outputPath = outputPath;
     }
 
     /**
@@ -33,13 +31,24 @@ public class PersistentDataGeneratorService implements DataGenerator {
         try {
             List<Recordable> existingData = storageService.load(outputPath);
             if (!existingData.isEmpty()) {
-                System.out.println("Loaded existing test data (" + existingData.size() + " records)");
+                if(existingData.size() != count) {
+                    System.out.println("Loaded existing test data (" + existingData.size() + " records) - not desired data amount");
+                    List<Recordable> list = new DynamicDataGeneratorService().generateData(count);
+                    storageService.save(list, outputPath);
+                    System.out.println("Generated new test data (" + list.size() + " records)");
+                    return list;
+                }
+                System.out.println(existingData.size() + " test data loaded");
                 return existingData;
             }else{
-                return new DynamicDataGeneratorService().generateData(count);
+                List<Recordable> list = new DynamicDataGeneratorService().generateData(count);
+                storageService.save(list, outputPath);
+                System.out.println("Generated new test data (" + existingData.size() + " records)");
+                return list;
             }
         } catch (IOException e) {
             throw new RuntimeException("Error when generating data", e);
         }
+
     }
 }

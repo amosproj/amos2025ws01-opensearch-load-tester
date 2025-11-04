@@ -1,11 +1,21 @@
 package com.opensearchloadtester.testdatagenerator.model;
 
-import com.opensearchloadtester.testdatagenerator.model.AnoRecord;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
  * Interface for OpenSearch Record Data.
  * A Record object stores all data from an OpenSearch Index in a Java Object.
  */
+@JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        include = JsonTypeInfo.As.PROPERTY,
+        property = "type"
+)
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = AnoRecord.class, name = "ano"),
+        @JsonSubTypes.Type(value = DuoRecord.class, name = "duo")
+})
 public interface Recordable {
 
     /**
@@ -16,7 +26,7 @@ public interface Recordable {
     public String getId();
 
     /**
-     * Generate a new Record filled with random values.
+     * Generates a new Record filled with random values.
      * With this method a random Record object can be created.
      * Default: Creating random AnoRecord entry
      *
