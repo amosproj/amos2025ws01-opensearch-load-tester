@@ -1,0 +1,14 @@
+# Co-Authors Configuration
+# Format: github-username=Full Name <githubEmail>
+# Case-insensitive username matching
+# Use @username in commit messages to automatically add co-authors
+
+# Team Members
+leabuchner=Lea Buchner <lea.buchner@proton.me>
+engelharddirk=Dirk Engelhard <dirk.engelhard@hotmail.de>
+carlit0=Carlo Strachwitz <carlostrachwitz@googlemail.com>
+beeugen=Eugen Becker <e.becker.student@gmail.com>
+seboknt=Sebastian Knecht <sebastian.alxr@gmail.com>
+leolingio=Leo Hofmann <leohof23@gmail.com>
+hydraneut=Alexander Lorenz <166607070+Hydraneut@users.noreply.github.com>
+sarabelz=Sara Belz <sarabelzafonso@gmail.com>
