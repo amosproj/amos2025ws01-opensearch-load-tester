@@ -1,11 +1,13 @@
 package com.opensearchloadtester.loadgenerator.runner;
 
+import lombok.extern.slf4j.Slf4j;
 // PLACEHOLDER IMPLEMENTATION! THIS IS JUST A PLACEHOLDER FOR THE QUERY EXECUTION!
 
 /**
  * Placeholder implementation of QueryExecution for testing purposes.
  * This will be replaced with actual query logic using the shared DbClient library.
  */
+@Slf4j
 public class NoOpQueryExecution implements QueryExecution {
 
     private final String id;
@@ -22,10 +24,13 @@ public class NoOpQueryExecution implements QueryExecution {
 
     @Override
     public void run() {
+        log.info("QueryExecution {} started", id);
         try {
             // Simulate query execution time
             Thread.sleep(executionTimeMs);
+            log.info("QueryExecution {} completed", id);
         } catch (InterruptedException e) {
+            log.warn("QueryExecution {} was interrupted", id);
             Thread.currentThread().interrupt();
         }
     }
