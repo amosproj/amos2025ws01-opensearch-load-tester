@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -99,6 +100,7 @@ public class OpenSearchDataService {
                     .hits()
                     .stream()
                     .map(Hit::source)
+                    .filter(Objects::nonNull)
                     .collect(Collectors.toList());
         } catch (IOException e) {
             log.error("Error searching in index {} on field {} with value {}",
