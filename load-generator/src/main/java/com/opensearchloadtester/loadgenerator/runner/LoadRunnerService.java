@@ -55,6 +55,28 @@ public class LoadRunnerService {
 
         } finally {
             // Shutdown executor service
+    /**
+     * Executes n query executions simultaneously using a factory to create them.
+     * 
+     * @param threadCount Number of query execution threads to spawn
+     * @param queryExecutionFactory Factory to create query execution instances
+     * @throws InterruptedException if the execution is interrupted while waiting
+     */
+    public void executeQueries(int threadCount, QueryExecutionFactory queryExecutionFactory) 
+            throws InterruptedException {
+        if (threadCount <= 0) {
+            log.warn("Invalid thread count: {}, nothing to execute", threadCount);
+            return;
+        }
+
+        List<QueryExecution> queryExecutions = new ArrayList<>();
+        for (int i = 0; i < threadCount; i++) {
+            queryExecutions.add(queryExecutionFactory.create(i));
+        }
+
+        executeQueries(queryExecutions);
+    }
+
         }
     }
 }
