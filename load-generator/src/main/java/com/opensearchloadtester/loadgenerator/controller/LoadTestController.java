@@ -53,4 +53,12 @@ public class LoadTestController {
         }
     }
 
+    /**
+     * Health check endpoint.
+     */
+    @GetMapping("/health")
+    public ResponseEntity<String> health() {
+        return ResponseEntity.ok("Load Generator is running!");
+    }
+}
 
