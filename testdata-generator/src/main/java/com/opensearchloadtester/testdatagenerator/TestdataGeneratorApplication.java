@@ -25,6 +25,8 @@ public class TestdataGeneratorApplication implements CommandLineRunner {
     // Value taken from application.properties, default: data/testdata.json
     @Value("${data.output.path:data/testdata.json}")
     private String outputPath;
+    @Value("${data.generation.count}")
+    private int recordsCount;
     private DataGenerator dataGenerator;
 
     @Override
@@ -37,15 +39,15 @@ public class TestdataGeneratorApplication implements CommandLineRunner {
             this.dataGenerator = new PersistentDataGeneratorService(new FileStorageService(), outputPath);
         }
 
-        List<Recordable> data = dataGenerator.generateData(10); //example value 10
+        List<Recordable> data = dataGenerator.generateData(recordsCount);
 
         // Debug Output:
-        /*
+
         System.out.println("Listing data:");
         for(Recordable item: data){
             System.out.println("Data Class" + item.getClass());
         }
-        */
+
 
 
     }
