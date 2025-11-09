@@ -1,4 +1,4 @@
-package com.opensearchloadtester.loadgenerator.runner;
+package com.opensearchloadtester.loadgenerator.service;
 
 /**
  * Factory interface for creating QueryExecution instances.
@@ -16,4 +16,3 @@ public interface QueryExecutionFactory {
      */
     QueryExecution create(int threadId);
 }
-

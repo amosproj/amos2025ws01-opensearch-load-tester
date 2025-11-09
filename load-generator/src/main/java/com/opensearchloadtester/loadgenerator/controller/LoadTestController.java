@@ -1,8 +1,8 @@
 package com.opensearchloadtester.loadgenerator.controller;
 
-import com.opensearchloadtester.loadgenerator.runner.LoadRunnerService;
-import com.opensearchloadtester.loadgenerator.runner.NoOpQueryExecution;
-import com.opensearchloadtester.loadgenerator.runner.QueryExecutionFactory;
+import com.opensearchloadtester.loadgenerator.service.NoOpQueryExecution;
+import com.opensearchloadtester.loadgenerator.service.QueryExecutionFactory;
+import com.opensearchloadtester.loadgenerator.service.LoadRunnerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

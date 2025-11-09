@@ -1,4 +1,4 @@
-package com.opensearchloadtester.loadgenerator.runner;
+package com.opensearchloadtester.loadgenerator.service;
 // PLACEHOLDER IMPLEMENTATION! THIS IS JUST A PLACEHOLDER FOR THE QUERY EXECUTION!
 /**
  * Interface for query execution tasks that will be run in parallel threads.

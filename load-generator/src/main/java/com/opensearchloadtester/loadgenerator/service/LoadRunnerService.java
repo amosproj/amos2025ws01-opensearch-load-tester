@@ -1,4 +1,4 @@
-package com.opensearchloadtester.loadgenerator.runner;
+package com.opensearchloadtester.loadgenerator.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -115,4 +115,3 @@ public class LoadRunnerService {
         }
     }
 }
-

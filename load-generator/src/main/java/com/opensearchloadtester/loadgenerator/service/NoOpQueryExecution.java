@@ -1,4 +1,4 @@
-package com.opensearchloadtester.loadgenerator.runner;
+package com.opensearchloadtester.loadgenerator.service;
 
 import lombok.extern.slf4j.Slf4j;
 // PLACEHOLDER IMPLEMENTATION! THIS IS JUST A PLACEHOLDER FOR THE QUERY EXECUTION!
@@ -40,4 +40,3 @@ public class NoOpQueryExecution implements QueryExecution {
         return id;
     }
 }
-
