@@ -1,5 +1,6 @@
 package com.opensearchloadtester.testdatagenerator.service;
 
+import com.opensearchloadtester.testdatagenerator.exception.OpenSearchDataAccessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.opensearch.OpenSearchClient;
@@ -11,7 +12,6 @@ import org.opensearch.client.opensearch.indices.ExistsRequest;
 import org.opensearch.client.transport.endpoints.BooleanResponse;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -25,7 +25,10 @@ public class OpenSearchDataService {
     private final OpenSearchClient openSearchClient;
 
     public void createIndex(String indexName) {
+        validateIndexName(indexName);
+
         if (indexExists(indexName)) {
+            log.info("Index '{}' already exists, skipping creation", indexName);
             return;
         }
 
@@ -36,14 +39,18 @@ public class OpenSearchDataService {
 
             openSearchClient.indices().create(request);
 
-            log.info("Created index={}", indexName);
-        } catch (IOException e) {
-            log.error("Error creating index {}", indexName, e);
-            throw new RuntimeException("Failed to create index in OpenSearch", e);
+            log.info("Created index '{}'", indexName);
+        } catch (Exception e) {
+            log.error("Unexpected error while creating index '{}'", indexName, e);
+            throw new OpenSearchDataAccessException(
+                    String.format("Unexpected error while creating index '%s'", indexName), e);
         }
     }
 
     public <T> String indexDocument(String indexName, T document) {
+        validateIndexName(indexName);
+        Objects.requireNonNull(document, "document must not be null");
+
         try {
             IndexRequest<T> request = new IndexRequest.Builder<T>()
                     .index(indexName)
@@ -52,17 +59,21 @@ public class OpenSearchDataService {
 
             IndexResponse response = openSearchClient.index(request);
 
-            log.info("Indexed document in index={} id={} result={}",
-                    indexName, response.id(), response.result());
+            log.info("Indexed document in index '{}' with id '{}'", indexName, response.id());
 
             return response.id();
-        } catch (IOException e) {
-            log.error("Error indexing document in index {}", indexName, e);
-            throw new RuntimeException("Failed to index document in OpenSearch", e);
+        } catch (Exception e) {
+            log.error("Unexpected error while indexing document in index '{}'", indexName, e);
+            throw new OpenSearchDataAccessException(
+                    String.format("Unexpected error while indexing document in index '%s'", indexName), e);
         }
     }
 
     public <T> Optional<T> getDocument(String indexName, String id, Class<T> documentClass) {
+        validateIndexName(indexName);
+        Objects.requireNonNull(id, "id must not be null");
+        Objects.requireNonNull(documentClass, "documentClass must not be null");
+
         try {
             GetRequest request = new GetRequest.Builder()
                     .index(indexName)
@@ -72,17 +83,24 @@ public class OpenSearchDataService {
             GetResponse<T> response = openSearchClient.get(request, documentClass);
 
             if (!response.found()) {
+                log.debug("Document with id '{}' not found in index '{}'", id, indexName);
                 return Optional.empty();
             }
 
             return Optional.ofNullable(response.source());
-        } catch (IOException e) {
-            log.error("Error retrieving document with id {} from index {}", id, indexName, e);
-            throw new RuntimeException("Failed to get document from OpenSearch", e);
+        } catch (Exception e) {
+            log.error("Unexpected error while getting document with id '{}' from index '{}'", id, indexName, e);
+            throw new OpenSearchDataAccessException(
+                    String.format("Unexpected error while getting document with id '%s' from index '%s'", id, indexName), e);
         }
     }
 
     public <T> List<T> searchByField(String indexName, String fieldName, String fieldValue, Class<T> documentClass) {
+        validateIndexName(indexName);
+        Objects.requireNonNull(fieldName, "fieldName must not be null");
+        Objects.requireNonNull(fieldValue, "fieldValue must not be null");
+        Objects.requireNonNull(documentClass, "documentClass must not be null");
+
         try {
             SearchRequest request = new SearchRequest.Builder()
                     .index(indexName)
@@ -102,14 +120,19 @@ public class OpenSearchDataService {
                     .map(Hit::source)
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
-        } catch (IOException e) {
-            log.error("Error searching in index {} on field {} with value {}",
+        } catch (Exception e) {
+            log.error("Unexpected error while searching in index '{}' on field '{}' with value '{}'",
                     indexName, fieldName, fieldValue, e);
-            throw new RuntimeException("Failed to search documents in OpenSearch by field", e);
+            throw new OpenSearchDataAccessException(
+                    String.format("Unexpected error while searching in index '%s' on field '%s' with value '%s'",
+                            indexName, fieldName, fieldValue), e);
         }
     }
 
     public void deleteDocument(String indexName, String id) {
+        validateIndexName(indexName);
+        Objects.requireNonNull(id, "id must not be null");
+
         try {
             DeleteRequest request = new DeleteRequest.Builder()
                     .index(indexName)
@@ -118,10 +141,17 @@ public class OpenSearchDataService {
 
             openSearchClient.delete(request);
 
-            log.info("Deleted document from index={} id={}", indexName, id);
-        } catch (IOException e) {
-            log.error("Error deleting document with id {} from index {}", id, indexName, e);
-            throw new RuntimeException("Failed to delete document from OpenSearch", e);
+            log.info("Deleted document with id '{}' from index '{}'", id, indexName);
+        } catch (Exception e) {
+            log.error("Unexpected error while deleting document with id '{}' from index '{}'", id, indexName, e);
+            throw new OpenSearchDataAccessException(
+                    String.format("Unexpected error while deleting document with id '%s' from index '%s'", id, indexName), e);
+        }
+    }
+
+    private void validateIndexName(String indexName) {
+        if (indexName == null || indexName.isBlank()) {
+            throw new IllegalArgumentException("indexName must not be null or blank");
         }
     }
 
@@ -133,9 +163,10 @@ public class OpenSearchDataService {
 
             BooleanResponse response = openSearchClient.indices().exists(request);
             return response.value(); // true, if index exists
-        } catch (IOException e) {
-            log.error("Error checking if index {} exists", indexName, e);
-            throw new RuntimeException("Failed to check if index exists in OpenSearch", e);
+        } catch (Exception e) {
+            log.error("Unexpected error while checking if index '{}' exists", indexName, e);
+            throw new OpenSearchDataAccessException(
+                    String.format("Unexpected error while checking if index '%s' exists", indexName), e);
         }
     }
 }
