@@ -39,17 +39,17 @@ public class LoadTestController {
             loadRunnerService.executeQueries(threadCount, factory);
 
             return ResponseEntity.ok(
-                String.format("Load test completed successfully with %d threads", threadCount)
+                String.format("Load test completed successfully with %d threads\n", threadCount)
             );
         } catch (InterruptedException e) {
             log.error("Load test was interrupted", e);
             Thread.currentThread().interrupt();
             return ResponseEntity.status(500)
-                .body("Load test was interrupted: " + e.getMessage());
+                .body("Load test was interrupted: " + e.getMessage() + "\n");
         } catch (Exception e) {
             log.error("Error executing load test", e);
             return ResponseEntity.status(500)
-                .body("Error executing load test: " + e.getMessage());
+                .body("Error executing load test: " + e.getMessage() + "\n");
         }
     }
 
@@ -58,7 +58,7 @@ public class LoadTestController {
      */
     @GetMapping("/health")
     public ResponseEntity<String> health() {
-        return ResponseEntity.ok("Load Generator is running!");
+        return ResponseEntity.ok("Load Generator is running!\n");
     }
 }
 
