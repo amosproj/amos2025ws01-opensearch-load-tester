@@ -118,7 +118,6 @@ public class OpenSearchDataService {
                     .hits()
                     .stream()
                     .map(Hit::source)
-                    .filter(Objects::nonNull)
                     .collect(Collectors.toList());
         } catch (Exception e) {
             log.error("Unexpected error while searching in index '{}' on field '{}' with value '{}'",
