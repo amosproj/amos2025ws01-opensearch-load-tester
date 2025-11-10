@@ -5,10 +5,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.FieldValue;
+import org.opensearch.client.opensearch._types.mapping.TypeMapping;
 import org.opensearch.client.opensearch.core.*;
 import org.opensearch.client.opensearch.core.search.Hit;
 import org.opensearch.client.opensearch.indices.CreateIndexRequest;
 import org.opensearch.client.opensearch.indices.ExistsRequest;
+import org.opensearch.client.opensearch.indices.IndexSettings;
 import org.opensearch.client.transport.endpoints.BooleanResponse;
 import org.springframework.stereotype.Service;
 
@@ -24,8 +26,10 @@ public class OpenSearchDataService {
 
     private final OpenSearchClient openSearchClient;
 
-    public void createIndex(String indexName) {
+    public void createIndex(String indexName, IndexSettings indexSettings, TypeMapping indexMapping) {
         validateIndexName(indexName);
+        Objects.requireNonNull(indexSettings, "indexSettings must not be null");
+        Objects.requireNonNull(indexMapping, "indexMapping must not be null");
 
         if (indexExists(indexName)) {
             log.info("Index '{}' already exists, skipping creation", indexName);
@@ -35,6 +39,8 @@ public class OpenSearchDataService {
         try {
             CreateIndexRequest request = new CreateIndexRequest.Builder()
                     .index(indexName)
+                    .settings(indexSettings)
+                    .mappings(indexMapping)
                     .build();
 
             openSearchClient.indices().create(request);
