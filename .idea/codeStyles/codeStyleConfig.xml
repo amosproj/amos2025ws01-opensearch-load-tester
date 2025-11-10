@@ -30,6 +30,20 @@
       <option name="CATCH_ON_NEW_LINE" value="false" />
       <option name="FINALLY_ON_NEW_LINE" value="false" />
       <option name="WHILE_ON_NEW_LINE" value="false" />
+      
+      <!-- Blank Lines: Consistent spacing rules -->
+      <!-- 1 blank line after package declaration -->
+      <option name="BLANK_LINES_AFTER_PACKAGE" value="1" />
+      <!-- 1 blank line after imports -->
+      <option name="BLANK_LINES_AFTER_IMPORTS" value="1" />
+      <!-- 1 blank line around class declarations -->
+      <option name="BLANK_LINES_AROUND_CLASS" value="1" />
+      <!-- 1 blank line around method declarations -->
+      <option name="BLANK_LINES_AROUND_METHOD" value="1" />
+      <!-- Keep 1 blank line in code (between statements) -->
+      <option name="KEEP_BLANK_LINES_IN_CODE" value="1" />
+      <!-- No blank line before closing brace -->
+      <option name="KEEP_BLANK_LINES_BEFORE_RBRACE" value="0" />
     </codeStyleSettings>
   </code_scheme>
 </component>
