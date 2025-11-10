@@ -19,5 +19,17 @@
         </value>
       </option>
     </JavaCodeStyleSettings>
+    <codeStyleSettings language="JAVA">
+      <!-- Braces Style: Egyptian braces (Google Java Style Guide) -->
+      <!-- Opening brace on same line, closing brace on new line -->
+      <option name="BRACE_STYLE" value="2" />
+      <option name="CLASS_BRACE_STYLE" value="2" />
+      <option name="METHOD_BRACE_STYLE" value="2" />
+      <!-- else, catch, finally on same line as closing brace -->
+      <option name="ELSE_ON_NEW_LINE" value="false" />
+      <option name="CATCH_ON_NEW_LINE" value="false" />
+      <option name="FINALLY_ON_NEW_LINE" value="false" />
+      <option name="WHILE_ON_NEW_LINE" value="false" />
+    </codeStyleSettings>
   </code_scheme>
 </component>
