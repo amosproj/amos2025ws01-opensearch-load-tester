@@ -34,3 +34,6 @@ bin/
 
 # MacOS
 .DS_Store
+
+# All CSV-Files 
+*.csv 
