@@ -15,8 +15,10 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:25-jre-alpine
 
 WORKDIR /app
-RUN addgroup -S user \
- && adduser -S user -G  user
+RUN mkdir -p /app/data \
+ && addgroup -S user \
+ && adduser -S user -G user \
+ && chown -R user:user /app/data
 USER user
 
 EXPOSE 8081
