@@ -7,6 +7,8 @@ import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.FieldValue;
 import org.opensearch.client.opensearch._types.mapping.TypeMapping;
 import org.opensearch.client.opensearch.core.*;
+import org.opensearch.client.opensearch.core.bulk.BulkOperation;
+import org.opensearch.client.opensearch.core.bulk.IndexOperation;
 import org.opensearch.client.opensearch.core.search.Hit;
 import org.opensearch.client.opensearch.indices.CreateIndexRequest;
 import org.opensearch.client.opensearch.indices.ExistsRequest;
@@ -14,6 +16,7 @@ import org.opensearch.client.opensearch.indices.IndexSettings;
 import org.opensearch.client.transport.endpoints.BooleanResponse;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -72,6 +75,63 @@ public class OpenSearchDataService {
             log.error("Unexpected error while indexing document in index '{}'", indexName, e);
             throw new OpenSearchDataAccessException(
                     String.format("Unexpected error while indexing document in index '%s'", indexName), e);
+        }
+    }
+
+    public <T> void bulkIndexDocuments(String indexName, List<T> documents) {
+        validateIndexName(indexName);
+        Objects.requireNonNull(documents, "documents list must not be null");
+
+        if (documents.isEmpty()) {
+            log.info("Empty documents list provided, skipping bulk indexing");
+            return;
+        }
+
+        try {
+            ArrayList<BulkOperation> ops = new ArrayList<>();
+
+            for (T document : documents) {
+                Objects.requireNonNull(document, "document must not be null");
+
+                ops.add(new BulkOperation.Builder()
+                        .index(new IndexOperation.Builder<T>()
+                                .index(indexName)
+                                .document(document)
+                                .build()
+                        )
+                        .build()
+                );
+            }
+
+            BulkRequest request = new BulkRequest.Builder()
+                    .operations(ops)
+                    .build();
+
+            BulkResponse response = openSearchClient.bulk(request);
+
+            if (response.errors()) {
+                String errorMessages = response.items().stream()
+                        .filter(item -> item.error() != null)
+                        .map(item -> String.format(
+                                "id: %s, status: %d, reason: %s",
+                                item.id(),
+                                item.status(),
+                                item.error().reason()
+                        ))
+                        .collect(Collectors.joining("; "));
+
+                log.error("Bulk indexing completed with errors for index '{}': {}", indexName, errorMessages);
+
+                throw new OpenSearchDataAccessException(
+                        String.format("Bulk indexing completed with errors for index '%s': %s", indexName, errorMessages)
+                );
+            }
+
+            log.info("Bulk indexed {} documents in index '{}'", response.items().size(), indexName);
+        } catch (Exception e) {
+            log.error("Unexpected error while bulk indexing documents in index '{}'", indexName, e);
+            throw new OpenSearchDataAccessException(
+                    String.format("Unexpected error while bulk indexing documents in index '%s'", indexName), e);
         }
     }
 
