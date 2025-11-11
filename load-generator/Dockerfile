@@ -21,6 +21,8 @@ RUN mkdir -p /app/data \
  && chown -R user:user /app/data
 USER user
 
+EXPOSE 8081
+
 # Copy the built JAR from build stage
 COPY --from=build /app/target/*.jar app.jar
 

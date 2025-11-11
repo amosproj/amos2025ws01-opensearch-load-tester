@@ -5,6 +5,7 @@ import com.opensearchloadtester.testdatagenerator.service.DataGenerator;
 import com.opensearchloadtester.testdatagenerator.service.DynamicDataGeneratorService;
 import com.opensearchloadtester.testdatagenerator.service.FileStorageService;
 import com.opensearchloadtester.testdatagenerator.service.PersistentDataGeneratorService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -12,6 +13,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.util.List;
 
+@Slf4j
 @SpringBootApplication
 public class TestdataGeneratorApplication implements CommandLineRunner {
 
@@ -25,11 +27,13 @@ public class TestdataGeneratorApplication implements CommandLineRunner {
     // Value taken from application.properties, default: data/testdata.json
     @Value("${data.output.path:data/testdata.json}")
     private String outputPath;
+    @Value("${data.generation.count}")
+    private int recordsCount;
     private DataGenerator dataGenerator;
 
     @Override
     public void run(String... args) {
-        System.out.println("Starting Test Data Generation (mode: " + mode + ")...");
+        log.info("Starting test-data generation (mode: {}) ...", mode);
 
         if ("dynamic".equalsIgnoreCase(mode)) {
             this.dataGenerator = new DynamicDataGeneratorService();
@@ -37,16 +41,15 @@ public class TestdataGeneratorApplication implements CommandLineRunner {
             this.dataGenerator = new PersistentDataGeneratorService(new FileStorageService(), outputPath);
         }
 
-        List<Recordable> data = dataGenerator.generateData(10); //example value 10
+        List<Recordable> data = dataGenerator.generateData(recordsCount);
+
+        log.info("Test-data generation completed.");
 
         // Debug Output:
-        /*
-        System.out.println("Listing data:");
-        for(Recordable item: data){
-            System.out.println("Data Class" + item.getClass());
+        log.debug("Listing data:");
+        for (Recordable item : data) {
+            log.debug("Data Class: {}", item.getClass());
         }
-        */
-
 
     }
 
