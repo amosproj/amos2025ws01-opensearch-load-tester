@@ -29,7 +29,7 @@ Install the Git hooks for automatic co-author management:
 
 ```bash
 cd scripts
-./setup-hooks.sh
+./setup-ooks.sh //little tipfeheler ./setup-hooks.sh
 ```
 
 See [scripts/README.md](scripts/README.md) for details on using `@mentions` in commits.

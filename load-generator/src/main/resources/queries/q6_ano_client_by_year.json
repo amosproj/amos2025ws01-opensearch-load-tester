@@ -1,0 +1,29 @@
+{
+  "size": 50,
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "term": {
+            "dss_creation_user_display_name.raw": "{{client_name}}"
+          }
+        }
+      ],
+      "filter": [
+        {
+          "term": {
+            "dss_custom_metadata.payrollinfo.accounting_year": {{year}}
+          }
+        }
+      ]
+    }
+  },
+  "_source": [
+    "dss_document_name",
+    "dss_custom_metadata.payrollinfo.accounting_year",
+    "dss_custom_metadata.payrollinfo.accounting_month",
+    "dss_creation_user_display_name",
+    "dss_dataspace_id"
+  ]
+}
+

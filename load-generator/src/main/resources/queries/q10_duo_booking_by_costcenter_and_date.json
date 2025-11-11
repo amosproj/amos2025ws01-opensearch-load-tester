@@ -1,0 +1,32 @@
+{
+  "size": 50,
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "term": {
+            "dss_custom_metadata.duo.positions.cost_center_1.raw": "{{cost_center_1}}"
+          }
+        },
+        {
+          "range": {
+            "dss_custom_metadata.duo.positions.service_date": {
+              "gte": "{{date_from}}",
+              "lte": "{{date_to}}"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "_source": [
+    "dss_document_name",
+    "dss_custom_metadata.duo.invoice_number",
+    "dss_custom_metadata.duo.invoice_date",
+    "dss_custom_metadata.duo.positions.cost_center_1",
+    "dss_custom_metadata.duo.positions.service_date",
+    "dss_custom_metadata.duo.total_gross_amount",
+    "dss_custom_metadata.duo.booking_state"
+  ]
+}
+

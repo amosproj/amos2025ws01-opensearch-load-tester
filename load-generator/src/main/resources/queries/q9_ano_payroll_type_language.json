@@ -1,0 +1,35 @@
+{
+  "size": 50,
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "term": {
+            "dss_custom_metadata.payrollinfo.payroll_type": "{{payroll_type}}"
+          }
+        },
+        {
+          "term": {
+            "dss_custom_metadata.payrollinfo.language": "{{language}}"
+          }
+        },
+        {
+          "range": {
+            "dss_custom_metadata.payrollinfo.accounting_year": {
+              "gte": {{year_from}},
+              "lte": {{year_to}}
+            }
+          }
+        }
+      ]
+    }
+  },
+  "_source": [
+    "dss_document_name",
+    "dss_custom_metadata.payrollinfo.payroll_type",
+    "dss_custom_metadata.payrollinfo.language",
+    "dss_custom_metadata.payrollinfo.accounting_year",
+    "dss_custom_metadata.payrollinfo.accounting_month"
+  ]
+}
+
