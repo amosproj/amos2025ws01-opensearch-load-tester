@@ -7,7 +7,7 @@ services:
     container_name: testdata-generator
     environment:
       - SPRING_APPLICATION_NAME=testdata-generator
-      - OPENSEARCHCLIENT_TESTTARGET_API=${OPENSEARCH_URL:-http://test-target-opensearch:9200}
+      - OPENSEARCH_URL=${OPENSEARCH_URL:-http://test-target-opensearch:9200}
       - DATA_GENERATION_MODE=${TEST_DATA_GENERATION_MODE:-dynamic}
       - DATA_GENERATION_COUNT=${TEST_DATA_GENERATION_COUNT:-1000}
     networks:
@@ -29,7 +29,7 @@ services:
       replicas: ${REPLICAS:-1}
     environment:
       - SPRING_APPLICATION_NAME=load-generator
-      - LOAD_GENERATOR_TARGET_URL=${OPENSEARCH_URL:-http://test-target-opensearch:9200}
+      - OPENSEARCH_URL=${OPENSEARCH_URL:-http://test-target-opensearch:9200}
     networks:
       - opensearch-loadtester-network
     healthcheck:
