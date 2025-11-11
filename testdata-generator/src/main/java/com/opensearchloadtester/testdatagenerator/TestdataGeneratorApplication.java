@@ -44,13 +44,10 @@ public class TestdataGeneratorApplication implements CommandLineRunner {
         log.info("Test-data generation completed.");
 
         // Debug Output:
-        /*
-        System.out.println("Listing data:");
-        for(Recordable item: data){
-            System.out.println("Data Class" + item.getClass());
+        log.debug("Listing data:");
+        for (Recordable item : data) {
+            log.debug("Data Class: {}", item.getClass());
         }
-        */
-
 
     }
 
