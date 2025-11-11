@@ -16,8 +16,8 @@
         {
           "range": {
             "dss_custom_metadata.payrollinfo.accounting_year": {
-              "gte": {{year_from}},
-              "lte": {{year_to}}
+              "gte": "{{year_from}}",
+              "lte": "{{year_to}}"
             }
           }
         }

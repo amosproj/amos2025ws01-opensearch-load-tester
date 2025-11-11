@@ -6,8 +6,8 @@
         {
           "range": {
             "dss_custom_metadata.duo.total_gross_amount": {
-              "gte": {{amount_min}},
-              "lte": {{amount_max}}
+              "gte": "{{amount_min}}",
+              "lte": "{{amount_max}}"
             }
           }
         }

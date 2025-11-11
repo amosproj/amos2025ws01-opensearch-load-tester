@@ -3,6 +3,7 @@ package com.opensearchloadtester.loadgenerator.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
@@ -27,6 +28,8 @@ public class OpenSearchQueryExecution implements QueryExecution {
     private final String queryFile;
     private final Map<String, String> params;
     ObjectMapper mapper = new ObjectMapper();
+    @Value("${opensearchserver.url}")
+    String openSearchBaseUrl;
 
     public OpenSearchQueryExecution(String id,
                                     String indexName,
@@ -55,8 +58,10 @@ public class OpenSearchQueryExecution implements QueryExecution {
                 body = body.replace(placeholder, e.getValue());
             }
 
-            // 3) Prepare HTTP call to OpenSearch
-            String openSearchBaseUrl = "http://localhost:9200";
+            // 3) Prepare HTTP call to OpenSearchç
+
+
+
             String url = openSearchBaseUrl + "/" + indexName + "/_search";
             RestTemplate restTemplate = new RestTemplate();
 
@@ -78,7 +83,7 @@ public class OpenSearchQueryExecution implements QueryExecution {
 
             // Extract basic metrics from the OpenSearch response
             int totalHits = json.path("hits").path("total").path("value").asInt();
-            long osTook = json.path("took").asLong(-1); // tiempo que dice OpenSearch
+            long osTook = json.path("took").asLong(-1);
 
             log.debug("[{}] Status {}, clientTimeMs={}, osTookMs={}, totalHits={}",
                     id, status, tookMs, osTook, totalHits);

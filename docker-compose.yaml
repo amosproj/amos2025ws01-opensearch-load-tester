@@ -42,8 +42,6 @@ services:
     #    condition: service_completed_successfully
 
   metrics-reporter:
-    ports:
-      - "8082:8080"
     build:
       context: ./metrics-reporter
       dockerfile: Dockerfile

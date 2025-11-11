@@ -111,7 +111,7 @@ public class LoadTestController {
         try {
             templateFile = queryRegistry.getTemplateFile(queryId);
         } catch (IllegalArgumentException ex) {
-            log.warn("Unknown queryId requested: {}", queryId);
+            log.error("Unknown queryId requested: {}", queryId);
             return ResponseEntity.badRequest()
                     .body("Unknown queryId: " + queryId + "\n");
         }

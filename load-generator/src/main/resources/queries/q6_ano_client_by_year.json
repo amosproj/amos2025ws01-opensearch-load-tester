@@ -12,7 +12,7 @@
       "filter": [
         {
           "term": {
-            "dss_custom_metadata.payrollinfo.accounting_year": {{year}}
+            "dss_custom_metadata.payrollinfo.accounting_year": "{{year}}"
           }
         }
       ]
