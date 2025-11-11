@@ -47,7 +47,7 @@ public class TestdataGeneratorApplication implements CommandLineRunner {
         for(Recordable item: data){
             System.out.println("Data Class" + item.getClass());
         }
-        +/
+        */
 
 
     }
