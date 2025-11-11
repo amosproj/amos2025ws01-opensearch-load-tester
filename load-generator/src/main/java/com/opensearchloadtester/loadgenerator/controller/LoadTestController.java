@@ -125,10 +125,8 @@ public class LoadTestController {
         // Ensure params is never null
         Map<String, String> params = request.getParams();
         if (params == null) {
-            params = Map.of(); // empty map if nothing is sent
+            params = Map.of();
         }
-        log.info("Starting query run: queryId={}, templateFile={}, indexName={}, params={}, threads={}, iterations={}",
-                queryId, templateFile, indexName, params, threads, iterations);
 
         // 2) Build list of QueryExecution instances
         List<QueryExecution> executions = new ArrayList<>();
@@ -165,7 +163,7 @@ public class LoadTestController {
                     .body("Unexpected error while executing query run\n");
         }
 
-        log.info("Query run {} finished successfully", queryId);
+        log.debug("Query run {} finished successfully", queryId);
         return ResponseEntity.ok("Query run finished successfully\n");
     }
 

@@ -42,7 +42,7 @@ public class OpenSearchQueryExecution implements QueryExecution {
     public void run() {
 
         // High-level marker that this run started
-        log.info("[{}] Starting OpenSearch query {}", id, queryFile);
+        log.debug("[{}] Starting OpenSearch query {}", id, queryFile);
         try {
             // 1) JSON template from resources/queries/<file>
             ClassPathResource resource = new ClassPathResource("queries/" + queryFile);
@@ -80,53 +80,8 @@ public class OpenSearchQueryExecution implements QueryExecution {
             int totalHits = json.path("hits").path("total").path("value").asInt();
             long osTook = json.path("took").asLong(-1); // tiempo que dice OpenSearch
 
-            log.info("[{}] Status {}, clientTimeMs={}, osTookMs={}, totalHits={}",
+            log.debug("[{}] Status {}, clientTimeMs={}, osTookMs={}, totalHits={}",
                     id, status, tookMs, osTook, totalHits);
-
-            // Create a per-query-run CSV file: one file per id + timestamp
-            String timestamp = java.time.format.DateTimeFormatter
-                    .ofPattern("yyyyMMdd_HHmmss")
-                    .format(java.time.Instant.now().atZone(java.time.ZoneId.systemDefault()));
-
-            String csvFileName = String.format("query-results/query_results_%s_%s.csv", id, timestamp);
-            CsvLogger csvLogger = new CsvLogger(csvFileName, false);
-
-
-            // Iterate over each hit and log/CSV-export selected fields
-            for (JsonNode hit : json.path("hits").path("hits")) {
-                JsonNode sourceNode = hit.path("_source");
-                String sourceStr = sourceNode.toString();
-                log.info("[{}] Hit source: {}", id, sourceStr);
-
-                JsonNode customMeta = sourceNode.path("dss_custom_metadata");
-                JsonNode payroll = customMeta.path("payrollinfo");
-
-                String docName = sourceNode.path("dss_document_name").asText(null);
-                String payrollType = payroll.path("payroll_type").asText(null);
-                String language = payroll.path("language").asText(null);
-                String year = payroll.path("accounting_year").asText(null);
-                String month = payroll.path("accounting_month").asText(null);
-
-
-                //  CSV: id query + data
-                csvLogger.writeRow(
-                        id,
-                        indexName,
-                        queryFile,
-                        docName,
-                        payrollType,
-                        language,
-                        year,
-                        month,
-                        status,
-                        tookMs,
-                        osTook,
-                        totalHits
-                );
-
-            }
-
-
 
         } catch (Exception e) {
             log.error("[{}] Error executing query {}: {}", id, queryFile, e.getMessage(), e);
