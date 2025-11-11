@@ -38,16 +38,16 @@ public class MetricsCollectorService {
             }
 
             writer = new BufferedWriter(new FileWriter(csvFile, false));
-            writer.write("loadRunnerInstance," +
-                    "timestamp," +
-                    "query,index," +
-                    "document_id," +
-                    "result_count," +
-                    "max_score," +
-                    "took_ms," +
-                    "timed_out," +
-                    "shards_total," +
-                    "shards_successful," +
+            writer.write("loadRunnerInstance;" +
+                    "query;" +
+                    "index;" +
+                    "document_id;" +
+                    "result_count;" +
+                    "max_score;" +
+                    "took_ms;" +
+                    "timed_out;" +
+                    "shards_total;" +
+                    "shards_successful;" +
                     "shards_failed\n");
             writer.flush();
             log.info("Metrics CSV initialized at {}", csvFile.getAbsolutePath());

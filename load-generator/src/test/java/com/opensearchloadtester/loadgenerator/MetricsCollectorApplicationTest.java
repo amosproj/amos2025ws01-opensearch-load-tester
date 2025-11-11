@@ -16,7 +16,7 @@ import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
-class MetricsCollectorServiceTest {
+class MetricsCollectorApplicationTest {
 
     @Autowired
     private MetricsCollectorService service;
