@@ -1,11 +1,15 @@
 package com.opensearchloadtester.testdatagenerator.service;
 
-import com.opensearchloadtester.testdatagenerator.model.*;
+import com.opensearchloadtester.testdatagenerator.model.AnoRecord;
+import com.opensearchloadtester.testdatagenerator.model.DuoRecord;
+import com.opensearchloadtester.testdatagenerator.model.Recordable;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
+@Slf4j
 @Service
 public class DynamicDataGeneratorService implements DataGenerator {
 
@@ -25,6 +29,7 @@ public class DynamicDataGeneratorService implements DataGenerator {
         for(int i = mid; i < count; i++) {
             res.add(DuoRecord.random());
         }
+        log.info("Generated {} random records", count);
         return res;
     }
 }

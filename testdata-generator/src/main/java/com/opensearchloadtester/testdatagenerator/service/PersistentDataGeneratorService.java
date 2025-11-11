@@ -1,6 +1,7 @@
 package com.opensearchloadtester.testdatagenerator.service;
 
 import com.opensearchloadtester.testdatagenerator.model.Recordable;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -11,6 +12,7 @@ import java.util.List;
  * Generates and stores data persistently (e.g., in /data/testdata.json).
  * On subsequent runs, existing data is reused unless deleted manually.
  */
+@Slf4j
 @Service
 public class PersistentDataGeneratorService implements DataGenerator {
 
@@ -32,23 +34,23 @@ public class PersistentDataGeneratorService implements DataGenerator {
             List<Recordable> existingData = storageService.load(outputPath);
             if (!existingData.isEmpty()) {
                 if(existingData.size() != count) {
-                    System.out.println("Loaded existing test data (" + existingData.size() + " records) - not desired data amount");
+                    log.warn("Existing test-data ({} records) is not desired data amount. Generating new ramdom test-data.", existingData.size());
                     List<Recordable> list = new DynamicDataGeneratorService().generateData(count);
                     storageService.save(list, outputPath);
-                    System.out.println("Generated new test data (" + list.size() + " records)");
+                    log.info("Generated and saved new random test-data ({} records)", list.size());
                     return list;
                 }
-                System.out.println(existingData.size() + " test data loaded");
+                log.info("{} test-data loaded", existingData.size());
                 return existingData;
             }else{
                 List<Recordable> list = new DynamicDataGeneratorService().generateData(count);
                 storageService.save(list, outputPath);
-                System.out.println("Generated new test data (" + list.size() + " records)");
+                log.info("Generated and saved new random test-data ({} records)", list.size());
                 return list;
             }
         } catch (IOException e) {
-            throw new RuntimeException("Error when generating data", e);
+            log.error("Error while generating test-data", e);
+            throw new RuntimeException("Error while generating test-data", e);
         }
-
     }
 }

@@ -8,6 +8,11 @@ services:
     environment:
       - SPRING_APPLICATION_NAME=testdata-generator
       - OPENSEARCH_URL=${OPENSEARCH_URL:-http://test-target-opensearch:9200}
+      - DATA_GENERATION_MODE=${TEST_DATA_GENERATION_MODE:-dynamic}
+      - DATA_GENERATION_COUNT=${TEST_DATA_GENERATION_COUNT:-1000}
+      - LOGGING_LEVEL_ROOT=${LOGGING_LVL_ROOT:-ERROR}
+      - LOGGING_LEVEL_ORG_ELASTICSEARCH=${LOGGING_LVL_ELASTIC:-ERROR}
+      - LOGGING_LEVEL_COM_OPENSEARCHLOADTESTER_TESTDATAGENERATOR=${LOGGING_LVL_TESTDATA_GEN:-INFO}
     networks:
       - opensearch-loadtester-network
     healthcheck:
@@ -16,30 +21,36 @@ services:
       timeout: 10s
       retries: 3
       start_period: 5s
+    volumes:
+      - testdata:/app/data
 
   load-generator:
     build:
       context: ./load-generator
       dockerfile: Dockerfile
     deploy:
-      replicas: ${REPLICAS:-1}
+      replicas: ${LOAD_GENERATOR_REPLICAS:-1}
     environment:
       - SPRING_APPLICATION_NAME=load-generator
+      - OPENSEARCH_URL=${OPENSEARCH_URL:-http://test-target-opensearch:9200}
+      - LOGGING_LEVEL_ROOT=${LOGGING_LVL_ROOT:-ERROR}
+      - LOGGING_LEVEL_ORG_ELASTICSEARCH=${LOGGING_LVL_ELASTIC:-ERROR}
+      - LOGGING_LEVEL_COM_OPENSEARCHLOADTESTER_LOADGENERATOR=${LOGGING_LVL_LOAD_GEN:-INFO}
     networks:
       - opensearch-loadtester-network
+    ports:
+      - "8081:8081"
     healthcheck:
-      test: ["CMD", "pgrep", "-f", "app.jar"]
+      test: ["CMD-SHELL", "wget -q -O
+       - http://localhost:8081/api/load-test/health 
+       || exit 1"]
       interval: 10s
       timeout: 10s
       retries: 3
       start_period: 5s
-    ############
-    # Makes load-generator wait for testdata-generator to complete
-    # cant be used now bc testdata-generator is designed to run continuously
-    ############
-    #depends_on:
-    #  testdata-generator:
-    #    condition: service_completed_successfully
+    depends_on:
+      testdata-generator:
+        condition: service_completed_successfully
 
   metrics-reporter:
     build:
@@ -48,30 +59,26 @@ services:
     container_name: metrics-reporter
     environment:
       - SPRING_APPLICATION_NAME=metrics-reporter
-      - LOAD_GENERATOR_REPLICAS=${REPLICAS:-1}
+      - LOAD_GENERATOR_REPLICAS=${LOAD_GENERATOR_REPLICAS:-1}
+      - LOGGING_LEVEL_ROOT=${LOGGING_LVL_ROOT:-ERROR}
+      - LOGGING_LEVEL_ORG_ELASTICSEARCH=${LOGGING_LVL_ELASTIC:-ERROR}
+      - LOGGING_LEVEL_COM_OPENSEARCHLOADTESTER_METRICSREPORTER=${LOGGING_LVL_METRICS_REPORTER:-INFO}
     networks:
       - opensearch-loadtester-network
+    ports:
+      - "8080:8080"
     healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--quiet",
-          "--tries=1",
-          "--spider",
-          "http://localhost:8081/actuator/health || exit 1",
-        ]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
     ############
     # Makes load-generator wait for testdata-generator to complete
-    # cant be used now bc testdata-generator is designed to run continuously
     ############
     depends_on:
-      #testdata-generator:
-      #  condition: service_completed_successfully
+      testdata-generator:
+        condition: service_completed_successfully
       load-generator:
         condition: service_healthy
 
@@ -112,6 +119,9 @@ networks:
   opensearch-loadtester-network:
     driver: bridge
 
-#volumes:
+volumes:
+    testdata:
+        driver: local
 #  opensearch-data:
 #    driver: local
+

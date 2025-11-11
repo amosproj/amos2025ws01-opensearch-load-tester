@@ -26,6 +26,9 @@ dist/
 
 # IDEA / IntelliJ
 .idea/
+# But keep code style settings for team consistency
+!.idea/codeStyles/
+!.idea/codeStyles/**
 out/
 
 # Eclipse IDE
@@ -34,3 +37,6 @@ bin/
 
 # MacOS
 .DS_Store
+
+# All CSV-Files 
+*.csv 
