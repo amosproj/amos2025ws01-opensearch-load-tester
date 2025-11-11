@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.opensearchloadtester.testdatagenerator.model.Recordable;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -12,6 +13,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 public class FileStorageService {
 
@@ -26,7 +28,7 @@ public class FileStorageService {
      * @param path Destination File path where data should be written
      */
     public void save(List<Recordable> data, String path) throws IOException {
-        System.out.println("Saving data to: " + path);
+        log.info("Saving data to {}", path);
         File f = new File(path);
         if (!f.exists()) {              // creating new file if it doesn't exist
             File parentDir = f.getParentFile();
