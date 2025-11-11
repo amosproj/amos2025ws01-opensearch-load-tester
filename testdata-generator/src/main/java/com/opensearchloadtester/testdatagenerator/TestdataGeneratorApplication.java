@@ -42,12 +42,12 @@ public class TestdataGeneratorApplication implements CommandLineRunner {
         List<Recordable> data = dataGenerator.generateData(recordsCount);
 
         // Debug Output:
-
+        /*
         System.out.println("Listing data:");
         for(Recordable item: data){
             System.out.println("Data Class" + item.getClass());
         }
-
+        +/
 
 
     }
