@@ -19,6 +19,8 @@ RUN addgroup -S user \
  && adduser -S user -G  user
 USER user
 
+EXPOSE 8081
+
 # Copy the built JAR from build stage
 COPY --from=build /app/target/*.jar app.jar
 
