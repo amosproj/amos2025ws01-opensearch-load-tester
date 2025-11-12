@@ -13,6 +13,7 @@ import org.opensearch.client.opensearch.core.search.Hit;
 import org.opensearch.client.opensearch.indices.CreateIndexRequest;
 import org.opensearch.client.opensearch.indices.ExistsRequest;
 import org.opensearch.client.opensearch.indices.IndexSettings;
+import org.opensearch.client.opensearch.indices.RefreshRequest;
 import org.opensearch.client.transport.endpoints.BooleanResponse;
 import org.springframework.stereotype.Service;
 
@@ -211,6 +212,24 @@ public class OpenSearchDataService {
             log.error("Unexpected error while deleting document with id '{}' from index '{}'", id, indexName, e);
             throw new OpenSearchDataAccessException(
                     String.format("Unexpected error while deleting document with id '%s' from index '%s'", id, indexName), e);
+        }
+    }
+
+    public void refreshIndex(String indexName) {
+        validateIndexName(indexName);
+
+        try {
+            RefreshRequest request = new RefreshRequest.Builder()
+                    .index(indexName)
+                    .build();
+
+            openSearchClient.indices().refresh(request);
+
+            log.info("Refreshed index '{}'", indexName);
+        } catch (Exception e) {
+            log.error("Unexpected error while refreshing index '{}'", indexName, e);
+            throw new OpenSearchDataAccessException(
+                    String.format("Unexpected error while refreshing index '%s'", indexName), e);
         }
     }
 
