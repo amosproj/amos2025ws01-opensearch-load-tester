@@ -1,6 +1,6 @@
 package com.opensearchloadtester.testdatagenerator;
 
-import com.opensearchloadtester.testdatagenerator.model.Recordable;
+import com.opensearchloadtester.testdatagenerator.model.Document;
 import com.opensearchloadtester.testdatagenerator.service.DataGenerator;
 import com.opensearchloadtester.testdatagenerator.service.DynamicDataGeneratorService;
 import com.opensearchloadtester.testdatagenerator.service.FileStorageService;
@@ -41,13 +41,13 @@ public class TestdataGeneratorApplication implements CommandLineRunner {
             this.dataGenerator = new PersistentDataGeneratorService(new FileStorageService(), outputPath);
         }
 
-        List<Recordable> data = dataGenerator.generateData(recordsCount);
+        List<Document> data = dataGenerator.generateData(recordsCount);
 
         log.info("Test-data generation completed.");
 
         // Debug Output:
         log.debug("Listing data:");
-        for (Recordable item : data) {
+        for (Document item : data) {
             log.debug("Data Class: {}", item.getClass());
         }
 

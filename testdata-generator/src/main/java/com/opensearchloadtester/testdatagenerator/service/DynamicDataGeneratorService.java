@@ -1,8 +1,8 @@
 package com.opensearchloadtester.testdatagenerator.service;
 
-import com.opensearchloadtester.testdatagenerator.model.AnoRecord;
-import com.opensearchloadtester.testdatagenerator.model.DuoRecord;
-import com.opensearchloadtester.testdatagenerator.model.Recordable;
+import com.opensearchloadtester.testdatagenerator.model.ano.AnoDocument;
+import com.opensearchloadtester.testdatagenerator.model.duo.DuoDocument;
+import com.opensearchloadtester.testdatagenerator.model.Document;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -15,21 +15,21 @@ public class DynamicDataGeneratorService implements DataGenerator {
 
     /**
      * Generates random data dynamically at start of application (not persisted).
-     * There will be a mix of Ano and Duo Records generated.
+     * There will be a mix of Ano and Duo Documents generated.
      */
     @Override
-    public List<Recordable> generateData(int count) {
-        List<Recordable> res = new ArrayList<>();
+    public List<Document> generateData(int count) {
+        List<Document> res = new ArrayList<>();
         int mid = count/2;
         // Generate Ano Data
         for(int i = 0; i < mid; i++) {
-            res.add(AnoRecord.random());
+            res.add(AnoDocument.random());
         }
         // Generate Duo Data
         for(int i = mid; i < count; i++) {
-            res.add(DuoRecord.random());
+            res.add(DuoDocument.random());
         }
-        log.info("Generated {} random records", count);
+        log.info("Generated {} random documents", count);
         return res;
     }
 }

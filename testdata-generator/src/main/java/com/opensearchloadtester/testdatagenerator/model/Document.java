@@ -2,6 +2,8 @@ package com.opensearchloadtester.testdatagenerator.model;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.opensearchloadtester.testdatagenerator.model.ano.AnoDocument;
+import com.opensearchloadtester.testdatagenerator.model.duo.DuoDocument;
 
 /**
  * Interface for OpenSearch Record Data.
@@ -13,10 +15,10 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
         property = "type"
 )
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = AnoRecord.class, name = "ano"),
-        @JsonSubTypes.Type(value = DuoRecord.class, name = "duo")
+        @JsonSubTypes.Type(value = AnoDocument.class, name = "ano"),
+        @JsonSubTypes.Type(value = DuoDocument.class, name = "duo")
 })
-public interface Recordable {
+public interface Document {
 
     /**
      * Returns the Id of the record.
@@ -32,8 +34,8 @@ public interface Recordable {
      *
      * @return Record with random values
      */
-    public static Recordable random(){
-        return AnoRecord.random();
+    public static Document random(){
+        return AnoDocument.random();
     }
 
 }
