@@ -7,6 +7,7 @@ import com.opensearchloadtester.loadgenerator.service.LoadRunnerService;
 import com.opensearchloadtester.loadgenerator.service.OpenSearchQueryExecution;
 import com.opensearchloadtester.loadgenerator.service.QueryRegistry;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,6 +34,8 @@ public class LoadTestController {
 
     private final LoadRunnerService loadRunnerService;
     private final QueryRegistry queryRegistry;
+    @Value("${opensearchserver.url}")
+    private String openSearchBaseUrl;
 
     public LoadTestController(LoadRunnerService loadRunnerService,
                               QueryRegistry queryRegistry) {
@@ -140,7 +143,8 @@ public class LoadTestController {
                                 id,
                                 indexName,
                                 templateFile,
-                                params
+                                params,
+                                openSearchBaseUrl
                         )
                 );
             }

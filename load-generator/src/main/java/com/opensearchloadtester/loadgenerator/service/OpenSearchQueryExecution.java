@@ -28,17 +28,19 @@ public class OpenSearchQueryExecution implements QueryExecution {
     private final String queryFile;
     private final Map<String, String> params;
     ObjectMapper mapper = new ObjectMapper();
+
     @Value("${opensearchserver.url}")
     String openSearchBaseUrl;
 
     public OpenSearchQueryExecution(String id,
                                     String indexName,
                                     String queryFile,
-                                    Map<String, String> params) {
+                                    Map<String, String> params, String openSearchBaseUrl) {
         this.id = id;
         this.indexName = indexName;
         this.queryFile = queryFile;
         this.params = params;
+        this.openSearchBaseUrl = openSearchBaseUrl;
     }
 
     @Override
@@ -62,7 +64,7 @@ public class OpenSearchQueryExecution implements QueryExecution {
 
 
 
-            String url = openSearchBaseUrl + "/" + indexName + "/_search";
+            String url = openSearchBaseUrl + indexName + "/_search";
             RestTemplate restTemplate = new RestTemplate();
 
             // Configure headers and basic auth for OpenSearch
