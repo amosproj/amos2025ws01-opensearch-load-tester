@@ -5,14 +5,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+
 /**
  * Executes a single OpenSearch search request based on a JSON template.
- *
+ * <p>
  * Responsibilities:
  * - Load the query template JSON from classpath (resources/queries).
  * - Replace {{placeholders}} with runtime parameters.
@@ -29,7 +33,7 @@ public class OpenSearchQueryExecution implements QueryExecution {
     private final Map<String, String> params;
     ObjectMapper mapper = new ObjectMapper();
 
-    @Value("${opensearchserver.url}")
+    @Value("${opensearch.url}")
     String openSearchBaseUrl;
 
     public OpenSearchQueryExecution(String id,
@@ -61,7 +65,6 @@ public class OpenSearchQueryExecution implements QueryExecution {
             }
 
             // 3) Prepare HTTP call to OpenSearchç
-
 
 
             String url = openSearchBaseUrl + indexName + "/_search";

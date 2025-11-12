@@ -1,11 +1,6 @@
 package com.opensearchloadtester.loadgenerator.controller;
 
-import com.opensearchloadtester.loadgenerator.service.NoOpQueryExecution;
-import com.opensearchloadtester.loadgenerator.service.QueryExecution;
-import com.opensearchloadtester.loadgenerator.service.QueryExecutionFactory;
-import com.opensearchloadtester.loadgenerator.service.LoadRunnerService;
-import com.opensearchloadtester.loadgenerator.service.OpenSearchQueryExecution;
-import com.opensearchloadtester.loadgenerator.service.QueryRegistry;
+import com.opensearchloadtester.loadgenerator.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -18,13 +13,13 @@ import java.util.Map;
 /**
  * REST controller for triggering load tests and ad-hoc query runs
  * against OpenSearch.
- *
+ * <p>
  * Endpoints:
  * - POST /api/load-test/start : demo endpoint using NoOpQueryExecution
  * - POST /api/load-test/run   : real endpoint executing JSON template-based queries
  * - GET  /api/load-test/queries : list available queryIds from QueryRegistry
  * - GET  /api/load-test/health  : basic health check
- *
+ * <p>
  * It delegates the actual parallel execution to LoadRunnerService.
  */
 @Slf4j
@@ -34,7 +29,7 @@ public class LoadTestController {
 
     private final LoadRunnerService loadRunnerService;
     private final QueryRegistry queryRegistry;
-    @Value("${opensearchserver.url}")
+    @Value("${opensearch.url}")
     private String openSearchBaseUrl;
 
     public LoadTestController(LoadRunnerService loadRunnerService,
@@ -80,7 +75,7 @@ public class LoadTestController {
      *
      */
     @PostMapping("/run")
-    public ResponseEntity<String> runQuery(@RequestBody(required = false) QueryRunRequest request){
+    public ResponseEntity<String> runQuery(@RequestBody(required = false) QueryRunRequest request) {
         // Basic null check on request body
         if (request == null) {
             return ResponseEntity.badRequest().body("Request body must not be null\n");
@@ -170,7 +165,6 @@ public class LoadTestController {
         log.debug("Query run {} finished successfully", queryId);
         return ResponseEntity.ok("Query run finished successfully\n");
     }
-
 
 
     /**
