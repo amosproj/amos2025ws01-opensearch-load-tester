@@ -31,7 +31,6 @@ public class LoadRunnerService {
         }
 
         int threadCount = queryExecutions.size();
-        log.info("Starting load test with {} parallel query execution threads", threadCount);
 
         // TODO: resources can be a problem here, use a thread pool with a max size
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
