@@ -3,9 +3,9 @@ package com.opensearchloadtester.testdatagenerator;
 import com.opensearchloadtester.testdatagenerator.model.ano.AnoDocument;
 import com.opensearchloadtester.testdatagenerator.model.duo.DuoDocument;
 import com.opensearchloadtester.testdatagenerator.model.Document;
-import com.opensearchloadtester.testdatagenerator.service.DynamicDataGeneratorService;
+import com.opensearchloadtester.testdatagenerator.service.DynamicDataGenerator;
 import com.opensearchloadtester.testdatagenerator.service.FileStorageService;
-import com.opensearchloadtester.testdatagenerator.service.PersistentDataGeneratorService;
+import com.opensearchloadtester.testdatagenerator.service.PersistentDataGenerator;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -21,7 +21,7 @@ class TestdataGeneratorApplicationTests {
          * Checks if dynamic data generator generates correct amount
          * of data and if each Document object has an ID
          */
-        DynamicDataGeneratorService dynamicGen = new DynamicDataGeneratorService();
+        DynamicDataGenerator dynamicGen = new DynamicDataGenerator();
         Random rand = new Random();
         int numData = rand.nextInt(40)+10;      // generate min 10 objects
         List<Document> list = dynamicGen.generateData(numData);
@@ -43,7 +43,7 @@ class TestdataGeneratorApplicationTests {
          * of data and if each Document object has an ID.
          * Here there is no distinction, whether there already exists data or not.
          */
-        PersistentDataGeneratorService persistentGen = new PersistentDataGeneratorService(new FileStorageService(),"data/testdata.json");
+        PersistentDataGenerator persistentGen = new PersistentDataGenerator(new FileStorageService(),"data/testdata.json");
         Random rand = new Random();
         int numData = rand.nextInt(40)+10;      // generate min 10 objects
         List<Document> list = persistentGen.generateData(numData);

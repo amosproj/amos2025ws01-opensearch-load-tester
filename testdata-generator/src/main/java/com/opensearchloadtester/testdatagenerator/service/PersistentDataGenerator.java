@@ -14,12 +14,12 @@ import java.util.List;
  */
 @Slf4j
 @Service
-public class PersistentDataGeneratorService implements DataGenerator {
+public class PersistentDataGenerator implements DataGenerator {
 
     private final FileStorageService storageService;
     private final String outputPath;
 
-    public PersistentDataGeneratorService(FileStorageService storageService, @Value("${data.output.path:data/testdata.json}") String outputPath) {
+    public PersistentDataGenerator(FileStorageService storageService, @Value("${data.output.path:data/testdata.json}") String outputPath) {
         this.storageService = storageService;
         this.outputPath = outputPath;
     }
@@ -35,7 +35,7 @@ public class PersistentDataGeneratorService implements DataGenerator {
             if (!existingData.isEmpty()) {
                 if(existingData.size() != count) {
                     log.warn("Existing test-data ({} documents) is not desired data amount. Generating new ramdom test-data.", existingData.size());
-                    List<Document> list = new DynamicDataGeneratorService().generateData(count);
+                    List<Document> list = new DynamicDataGenerator().generateData(count);
                     storageService.save(list, outputPath);
                     log.info("Generated and saved new random test-data ({} documents)", list.size());
                     return list;
@@ -43,7 +43,7 @@ public class PersistentDataGeneratorService implements DataGenerator {
                 log.info("{} test-data loaded", existingData.size());
                 return existingData;
             }else{
-                List<Document> list = new DynamicDataGeneratorService().generateData(count);
+                List<Document> list = new DynamicDataGenerator().generateData(count);
                 storageService.save(list, outputPath);
                 log.info("Generated and saved new random test-data ({} documents)", list.size());
                 return list;

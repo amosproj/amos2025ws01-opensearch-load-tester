@@ -11,7 +11,7 @@ import java.util.List;
 
 @Slf4j
 @Service
-public class DynamicDataGeneratorService implements DataGenerator {
+public class DynamicDataGenerator implements DataGenerator {
 
     /**
      * Generates random data dynamically at start of application (not persisted).
