@@ -1,38 +1,92 @@
-# Load Generator 
-------------------
-# Query Execution Component
+# 🚀 How to start and test the load-generator
 
-## Overview
-This component adds functionality to execute parameterized OpenSearch queries via REST endpoints.
+## Integration Tests (REST API)
 
-## New Features
-- **Endpoint** `/api/load-test/run`: executes queries with multiple threads and iterations.
-- **QueryRegistry**: maps query IDs (q1–q11) to JSON templates in `resources/queries/`.
-- **OpenSearchQueryExecution**: handles parameter substitution, HTTP requests, timing.
-- **Parallel execution** using `LoadRunnerService`.
-
-## Usage Example
- *To start the Load Generator*
+### 1. Start Application
 
 ```bash
-mvn spring-boot:run
+cd load-generator
+./mvnw spring-boot:run
 ```
-This starts the Load Generator service on port 8081.
 
-*Example for Query 1*
+Expected Result:
+
+    Application starts without errors
+    Port 8081 is reachable
+    Logs show: "Started LoadGeneratorApplication"
+
+### 2. Test Health Check Endpoint
 
 ```bash
- curl -X POST "http://localhost:8081/api/load-test/run"   -H "Content-Type: application/json"   -d '{
-    "queryId": "q1",
-    "threads": 2,
-    "iterations": 1,
-    "indexName": "ano_test",
-    "params": {
-      "from": "2024",
-      "to": "2025"
-    }
-  }'
+curl http://localhost:8081/api/load-test/health
 ```
-Each query template supports its own set of parameters,
-which can be customized in the "params" section of the request body.
-For example, some queries use category, approval_state, or location instead of from/to.
+
+Expected Result:
+
+    HTTP Status: 200 OK
+    Response Body: Load Generator is running!\n
+
+### 3. Load Test with Default Parameters
+
+```bash
+curl -X POST "http://localhost:8081/api/load-test/start"
+```
+
+Expected Result:
+
+    HTTP Status: 200 OK
+    Response Body: Load test completed successfully with 5 threads\n
+    In logs: "Starting load test with 5 parallel query execution threads"
+    In logs: "All 5 query execution threads completed successfully"
+
+### 4. Load Test with Custom Thread Count
+
+```bash
+curl -X POST "http://localhost:8081/api/load-test/start?threadCount=3"
+```
+
+Expected Result:
+
+    HTTP Status: 200 OK
+    Response Body: Load test completed successfully with 3 threads\n
+    In logs: "Starting load test with 3 parallel query execution threads"
+    In logs: "All 3 query execution threads completed successfully"
+
+### 5. Load Test with Many Threads
+
+```bash
+curl -X POST "http://localhost:8081/api/load-test/start?threadCount=10"
+```
+
+Expected Result:
+
+    HTTP Status: 200 OK
+    Response Body: Load test completed successfully with 10 threads\n
+    All 10 threads are executed in parallel
+
+# Functionality Tests
+### 1. Test Parallelism
+   Start multiple load tests simultaneously
+
+```bash
+curl -X POST "http://localhost:8081/api/load-test/start?threadCount=5" &
+curl -X POST "http://localhost:8081/api/load-test/start?threadCount=3" &
+wait
+```
+Expected Result:
+
+    Both requests are processed
+    No race conditions
+    Logs show correct thread management
+
+### 2. Thread Pool Behavior
+   Test with many threads
+
+```bash
+curl -X POST "http://localhost:8081/api/load-test/start?threadCount=20"
+```
+Expected Result:
+
+    All threads are managed correctly
+    Executor service is properly shut down
+    No hanging threads
