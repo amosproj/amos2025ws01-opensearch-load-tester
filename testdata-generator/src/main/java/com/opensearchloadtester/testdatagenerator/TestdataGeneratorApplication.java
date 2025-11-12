@@ -1,5 +1,6 @@
 package com.opensearchloadtester.testdatagenerator;
 
+import com.opensearchloadtester.testdatagenerator.config.DataGenerationProperties;
 import com.opensearchloadtester.testdatagenerator.model.Document;
 import com.opensearchloadtester.testdatagenerator.service.DataGenerator;
 import com.opensearchloadtester.testdatagenerator.service.DynamicDataGeneratorService;
@@ -10,10 +11,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 import java.util.List;
 
 @Slf4j
+@EnableConfigurationProperties(DataGenerationProperties.class)
 @SpringBootApplication
 public class TestdataGeneratorApplication implements CommandLineRunner {
 
