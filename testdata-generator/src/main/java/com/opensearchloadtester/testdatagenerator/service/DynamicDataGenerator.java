@@ -4,13 +4,13 @@ import com.opensearchloadtester.testdatagenerator.model.ano.AnoDocument;
 import com.opensearchloadtester.testdatagenerator.model.duo.DuoDocument;
 import com.opensearchloadtester.testdatagenerator.model.Document;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
-@Service
+@Component
 public class DynamicDataGenerator implements DataGenerator {
 
     /**

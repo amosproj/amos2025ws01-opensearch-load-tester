@@ -3,7 +3,7 @@ package com.opensearchloadtester.testdatagenerator.service;
 import com.opensearchloadtester.testdatagenerator.model.Document;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.List;
@@ -13,7 +13,7 @@ import java.util.List;
  * On subsequent runs, existing data is reused unless deleted manually.
  */
 @Slf4j
-@Service
+@Component
 public class PersistentDataGenerator implements DataGenerator {
 
     private final FileStorageService storageService;
