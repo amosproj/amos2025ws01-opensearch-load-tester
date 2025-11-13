@@ -1,59 +1,16 @@
 package com.opensearchloadtester.testdatagenerator;
 
 import com.opensearchloadtester.testdatagenerator.config.DataGenerationProperties;
-import com.opensearchloadtester.testdatagenerator.model.Document;
-import com.opensearchloadtester.testdatagenerator.service.DataGenerator;
-import com.opensearchloadtester.testdatagenerator.service.DynamicDataGenerator;
-import com.opensearchloadtester.testdatagenerator.service.FileStorageService;
-import com.opensearchloadtester.testdatagenerator.service.PersistentDataGenerator;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
-import java.util.List;
-
-@Slf4j
 @EnableConfigurationProperties(DataGenerationProperties.class)
 @SpringBootApplication
-public class TestdataGeneratorApplication implements CommandLineRunner {
+public class TestdataGeneratorApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(TestdataGeneratorApplication.class, args);
-    }
-
-    // Value taken from application.properties, default: persistent
-    @Value("${data.generation.mode:persistent}")
-    private String mode;
-    // Value taken from application.properties, default: data/testdata.json
-    @Value("${data.output.path:data/testdata.json}")
-    private String outputPath;
-    @Value("${data.generation.count}")
-    private int recordsCount;
-    private DataGenerator dataGenerator;
-
-    @Override
-    public void run(String... args) {
-        log.info("Starting test-data generation (mode: {}) ...", mode);
-
-        if ("dynamic".equalsIgnoreCase(mode)) {
-            this.dataGenerator = new DynamicDataGenerator();
-        } else {
-            this.dataGenerator = new PersistentDataGenerator(new FileStorageService(), outputPath);
-        }
-
-        List<Document> data = dataGenerator.generateData(recordsCount);
-
-        log.info("Test-data generation completed.");
-
-        // Debug Output:
-        log.debug("Listing data:");
-        for (Document item : data) {
-            log.debug("Data Class: {}", item.getClass());
-        }
-
     }
 
 }

@@ -15,6 +15,7 @@ import org.opensearch.client.opensearch.indices.ExistsRequest;
 import org.opensearch.client.opensearch.indices.IndexSettings;
 import org.opensearch.client.opensearch.indices.RefreshRequest;
 import org.opensearch.client.transport.endpoints.BooleanResponse;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -30,10 +31,20 @@ public class OpenSearchDataService {
 
     private final OpenSearchClient openSearchClient;
 
-    public void createIndex(String indexName, IndexSettings indexSettings, TypeMapping indexMapping) {
+    /**
+     * Creates an index if it does not exist yet.
+     * <p>
+     * If {@code indexSettings} or {@code indexMapping} is {@code null},
+     * the respective part is omitted and OpenSearch defaults are used.
+     *
+     * @param indexName     name of the index to create (must not be {@code null} or blank)
+     * @param indexSettings optional index settings (may be {@code null})
+     * @param indexMapping  optional index mapping (may be {@code null})
+     */
+    public void createIndex(String indexName,
+                            @Nullable IndexSettings indexSettings,
+                            @Nullable TypeMapping indexMapping) {
         validateIndexName(indexName);
-        Objects.requireNonNull(indexSettings, "indexSettings must not be null");
-        Objects.requireNonNull(indexMapping, "indexMapping must not be null");
 
         if (indexExists(indexName)) {
             log.info("Index '{}' already exists, skipping creation", indexName);
@@ -41,13 +52,18 @@ public class OpenSearchDataService {
         }
 
         try {
-            CreateIndexRequest request = new CreateIndexRequest.Builder()
-                    .index(indexName)
-                    .settings(indexSettings)
-                    .mappings(indexMapping)
-                    .build();
+            CreateIndexRequest.Builder requestBuilder = new CreateIndexRequest.Builder()
+                    .index(indexName);
 
-            openSearchClient.indices().create(request);
+            if (indexSettings != null) {
+                requestBuilder.settings(indexSettings);
+            }
+
+            if (indexMapping != null) {
+                requestBuilder.mappings(indexMapping);
+            }
+
+            openSearchClient.indices().create(requestBuilder.build());
 
             log.info("Created index '{}'", indexName);
         } catch (Exception e) {
