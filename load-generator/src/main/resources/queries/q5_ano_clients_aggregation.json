@@ -1,0 +1,12 @@
+{
+  "size": 0,
+  "aggs": {
+    "clients": {
+      "terms": {
+        "field": "dss_creation_user_display_name.raw",
+        "size": 50
+      }
+    }
+  }
+}
+

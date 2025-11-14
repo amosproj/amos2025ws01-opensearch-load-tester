@@ -42,7 +42,7 @@ services:
       - "8081:8081"
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O
-       - http://localhost:8081/api/load-test/health 
+       - http://localhost:8081/api/load-test/health
        || exit 1"]
       interval: 10s
       timeout: 10s
