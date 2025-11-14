@@ -6,8 +6,8 @@ import com.opensearchloadtester.testdatagenerator.model.ano.AnoDocument;
 import com.opensearchloadtester.testdatagenerator.model.duo.DuoDocument;
 
 /**
- * Interface for OpenSearch Record Data.
- * A Record object stores all data from an OpenSearch Index in a Java Object.
+ * Interface for OpenSearch Document Data.
+ * A Document object stores all data from an OpenSearch Index in a Java Object.
  */
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
@@ -21,18 +21,18 @@ import com.opensearchloadtester.testdatagenerator.model.duo.DuoDocument;
 public interface Document {
 
     /**
-     * Returns the Id of the record.
+     * Returns the Id of the document.
      *
-     * @return Id of the record
+     * @return Id of the document
      */
     //public String getId();
 
     /**
-     * Generates a new Record filled with random values.
-     * With this method a random Record object can be created.
-     * Default: Creating random AnoRecord entry
+     * Generates a new Document filled with random values.
+     * With this method a random Document object can be created.
+     * Default: Creating random AnoDocument entry
      *
-     * @return Record with random values
+     * @return Document with random values
      */
     public static Document random(){
         return AnoDocument.random();
