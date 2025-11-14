@@ -1,6 +1,6 @@
 package com.opensearchloadtester.testdatagenerator.service;
 
-import com.opensearchloadtester.testdatagenerator.model.Recordable;
+import com.opensearchloadtester.testdatagenerator.model.Document;
 
 import java.util.List;
 
@@ -11,10 +11,10 @@ import java.util.List;
 public interface DataGenerator {
 
     /**
-     * Generates a list of test data records.
+     * Generates a list of test data documents.
      *
-     * @param count of records to generate
-     * @return list of Recordable objects
+     * @param count of documents to generate
+     * @return list of Document objects
      */
-    List<Recordable> generateData(int count);
+    List<Document> generateData(int count);
 }
