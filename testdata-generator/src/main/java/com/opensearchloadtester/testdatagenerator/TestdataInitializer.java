@@ -30,6 +30,7 @@ public class TestdataInitializer implements CommandLineRunner {
             openSearchDataService.createIndex(indexName, null, null);
             List<Document> documents = dataGenerator.generateData(dataGenerationProperties.getCount());
             openSearchDataService.bulkIndexDocuments(indexName, documents);
+            openSearchDataService.refreshIndex(indexName);
 
             log.info("Finished test data initialization successfully");
         } catch (Exception e) {
