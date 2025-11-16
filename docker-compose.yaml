@@ -38,8 +38,6 @@ services:
       - LOGGING_LEVEL_COM_OPENSEARCHLOADTESTER_LOADGENERATOR=${LOGGING_LVL_LOAD_GEN:-INFO}
     networks:
       - opensearch-loadtester-network
-    ports:
-      - "8081:8081"
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O
        - http://localhost:8081/api/load-test/health

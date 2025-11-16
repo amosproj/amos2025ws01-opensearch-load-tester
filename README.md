@@ -63,13 +63,13 @@ docker-compose down
 To run multiple Load Generator instances:
 
 ```bash
-REPLICAS=3 docker-compose up --build -d
+docker-compose up --build -d
 ```
 
 ### Run the Whole Stack with Integrated OpenSearch
 
 ```bash
-REPLICAS=3 docker-compose --profile opensearch up --build -d
+docker-compose --profile opensearch up --build -d
 ```
 
 Example Usage: `curl -X PUT "http://localhost:9200/test-index"`
