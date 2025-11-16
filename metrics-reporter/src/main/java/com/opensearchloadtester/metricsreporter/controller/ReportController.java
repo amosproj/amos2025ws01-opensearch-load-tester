@@ -5,20 +5,23 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/metrics-reporter-test")
 public class ReportController {
 
-    private Metrics metrics;
+    private int size;
+    private ArrayList<Metrics> metrics = new ArrayList<>();
 
     /**
      * This Post request saves the recieved parameter to local vars
      *
      * @param metrics DTO for metrics data
      */
-    @PostMapping("/setMetrics")
-    public ResponseEntity<String> setMetrics(@RequestBody Metrics metrics) {
+    @PostMapping("/addMetrics")
+    public ResponseEntity<String> addMetrics(@RequestBody Metrics metrics) {
         log.info("Received request to receive metrics");
 
         // Check params
@@ -28,17 +31,17 @@ public class ReportController {
             return ResponseEntity.badRequest().build();
         }
 
-        this.metrics = metrics;
+        this.metrics.add(metrics);
 
-        log.debug("Received data: requestType:{}, roundtripMilSec:{}, jsonResponse:{} \n",
-                metrics.getRequestType(), metrics.getRoundtripMilSec(), metrics.getJsonResponse());
+        log.debug("Received data from {}: requestType:{}, roundtripMilSec:{}, jsonResponse:{} \n",
+                metrics.getLoadGeneratorInstance(), metrics.getRequestType(), metrics.getRoundtripMilSec(), metrics.getJsonResponse());
 
         log.info("Metrics stored successfully!\n");
         return ResponseEntity.ok("Metrics stored successfully!\n");
     }
 
     // Simple getter
-    public Metrics getMetrics() {
+    public ArrayList<Metrics> getMetrics() {
         return metrics;
     }
 

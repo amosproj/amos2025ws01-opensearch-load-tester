@@ -6,13 +6,23 @@ import lombok.Data;
 public class Metrics {
 
     /**
-     * requestType       Type of query that was executed
-     * roundtripMilSec   Time from first request to final answer
-     * jsonResponse      Response of query execution
+     * loadGeneratorInstance   Name of reporting loadGenerator instance
+     * requestType          Type of query that was executed
+     * roundtripMilSec      Time from first request to final answer
+     * jsonResponse         Response of query execution
      */
+    private String loadGeneratorInstance;
     private String requestType;
     private int roundtripMilSec;
     private String jsonResponse;
+
+    public String getLoadGeneratorInstance() {
+        return loadGeneratorInstance;
+    }
+
+    public void setLoadGeneratorInstance(String loadGeneratorInstance) {
+        this.loadGeneratorInstance = loadGeneratorInstance;
+    }
 
     public String getRequestType() {
         return requestType;
