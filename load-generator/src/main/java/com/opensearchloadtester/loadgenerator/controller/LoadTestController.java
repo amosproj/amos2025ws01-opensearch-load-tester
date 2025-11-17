@@ -29,13 +29,16 @@ public class LoadTestController {
 
     private final LoadRunnerService loadRunnerService;
     private final QueryRegistry queryRegistry;
+    private final MetricsCollectorService metricsCollectorService;
     @Value("${opensearch.url}")
     private String openSearchBaseUrl;
 
     public LoadTestController(LoadRunnerService loadRunnerService,
-                              QueryRegistry queryRegistry) {
+                              QueryRegistry queryRegistry,
+                              MetricsCollectorService metricsCollectorService) {
         this.loadRunnerService = loadRunnerService;
         this.queryRegistry = queryRegistry;
+        this.metricsCollectorService = metricsCollectorService;
     }
 
     /**
@@ -139,7 +142,8 @@ public class LoadTestController {
                                 indexName,
                                 templateFile,
                                 params,
-                                openSearchBaseUrl
+                                openSearchBaseUrl,
+                                metricsCollectorService
                         )
                 );
             }
