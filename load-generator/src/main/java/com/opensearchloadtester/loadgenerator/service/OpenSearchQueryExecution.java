@@ -33,18 +33,23 @@ public class OpenSearchQueryExecution implements QueryExecution {
     private final Map<String, String> params;
     ObjectMapper mapper = new ObjectMapper();
 
+    private final MetricsCollectorService metricsCollectorService;
+
     @Value("${opensearch.url}")
     String openSearchBaseUrl;
 
     public OpenSearchQueryExecution(String id,
                                     String indexName,
                                     String queryFile,
-                                    Map<String, String> params, String openSearchBaseUrl) {
+                                    Map<String, String> params,
+                                    String openSearchBaseUrl,
+                                    MetricsCollectorService metricsCollectorService) {
         this.id = id;
         this.indexName = indexName;
         this.queryFile = queryFile;
         this.params = params;
         this.openSearchBaseUrl = openSearchBaseUrl;
+        this.metricsCollectorService = metricsCollectorService;
     }
 
     @Override
@@ -64,7 +69,7 @@ public class OpenSearchQueryExecution implements QueryExecution {
                 body = body.replace(placeholder, e.getValue());
             }
 
-            // 3) Prepare HTTP call to OpenSearchç
+            // 3) Prepare HTTP call to OpenSearch
 
 
             String url = openSearchBaseUrl + indexName + "/_search";
@@ -82,6 +87,8 @@ public class OpenSearchQueryExecution implements QueryExecution {
             ResponseEntity<String> response =
                     restTemplate.postForEntity(url, entity, String.class);
             long tookMs = System.currentTimeMillis() - start;
+
+            metricsCollectorService.appendMetrics(id, tookMs, response.toString());
 
             int status = response.getStatusCodeValue();
             JsonNode json = mapper.readTree(response.getBody());
