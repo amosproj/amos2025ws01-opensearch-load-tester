@@ -25,7 +25,7 @@ public class ReportController {
         log.info("Received request to receive metrics");
 
         // Check params
-        if (metrics.getRequestType().isBlank() || metrics.getRoundtripMilSec() == 0 || metrics.getJsonResponse().isBlank()) {
+        if (metrics.getRequestType() == null || metrics.getRoundtripMilSec() == null || metrics.getJsonResponse() == null) {
             log.error("Invalid request parameters requestType:{}, roundtripMilSec:{}, jsonResponse:{} \n",
                     metrics.getRequestType(), metrics.getRoundtripMilSec(), metrics.getJsonResponse());
             return ResponseEntity.badRequest().build();
