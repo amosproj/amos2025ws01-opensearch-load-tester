@@ -3,6 +3,7 @@ package com.opensearchloadtester.loadgenerator.service;
 import com.opensearchloadtester.loadgenerator.dto.Metrics;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +17,7 @@ public class MetricsCollectorService {
 
     private BufferedWriter writer;
     private File csvFile;
+    @Getter
     private final Metrics metrics = new Metrics(System.getenv("HOSTNAME"));
 
     public MetricsCollectorService() {
@@ -59,7 +61,7 @@ public class MetricsCollectorService {
         metrics.addMetrics(requestType, roundtripMilSec, jsonResponse);
 
         log.info(metrics.toString());
-        
+
 
 //        try {
 //            // JSON to Map

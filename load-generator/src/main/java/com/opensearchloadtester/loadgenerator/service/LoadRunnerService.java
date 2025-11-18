@@ -18,6 +18,15 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class LoadRunnerService {
 
+    private final MetricsReporterClient metricsReporterClient;
+    private final MetricsCollectorService metricsCollectorService;
+
+    public LoadRunnerService(MetricsReporterClient metricsReporterClient,
+                             MetricsCollectorService metricsCollectorService) {
+        this.metricsReporterClient = metricsReporterClient;
+        this.metricsCollectorService = metricsCollectorService;
+    }
+
     /**
      * Executes n query executions simultaneously and waits for all to complete.
      *
@@ -61,7 +70,7 @@ public class LoadRunnerService {
 
             if (completed) {
                 log.info("Calling MetricsReporterClient");
-                // TODO: Call method in client
+                metricsReporterClient.reportMetrics(metricsCollectorService.getMetrics());
 
                 log.info("All {} query execution threads completed successfully", threadCount);
             } else {
