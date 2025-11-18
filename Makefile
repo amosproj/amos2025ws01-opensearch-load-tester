@@ -1,14 +1,16 @@
-.PHONY: run stop logs clean loadtest setup-loadtest status help
+.PHONY: run stop logs clean loadtest status help build curl
 
 help:
 	@echo "Verfügbare Befehle:"
+	@echo "  make build        - Baut alle Docker-Images"
 	@echo "  make run          - Startet alle Container"
 	@echo "  make stop         - Stoppt alle Container"
-	@echo "  make logs         - Zeigt Container Logs"
-	@echo "  make curl         - Attached curl Container"
+	@echo "  make logs         - Zeigt Container-Logs"
+	@echo "  make curl         - Startet eine Shell im Curl-Debug Container"
 	@echo "  make loadtest     - Interaktiver Loadtest Setup"
-	@echo "  make status       - Zeigt Container-Status"
-	@echo "  make clean        - Stoppt Container und löscht Volumes"
+	@echo "  make status       - Zeigt Ressourcen-Nutzung der Container"
+	@echo "  make clean        - Stoppt Container und löscht Volumes/Images"
+	@echo "  make help         - Zeigt diese Hilfe an"
 
 loadtest:
 	@echo "Loadtest Konfiguration"
@@ -27,7 +29,7 @@ loadtest:
 	rm -f .env.bak; \
 	echo ".env wurde aktualisiert"; \
 	echo ""; \
-	read -p "Container neu starten? (Y/n): " restart; \
+	read -p "Container (neu) starten? (Y/n): " restart; \
 	echo ""; \
 	if [ -z "$$restart" ] || [ "$$restart" = "y" ] || [ "$$restart" = "Y" ]; then \
 		make clean; \
@@ -49,7 +51,7 @@ run:
 	@echo ""
 	@echo "Container erfolgreich gestartet!"
 	@echo ""
-	@echo "Load-Generator Container (Port 8080):"
+	@echo "Load-Generator Container:"
 	@for c in $$(docker-compose ps -q); do \
 		name=$$(docker inspect --format='{{.Name}}' $$c | sed 's#/##'); \
 		if echo "$$name" | grep -q "load-generator"; then \
@@ -60,7 +62,7 @@ run:
 	done
 
 stop:
-	@echo "Stoppe Container..."
+	@echo "Container werden gestoppt..."
 	@docker-compose down
 	@echo "Container gestoppt"
 
@@ -73,7 +75,7 @@ status:
 	@docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}"
 
 curl:
-	@echo "Start von einem Curl Container"
+	@echo "Attach Curl Container..."
 	@docker exec -it curl sh
 
 clean:
