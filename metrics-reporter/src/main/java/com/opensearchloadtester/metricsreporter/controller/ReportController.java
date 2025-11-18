@@ -9,7 +9,7 @@ import java.util.ArrayList;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/metrics-reporter-test")
+@RequestMapping("/api")
 public class ReportController {
 
     private int size;
