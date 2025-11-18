@@ -1,5 +1,19 @@
 # 🚀 How to start and test the load-generator
 
+The Load Generator is the component, that can be scaled
+and generates the load on the OpenSearch instance. The
+execution is performed multithreaded. When every thread
+finished its execution, an HTTP request is sent to the
+MetricsReporter container.
+
+## Components
+
+- LoadRunner - starts multiple threads with query executions
+- QueryExecution - Executes one query and reports metrics to MetricsCollector
+- MetricsCollector - Stores all metrics
+- MetricsReporterClient - Sends all metrics to MetricsReporter container when
+  all threads are finished
+
 ## Integration Tests (REST API)
 
 ### 1. Start Application
@@ -64,15 +78,18 @@ Expected Result:
     Response Body: Load test completed successfully with 10 threads\n
     All 10 threads are executed in parallel
 
-# Functionality Tests
+## Functionality Tests
+
 ### 1. Test Parallelism
-   Start multiple load tests simultaneously
+
+Start multiple load tests simultaneously
 
 ```bash
 curl -X POST "http://localhost:8081/api/load-test/start?threadCount=5" &
 curl -X POST "http://localhost:8081/api/load-test/start?threadCount=3" &
 wait
 ```
+
 Expected Result:
 
     Both requests are processed
@@ -80,11 +97,13 @@ Expected Result:
     Logs show correct thread management
 
 ### 2. Thread Pool Behavior
-   Test with many threads
+
+Test with many threads
 
 ```bash
 curl -X POST "http://localhost:8081/api/load-test/start?threadCount=20"
 ```
+
 Expected Result:
 
     All threads are managed correctly
