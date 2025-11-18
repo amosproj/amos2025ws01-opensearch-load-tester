@@ -5,6 +5,7 @@ help:
 	@echo "  make run          - Startet alle Container"
 	@echo "  make stop         - Stoppt alle Container"
 	@echo "  make logs         - Zeigt Container Logs"
+	@echo "  make curl         - Attached curl Container"
 	@echo "  make loadtest     - Interaktiver Loadtest Setup"
 	@echo "  make status       - Zeigt Container-Status"
 	@echo "  make clean        - Stoppt Container und löscht Volumes"
@@ -27,32 +28,34 @@ loadtest:
 	echo ".env wurde aktualisiert"; \
 	echo ""; \
 	read -p "Container neu starten? (Y/n): " restart; \
+	echo ""; \
 	if [ -z "$$restart" ] || [ "$$restart" = "y" ] || [ "$$restart" = "Y" ]; then \
 		make clean; \
+		make build; \
 		make run; \
-		echo ""; \
-		echo "🎯 Loadtest läuft!"; \
-		make logs;  \
+		make curl; \
 	fi
 
+build:
+	@echo "Docker Images werden gebaut..."
+	@docker-compose build testdata-generator
+	@docker-compose build load-generator
+	@docker-compose build metrics-reporter
+	@echo "Alle Images wurden erfolgreich gebaut!"
 
 run:
 	@echo "Container werden gestartet..."
-	@docker-compose --profile opensearch up --build -d > /dev/null 2>&1
+	@docker-compose --profile curl up -d
 	@echo ""
 	@echo "Container erfolgreich gestartet!"
 	@echo ""
-	@echo " Container IP-Adressen:"
+	@echo "Load-Generator Container (Port 8080):"
 	@for c in $$(docker-compose ps -q); do \
 		name=$$(docker inspect --format='{{.Name}}' $$c | sed 's#/##'); \
-		ip=$$(docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $$c); \
-		ports=$$(docker inspect --format='{{range $$p, $$conf := .NetworkSettings.Ports}}{{if $$conf}}{{(index $$conf 0).HostPort}}->{{$$p}} {{end}}{{end}}' $$c); \
-		if [ -n "$$ports" ]; then \
-			echo "   $$name"; \
-			echo "     └─ IP: $$ip"; \
-			echo "     └─ Ports: $$ports"; \
-		else \
-			echo "   $$name → $$ip"; \
+		if echo "$$name" | grep -q "load-generator"; then \
+			ip=$$(docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $$c); \
+			echo "  $$name"; \
+			echo "    └─ IP: $$ip:8081"; \
 		fi; \
 	done
 
@@ -69,7 +72,11 @@ status:
 	@echo "Ressourcen-Nutzung:"
 	@docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}"
 
+curl:
+	@echo "Start von einem Curl Container"
+	@docker exec -it curl sh
+
 clean:
-	@echo "Cleanup"
-	@docker-compose --profile opensearch down --volumes --rmi local --remove-orphans
+	@echo "Falls noch alte Container laufen werden die gelöscht"
+	@docker-compose --profile curl down --volumes --rmi local --remove-orphans
 	@echo "Alle Container, Volumes und Images entfernt"

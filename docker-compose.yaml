@@ -36,6 +36,7 @@ services:
     environment:
       - SPRING_APPLICATION_NAME=load-generator
       - OPENSEARCH_URL=${OPENSEARCH_URL:-http://test-target-opensearch:9200}
+      - METRIC_REPORTER_URL=${METRIC_REPORTER_URL:-http://metrics-reporter:8080/api/}
       - LOGGING_LEVEL_ROOT=${LOGGING_LVL_ROOT:-ERROR}
       - LOGGING_LEVEL_ORG_ELASTICSEARCH=${LOGGING_LVL_ELASTIC:-ERROR}
       - LOGGING_LEVEL_COM_OPENSEARCHLOADTESTER_LOADGENERATOR=${LOGGING_LVL_LOAD_GEN:-INFO}
@@ -74,9 +75,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    ############
-    # Makes load-generator wait for testdata-generator to complete
-    ############
     depends_on:
       testdata-generator:
         condition: service_completed_successfully
@@ -87,8 +85,6 @@ services:
     image: opensearchproject/opensearch:2.16.0
     container_name: test-target-opensearch
     restart: unless-stopped
-    profiles:
-      - opensearch
     environment:
       - DISABLE_SECURITY_PLUGIN=true
       - discovery.type=single-node
@@ -113,8 +109,18 @@ services:
         ]
       interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 20
       start_period: 10s
+
+  curl:
+    image: alpine/curl
+    container_name: curl
+    restart: unless-stopped
+    profiles:
+      - curl
+    command: ["sleep", "infinity"]
+    networks:
+      - opensearch-loadtester-network
 
 networks:
   opensearch-loadtester-network:
