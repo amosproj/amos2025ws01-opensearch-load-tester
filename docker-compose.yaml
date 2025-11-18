@@ -103,8 +103,9 @@ services:
       - "9200:9200" # OpenSearch REST API
       #- "9600:9600" # OpenSearch Performance Analyzer
     healthcheck:
-      test: [ "CMD-SHELL", "wget -q -O
-            - http://test-target-opensearch:9200/_cluster/health
+      test: [ "CMD-SHELL",
+            "curl -s \
+            http://test-target-opensearch:9200/_cluster/health
             | grep green || exit 1"]
       interval: 10s
       timeout: 5s
@@ -126,8 +127,8 @@ networks:
     driver: bridge
 
 volumes:
-    testdata:
-        driver: local
+  testdata:
+    driver: local
 #  opensearch-data:
 #    driver: local
 
