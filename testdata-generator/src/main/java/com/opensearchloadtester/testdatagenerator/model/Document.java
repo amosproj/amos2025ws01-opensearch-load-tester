@@ -6,8 +6,7 @@ import com.opensearchloadtester.testdatagenerator.model.ano.AnoDocument;
 import com.opensearchloadtester.testdatagenerator.model.duo.DuoDocument;
 
 /**
- * Interface for OpenSearch Document Data.
- * A Document object stores all data from an OpenSearch Index in a Java Object.
+ * A Document represents a single record stored in an OpenSearch index.
  */
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
@@ -19,23 +18,4 @@ import com.opensearchloadtester.testdatagenerator.model.duo.DuoDocument;
         @JsonSubTypes.Type(value = DuoDocument.class, name = "duo")
 })
 public interface Document {
-
-    /**
-     * Returns the Id of the document.
-     *
-     * @return Id of the document
-     */
-    //public String getId();
-
-    /**
-     * Generates a new Document filled with random values.
-     * With this method a random Document object can be created.
-     * Default: Creating random AnoDocument entry
-     *
-     * @return Document with random values
-     */
-    public static Document random(){
-        return AnoDocument.random();
-    }
-
 }
