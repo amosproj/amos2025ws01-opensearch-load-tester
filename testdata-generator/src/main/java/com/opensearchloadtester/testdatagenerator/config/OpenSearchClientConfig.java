@@ -7,6 +7,7 @@ import org.opensearch.client.transport.httpclient5.ApacheHttpClient5TransportBui
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 import java.net.URI;
 
@@ -17,6 +18,7 @@ public class OpenSearchClientConfig {
     private String openSearchUrl;
 
     @Bean
+    @Primary
     public OpenSearchClient openSearchClient() {
         URI uri = URI.create(openSearchUrl);
         HttpHost host = new HttpHost(uri.getScheme(), uri.getHost(), uri.getPort());
