@@ -1,50 +1,61 @@
 package com.opensearchloadtester.loadgenerator.dto;
 
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
+
+@Slf4j
 @Data
 public class Metrics {
 
+
     /**
      * loadGeneratorInstance   Name of reporting loadGenerator instance
-     * requestType          Type of query that was executed
-     * roundtripMilSec      Time from first request to final answer
-     * jsonResponse         Response of query execution
+     * requestType          Array of types of queries that were executed
+     * roundtripMilSec      Array of times from first request to final answer
+     * jsonResponse         Array of responses of query executions
      */
     private String loadGeneratorInstance;
-    private String requestType;
-    private int roundtripMilSec;
-    private String jsonResponse;
+    private ArrayList<String> requestType = new ArrayList<>();
+    private ArrayList<Long> roundtripMilSec = new ArrayList<>();
+    private ArrayList<String> jsonResponse = new ArrayList<>();
+
+    public Metrics(String loadGeneratorInstance) {
+        this.loadGeneratorInstance = loadGeneratorInstance;
+    }
 
     public String getLoadGeneratorInstance() {
         return loadGeneratorInstance;
+
     }
 
     public void setLoadGeneratorInstance(String loadGeneratorInstance) {
         this.loadGeneratorInstance = loadGeneratorInstance;
     }
 
-    public String getRequestType() {
-        return requestType;
+    public void addMetrics(String requestType, long roundtripMilSec, String jsonResponse) {
+        if (requestType == null || roundtripMilSec == 0 || jsonResponse == null) {
+            log.error("Error when adding Metrics requestType: " +
+                    "{}, roundtripMilSec: " +
+                    "{}, jsonResponse: " +
+                    "{}", requestType, roundtripMilSec, jsonResponse);
+            return;
+        }
+        this.requestType.add(requestType);
+        this.roundtripMilSec.add(roundtripMilSec);
+        this.jsonResponse.add(jsonResponse);
     }
 
-    public void setRequestType(String requestType) {
-        this.requestType = requestType;
+    public String getRequestType(int index) {
+        return requestType.get(index);
     }
 
-    public int getRoundtripMilSec() {
-        return roundtripMilSec;
+    public long getRoundtripMilSec(int index) {
+        return roundtripMilSec.get(index);
     }
 
-    public void setRoundtripMilSec(int roundtripMilSec) {
-        this.roundtripMilSec = roundtripMilSec;
-    }
-
-    public String getJsonResponse() {
-        return jsonResponse;
-    }
-
-    public void setJsonResponse(String jsonResponse) {
-        this.jsonResponse = jsonResponse;
+    public String getJsonResponse(int index) {
+        return jsonResponse.get(index);
     }
 }
