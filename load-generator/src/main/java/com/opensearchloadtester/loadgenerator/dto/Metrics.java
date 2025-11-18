@@ -25,15 +25,6 @@ public class Metrics {
         this.loadGeneratorInstance = loadGeneratorInstance;
     }
 
-    public String getLoadGeneratorInstance() {
-        return loadGeneratorInstance;
-
-    }
-
-    public void setLoadGeneratorInstance(String loadGeneratorInstance) {
-        this.loadGeneratorInstance = loadGeneratorInstance;
-    }
-
     public void addMetrics(String requestType, long roundtripMilSec, String jsonResponse) {
         if (requestType == null || roundtripMilSec == 0 || jsonResponse == null) {
             log.error("Error when adding Metrics requestType: " +
