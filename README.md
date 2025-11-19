@@ -36,6 +36,32 @@ See [scripts/README.md](scripts/README.md) for details on using `@mentions` in c
 
 
 ---
+## Make
+
+For convenient operation, Makefile targets are provided to deploy the load-generator. 
+The following commands are available:
+
+| Command         | Description                                       |
+|-----------------|---------------------------------------------------|
+| `make build`    | Builds the Docker images                          |
+| `make clean`    | Stops containers and removes                      |
+| `make curl`     | Attach an interactive shell to the Curl container |
+| `make help`     | Shows help with all available commands            |
+| `make loadtest` | Interactive load test setup                       |
+| `make logs`     | Follows container logs                            |
+| `make run`      | Starts all containers in the background           |
+| `make status`   | Shows CPU and memory usage of containers          |
+| `make stop`     | Stops all containers                              |   
+
+### Interactive Loadtest Setup
+
+- `make loadtest`  
+  Interactive setup for load tests. Prompts for:
+    - `LOAD_GENERATOR_REPLICAS` (default: `3`) — updates the value in ` .env`
+    - `TEST_DATA_GENERATION_COUNT` (default: `1000`) — updates the value in ` .env`  
+  and then runs `make clean`, `make build`, `make run` and `make curl` to open shell to start loadtest.
+
+---
 
 ## 🐳 Docker Setup (Recommended)
 
@@ -63,13 +89,13 @@ docker-compose down
 To run multiple Load Generator instances:
 
 ```bash
-REPLICAS=3 docker-compose up --build -d
+docker-compose up --build -d
 ```
 
 ### Run the Whole Stack with Integrated OpenSearch
 
 ```bash
-REPLICAS=3 docker-compose --profile opensearch up --build -d
+docker-compose --profile opensearch up --build -d
 ```
 
 Example Usage: `curl -X PUT "http://localhost:9200/test-index"`

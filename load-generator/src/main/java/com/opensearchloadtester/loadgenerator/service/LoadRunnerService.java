@@ -18,9 +18,18 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class LoadRunnerService {
 
+    private final MetricsReporterClient metricsReporterClient;
+    private final MetricsCollectorService metricsCollectorService;
+
+    public LoadRunnerService(MetricsReporterClient metricsReporterClient,
+                             MetricsCollectorService metricsCollectorService) {
+        this.metricsReporterClient = metricsReporterClient;
+        this.metricsCollectorService = metricsCollectorService;
+    }
+
     /**
      * Executes n query executions simultaneously and waits for all to complete.
-     * 
+     *
      * @param queryExecutions List of query executions to run in parallel
      * @throws InterruptedException if the execution is interrupted while waiting
      */
@@ -44,6 +53,7 @@ public class LoadRunnerService {
                         log.debug("Starting query execution: {}", queryExecution.getId());
                         queryExecution.run();
                         log.debug("Completed query execution: {}", queryExecution.getId());
+
                     } catch (Exception e) {
                         log.error("Error executing query: {}", queryExecution.getId(), e);
                     } finally {
@@ -59,6 +69,9 @@ public class LoadRunnerService {
             // boolean completed = latch.await(10, TimeUnit.MINUTES);
 
             if (completed) {
+                log.info("Calling MetricsReporterClient");
+                metricsReporterClient.reportMetrics(metricsCollectorService.getMetrics());
+
                 log.info("All {} query execution threads completed successfully", threadCount);
             } else {
                 log.warn("Timeout waiting for query execution threads to complete");
@@ -72,12 +85,12 @@ public class LoadRunnerService {
 
     /**
      * Executes n query executions simultaneously using a factory to create them.
-     * 
-     * @param threadCount Number of query execution threads to spawn
+     *
+     * @param threadCount           Number of query execution threads to spawn
      * @param queryExecutionFactory Factory to create query execution instances
      * @throws InterruptedException if the execution is interrupted while waiting
      */
-    public void executeQueries(int threadCount, QueryExecutionFactory queryExecutionFactory) 
+    public void executeQueries(int threadCount, QueryExecutionFactory queryExecutionFactory)
             throws InterruptedException {
         if (threadCount <= 0) {
             log.warn("Invalid thread count: {}, nothing to execute", threadCount);
@@ -94,7 +107,7 @@ public class LoadRunnerService {
 
     /**
      * Gracefully shuts down the executor service.
-     * 
+     *
      * @param executorService The executor service to shut down
      */
     private void shutdownExecutorService(ExecutorService executorService) {
