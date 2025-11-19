@@ -14,7 +14,12 @@ public class DataGenerationProperties {
         DYNAMIC, PERSISTENT
     }
 
+    public enum DocumentType {
+        ANO, DUO
+    }
+
     private Mode mode;
+    private DocumentType documentType;
     private String outputPath;
     @Min(1)
     private int count;

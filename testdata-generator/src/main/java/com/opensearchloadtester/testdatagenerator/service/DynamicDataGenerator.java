@@ -1,35 +1,39 @@
 package com.opensearchloadtester.testdatagenerator.service;
 
+import com.opensearchloadtester.testdatagenerator.config.DataGenerationProperties.DocumentType;
 import com.opensearchloadtester.testdatagenerator.model.ano.AnoDocument;
 import com.opensearchloadtester.testdatagenerator.model.duo.DuoDocument;
 import com.opensearchloadtester.testdatagenerator.model.Document;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
-@Component
 public class DynamicDataGenerator implements DataGenerator {
 
     /**
-     * Generates random data dynamically at start of application (not persisted).
-     * There will be a mix of Ano and Duo Documents generated.
+     * Generates random documents dynamically at start of application (not persisted).
      */
     @Override
-    public List<Document> generateData(int count) {
-        List<Document> res = new ArrayList<>();
-        int mid = count/2;
-        // Generate Ano Data
-        for(int i = 0; i < mid; i++) {
-            res.add(AnoDocument.random());
+    public List<Document> generateData(DocumentType documentType, int count) {
+        List<Document> documents = new ArrayList<>(count);
+
+        switch (documentType) {
+            case ANO -> {
+                for (int i = 0; i < count; i++) {
+                    documents.add(AnoDocument.random());
+                }
+            }
+            case DUO -> {
+                for (int i = 0; i < count; i++) {
+                    documents.add(DuoDocument.random());
+                }
+            }
+            default -> throw new IllegalArgumentException("Unsupported document type: " + documentType.name());
         }
-        // Generate Duo Data
-        for(int i = mid; i < count; i++) {
-            res.add(DuoDocument.random());
-        }
-        log.info("Generated {} random documents", count);
-        return res;
+
+        log.info("Generated {} random {} documents", documents.size(), documentType.name());
+        return documents;
     }
 }
