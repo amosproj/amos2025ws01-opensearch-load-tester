@@ -1,91 +1,58 @@
 package com.opensearchloadtester.testdatagenerator.model.ano;
 
-import com.opensearchloadtester.testdatagenerator.model.Document;
+import com.opensearchloadtester.testdatagenerator.model.AbstractDocument;
 import lombok.AccessLevel;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Random;
 
-@Data
-@NoArgsConstructor(access = AccessLevel.PRIVATE) // AnoDocument Objects must be created via random() method
-public class AnoDocument implements Document {
+@Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PRIVATE) // AnoDocument objects must be created via random() method
+public class AnoDocument extends AbstractDocument {
 
     /**
-     * Attributes of a Document Instance correspond to the data stored in an OpenSearch Interface.
+     * Attributes of an AnoDocument correspond to the data stored in an OpenSearch index.
      * Wrapper Classes are used for datatypes to ensure stability for null entries.
      */
-    private String id;
-    private String customAll;
-    private Long contentLength;
-    private String contentType;
     private Instant dssCreationDatetime;
-    private String dssCreationUserDisplayName;
-    private String dssCreationUserIdKey;
     private PayrollInfo dssCustomMetadataPayrollInfo;
-    private String dssDataspaceId;
     private Instant dssDeleteRetentionMinRetention;
-    private String dssDocumentId;
-    private String dssDocumentName;
     private Long dssDocumentOrientation;
     private String dssDocumentPath;
     private String dssDocumentSource;
-    private Instant dssLastModifiedDatetime;
     private Instant dssLastModifiedUserDatetime;
-    private String dssLastModifiedUserDisplayName;
-    private String dssLastModifiedUserIdKey;
     private String dssOriginalFilename;
-    private String dssProcessingFlagOwner;
     private Boolean dssRecyclebin;
-    private String dssVersion;
-    private String etag;
-    private Instant lastDocumentChange;
 
 
-    // Method to create a random AnoDocument Object
+    // Method to create a random AnoDocument object
     public static AnoDocument random() {
-        Random rand = new Random();
-        AnoDocument res = new AnoDocument();
-        // Filled with random values without purpose
-        res.id = "id-" + rand.nextInt(100000);
-        res.customAll = "This is customAll from " + res.id;
-        res.contentLength = rand.nextLong(10000);
-        res.contentType = "Document";
-        res.dssCreationDatetime = Instant.now();
-        res.dssCreationUserDisplayName = "RandomGenerator";
-        res.dssCreationUserIdKey = "user-random";
-        res.dssCustomMetadataPayrollInfo = PayrollInfo.random();
-        res.dssDataspaceId = "dataspace-" + rand.nextInt(1001);
-        res.dssDeleteRetentionMinRetention = Instant.now();
-        res.dssDocumentId = "document-" + rand.nextInt(10000);
-        res.dssDocumentName = "Payroll-" + res.dssDocumentId + "-random";
-        res.dssDocumentOrientation = rand.nextLong(4);
-        res.dssDocumentPath = "example/home/payrolls/" + res.dssDocumentName;
-        res.dssDocumentSource = "https://example.de/payrolls/" + res.dssDocumentName;
-        res.dssLastModifiedDatetime = Instant.now();
-        res.dssLastModifiedUserDatetime = Instant.now();
-        res.dssLastModifiedUserDisplayName = "RandomGenerator";
-        res.dssLastModifiedUserIdKey = "user-random";
-        res.dssOriginalFilename = res.dssDocumentName;
-        res.dssProcessingFlagOwner = "owner-random";
-        res.dssRecyclebin = false;
-        res.dssVersion = "1.0";
-        res.etag = "etag-" + rand.nextInt(100000000);
-        res.lastDocumentChange = Instant.now();
-        return res;
+        AnoDocument anoDocument = fillCommonFieldsRandomly(new AnoDocument());
+
+        // Fill with random values without purpose
+        anoDocument.dssCreationDatetime = Instant.now();
+        anoDocument.dssCustomMetadataPayrollInfo = PayrollInfo.random();
+        anoDocument.dssDeleteRetentionMinRetention = Instant.now();
+        anoDocument.dssDocumentOrientation = RANDOM.nextLong(4);
+        anoDocument.dssDocumentPath = "example/home/payrolls/" + anoDocument.dssDocumentName;
+        anoDocument.dssDocumentSource = "https://example.de/payrolls/" + anoDocument.dssDocumentName;
+        anoDocument.dssLastModifiedUserDatetime = Instant.now();
+        anoDocument.dssOriginalFilename = anoDocument.dssDocumentName;
+        anoDocument.dssRecyclebin = false;
+        return anoDocument;
     }
 
     /**
-     * Nested Class for PayrollInfo of Ano OpenSearch Indices
+     * Nested Class for PayrollInfo of AnoDocument
      */
-    @Data
+    @Getter
+    @Setter
     public static class PayrollInfo {
-        /**
-         * Attributes correspond to the data stored in an OpenSearch Interface.
-         * Wrapper Classes are used for datatypes to ensure stability for null entries.
-         */
+
         private Integer accountingMonth;
         private Integer accountingYear;
         private Instant firstAccess;
@@ -94,20 +61,20 @@ public class AnoDocument implements Document {
         private Instant provisionDate;
 
 
-        // Method to create a random PayrollInfo Object
+        // Method to create a random PayrollInfo object
         public static PayrollInfo random() {
-            Random rand = new Random();
-            PayrollInfo res = new PayrollInfo();
-            // Filled with random values without purpose
-            res.accountingMonth = rand.nextInt(12) + 1;
-            res.accountingYear = 2020 + rand.nextInt(6);
-            res.firstAccess = Instant.now();
+            PayrollInfo payrollInfo = new PayrollInfo();
+
+            // Fill with random values without purpose
+            payrollInfo.accountingMonth = RANDOM.nextInt(12) + 1;
+            payrollInfo.accountingYear = 2020 + RANDOM.nextInt(6);
+            payrollInfo.firstAccess = Instant.now();
             List<String> lang = List.of("German", "English", "Spanish", "French");
-            res.language = lang.get(rand.nextInt(lang.size()));
+            payrollInfo.language = lang.get(RANDOM.nextInt(lang.size()));
             List<String> type = List.of("Monthly", "Yearly", "Quarterly");
-            res.payrollType = type.get(rand.nextInt(type.size()));
-            res.provisionDate = Instant.now();
-            return res;
+            payrollInfo.payrollType = type.get(RANDOM.nextInt(type.size()));
+            payrollInfo.provisionDate = Instant.now();
+            return payrollInfo;
         }
     }
 }

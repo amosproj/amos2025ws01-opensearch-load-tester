@@ -1,8 +1,8 @@
 package com.opensearchloadtester.testdatagenerator.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.type.CollectionType;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.opensearchloadtester.testdatagenerator.model.Document;
 import lombok.extern.slf4j.Slf4j;
@@ -24,37 +24,56 @@ public class FileStorageService {
     /**
      * Saves a list of Document objects to a file.
      * Each document is written in JSON format.
+     *
      * @param data List of Document Items that have to be stored
      * @param path Destination File path where data should be written
      */
-    public void save(List<Document> data, String path) throws IOException {
-        log.info("Saving data to {}", path);
-        File f = new File(path);
-        if (!f.exists()) {              // creating new file if it doesn't exist
-            File parentDir = f.getParentFile();
-            if (parentDir != null && !parentDir.exists()) {
-                parentDir.mkdirs();     // creating missing dirs
+    public void save(List<Document> data, String path) {
+        log.info("Saving data to file '{}'", path);
+
+        File file = new File(path);
+
+        try {
+            if (!file.exists()) {           // creating new file if it doesn't exist
+                File parentDir = file.getParentFile();
+
+                if (parentDir != null && !parentDir.exists()) {
+                    parentDir.mkdirs();     // creating missing dirs
+                }
+                file.createNewFile();       // create new file
             }
-            f.createNewFile();          // create new file
+
+            objectMapper.writeValue(file, data);
+        } catch (IOException e) {
+            log.error("Failed to save data to file '{}': {}", path, e.getMessage());
+            throw new RuntimeException(String.format("Failed to save data to file '%s'", path), e);
         }
-        // writerFor has to be used to ensure that class type is written to json too
-        objectMapper.writerFor(new TypeReference<List<Document>>() {})
-                .writeValue(f, data);
     }
 
     /**
      * Loads a list of Document objects from a file.
      * Each document is written in JSON format.
-     * Polymorphy is supported -> automatic distinction between classes
-     * @param path Source File path where data is located
+     *
+     * @param path        Source file path where data is located
+     * @param targetClass Concrete Document class to deserialize (e.g. AnoDocument.class)
      */
-    public List<Document> load(String path) {
+    public List<Document> load(String path, Class<? extends Document> targetClass) {
+        File file = new File(path);
+
+        if (!file.exists()) {
+            return new ArrayList<>();
+        }
+
+        CollectionType collectionType = objectMapper.getTypeFactory()
+                .constructCollectionType(List.class, targetClass);
+
         try {
-            File f = new File(path);
-            return objectMapper.readValue(f, new TypeReference<List<Document>>() {});
+            log.info("Loading data from file '{}'", path);
+            List<? extends Document> tmp = objectMapper.readValue(file, collectionType);
+            return new ArrayList<>(tmp);
         } catch (IOException e) {
-            // On Error: return empty list
-            return new ArrayList<Document>();
+            log.error("Failed to read or parse from file '{}': {}", path, e.getMessage());
+            throw new RuntimeException(String.format("Failed to read or parse from file '%s'", path), e);
         }
     }
 }

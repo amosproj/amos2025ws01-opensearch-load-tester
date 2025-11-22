@@ -1,11 +1,12 @@
 package com.opensearchloadtester.testdatagenerator.service;
 
+import com.opensearchloadtester.testdatagenerator.config.DataGenerationProperties.DocumentType;
 import com.opensearchloadtester.testdatagenerator.model.Document;
+import com.opensearchloadtester.testdatagenerator.model.ano.AnoDocument;
+import com.opensearchloadtester.testdatagenerator.model.duo.DuoDocument;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -13,44 +14,31 @@ import java.util.List;
  * On subsequent runs, existing data is reused unless deleted manually.
  */
 @Slf4j
-@Component
+@RequiredArgsConstructor
 public class PersistentDataGenerator implements DataGenerator {
 
     private final FileStorageService storageService;
     private final String outputPath;
-
-    public PersistentDataGenerator(FileStorageService storageService, @Value("${data.output.path:data/testdata.json}") String outputPath) {
-        this.storageService = storageService;
-        this.outputPath = outputPath;
-    }
+    private final DynamicDataGenerator dynamicDataGenerator;
 
     /**
      * Loads existing data from persistent file.
      * If there is no data available, new random data is generated
      */
     @Override
-    public List<Document> generateData(int count) {
-        try {
-            List<Document> existingData = storageService.load(outputPath);
-            if (!existingData.isEmpty()) {
-                if(existingData.size() != count) {
-                    log.warn("Existing test-data ({} documents) is not desired data amount. Generating new ramdom test-data.", existingData.size());
-                    List<Document> list = new DynamicDataGenerator().generateData(count);
-                    storageService.save(list, outputPath);
-                    log.info("Generated and saved new random test-data ({} documents)", list.size());
-                    return list;
-                }
-                log.info("{} test-data loaded", existingData.size());
-                return existingData;
-            }else{
-                List<Document> list = new DynamicDataGenerator().generateData(count);
-                storageService.save(list, outputPath);
-                log.info("Generated and saved new random test-data ({} documents)", list.size());
-                return list;
-            }
-        } catch (IOException e) {
-            log.error("Error while generating test-data", e);
-            throw new RuntimeException("Error while generating test-data", e);
+    public List<Document> generateData(DocumentType documentType, int count) {
+        List<Document> existingData = switch (documentType) {
+            case ANO -> storageService.load(outputPath, AnoDocument.class);
+            case DUO -> storageService.load(outputPath, DuoDocument.class);
+        };
+
+        if (existingData.isEmpty()) {
+            List<Document> newData = dynamicDataGenerator.generateData(documentType, count);
+            storageService.save(newData, outputPath);
+            log.info("Generated and saved {} random {} documents", newData.size(), documentType.name());
+            return newData;
         }
+
+        return existingData;
     }
 }

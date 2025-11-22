@@ -16,10 +16,13 @@ public class DataGeneratorConfig {
     public DataGenerator dataGenerator(DataGenerationProperties dataGenerationProperties,
                                        FileStorageService fileStorageService) {
 
-        if (dataGenerationProperties.getMode() == DataGenerationProperties.Mode.PERSISTENT) {
-            return new PersistentDataGenerator(fileStorageService, dataGenerationProperties.getOutputPath());
-        }
-
-        return new DynamicDataGenerator();
+        return switch (dataGenerationProperties.getMode()) {
+            case DYNAMIC -> new DynamicDataGenerator();
+            case PERSISTENT -> new PersistentDataGenerator(
+                    fileStorageService,
+                    dataGenerationProperties.getOutputPath(),
+                    new DynamicDataGenerator()
+            );
+        };
     }
 }
