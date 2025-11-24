@@ -73,6 +73,45 @@ public class ReportController {
                 expectedReplicas,
                 metrics.getRequestType().size());
 
+        // Check if all replicas have reported
+        if (currentCount >= expectedReplicas) {
+            log.info("All {} replicas have reported. Generating reports...", expectedReplicas);
+            
+            try {
+                generateReports();
+                
+                String message = String.format(
+                    "All metrics received (%d/%d replicas). Reports generated successfully!\n" +
+                    "Total load generators: %d\n" +
+                    "Total queries: %d\n",
+                    currentCount, expectedReplicas, 
+                    metricsMap.size(),
+                    metricsMap.values().stream().mapToInt(m -> m.getRequestType().size()).sum()
+                );
+                
+                if (jsonExportEnabled) {
+                    message += "JSON report: " + reportService.getJsonReportPath() + "\n";
+                }
+                if (csvExportEnabled) {
+                    message += "CSV report: " + reportService.getCsvReportPath() + "\n";
+                }
+                
+                return ResponseEntity.ok(message);
+                
+            } catch (IOException e) {
+                log.error("Failed to generate reports", e);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Metrics received but failed to generate reports: " + e.getMessage() + "\n");
+            }
+        } else {
+            // Not all replicas reported yet
+            return ResponseEntity.ok(
+                String.format("Metrics stored successfully. Waiting for remaining replicas (%d/%d)\n",
+                    currentCount, expectedReplicas)
+            );
+        }
+    }
+    
     /**
      * Generates reports from all collected metrics.
      * Called when all expected replicas have reported.
