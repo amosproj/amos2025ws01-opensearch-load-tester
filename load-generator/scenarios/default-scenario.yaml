@@ -1,0 +1,15 @@
+---
+name: default-scenario
+document_type: ANO
+duration: PT5M
+queries_per_second: 50
+warm_up_duration: PT30S
+ramp_up_duration: PT1M
+concurrency:
+  client_size: 10
+  thread_pool_size: 5
+query:
+  type: YEAR_RANGE
+  parameters:
+    from: 2010
+    to: 2025
