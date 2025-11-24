@@ -162,7 +162,7 @@ public class ReportController {
      */
     @GetMapping("/health")
     public ResponseEntity<String> health() {
-        return ResponseEntity.ok("Metrics Reporter is running!\n");
+        return ResponseEntity.ok("Report Controller is running!\n");
     }
 
 }
