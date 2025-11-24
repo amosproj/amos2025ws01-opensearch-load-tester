@@ -63,13 +63,16 @@ public class ReportController {
             return ResponseEntity.badRequest().body("Invalid metrics data\n");
         }
 
-        this.metrics.add(metrics);
+        // Store metrics in thread-safe map
+        metricsMap.put(metrics.getLoadGeneratorInstance(), metrics);
+        int currentCount = receivedReports.incrementAndGet();
+        
+        log.info("Stored metrics from {}. Received {}/{} replicas. Query count: {}", 
+                metrics.getLoadGeneratorInstance(), 
+                currentCount, 
+                expectedReplicas,
+                metrics.getRequestType().size());
 
-        log.debug("Received data from {}: requestType:{}, roundtripMilSec:{}, jsonResponse:{} \n",
-                metrics.getLoadGeneratorInstance(), metrics.getRequestType(), metrics.getRoundtripMilSec(), metrics.getJsonResponse());
-
-        log.info("Metrics stored successfully!\n");
-        return ResponseEntity.ok("Metrics stored successfully!\n");
     }
 
     // Simple getter
