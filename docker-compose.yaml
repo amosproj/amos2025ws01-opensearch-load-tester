@@ -34,13 +34,16 @@ services:
       dockerfile: Dockerfile
     deploy:
       replicas: ${LOAD_GENERATOR_REPLICAS:-1}
+    volumes:
+      - ./load-generator/scenarios:/scenarios:ro
     environment:
       - SPRING_APPLICATION_NAME=load-generator
       - OPENSEARCH_URL=${OPENSEARCH_URL:-http://test-target-opensearch:9200}
-      - METRICS_REPORTER_URL=${METRICS_REPORTER_URL-http://metrics-reporter:8080/api/}
+      - METRICS_REPORTER_URL=${METRICS_REPORTER_URL:-http://metrics-reporter:8080/api/}
       - LOGGING_LEVEL_ROOT=${LOGGING_LVL_ROOT:-ERROR}
       - LOGGING_LEVEL_ORG_ELASTICSEARCH=${LOGGING_LVL_ELASTIC:-ERROR}
       - LOGGING_LEVEL_COM_OPENSEARCHLOADTESTER_LOADGENERATOR=${LOGGING_LVL_LOAD_GEN:-INFO}
+      - SCENARIO_CONFIG_PATH=${SCENARIO_CONFIG_PATH:-scenarios/default-scenario.yaml}
     networks:
       - opensearch-loadtester-network
     healthcheck:
