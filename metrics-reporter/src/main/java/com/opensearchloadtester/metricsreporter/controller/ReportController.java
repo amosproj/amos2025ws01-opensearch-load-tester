@@ -73,11 +73,49 @@ public class ReportController {
                 expectedReplicas,
                 metrics.getRequestType().size());
 
+    /**
+     * Generates reports from all collected metrics.
+     * Called when all expected replicas have reported.
+     *
+     * @throws IOException if report generation fails
+     */
+    private void generateReports() throws IOException {
+        List<Metrics> allMetrics = new ArrayList<>(metricsMap.values());
+        
+        log.info("Generating reports from {} load generator instances", allMetrics.size());
+        
+        if (jsonExportEnabled) {
+            log.info("Generating JSON report...");
+            for (Metrics metrics : allMetrics) {
+                reportService.appendToJsonReport(metrics);
+            }
+            log.info("JSON report generated at: {}", reportService.getJsonReportPath());
+        }
+        
+        if (csvExportEnabled) {
+            log.info("Generating CSV report...");
+            for (Metrics metrics : allMetrics) {
+                reportService.appendToCsvReport(metrics);
+            }
+            log.info("CSV report generated at: {}", reportService.getCsvReportPath());
+        }
+        
+        // Log aggregated statistics
+        TestRunReport report = reportService.createReport(allMetrics);
+        log.info("Report Summary - Total Queries: {}, Total Errors: {}, Load Generator Instances: {}", 
+                report.getTotalQueries(), 
+                report.getTotalErrors(), 
+                report.getLoadGeneratorInstances().size());
     }
 
-    // Simple getter
-    public ArrayList<Metrics> getMetrics() {
-        return metrics;
+    /**
+     * Returns all collected metrics as a list.
+     * Thread-safe getter for metrics.
+     *
+     * @return List of all metrics
+     */
+    public List<Metrics> getMetrics() {
+        return new ArrayList<>(metricsMap.values());
     }
 
     /**
