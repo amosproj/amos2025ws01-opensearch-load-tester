@@ -1,6 +1,9 @@
 package com.opensearchloadtester.loadgenerator.service;
 
+import com.opensearchloadtester.loadgenerator.model.DocumentType;
+import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -20,15 +23,21 @@ public class LoadRunnerService {
 
     private final MetricsReporterClient metricsReporterClient;
     private final MetricsCollectorService metricsCollectorService;
+    private final QueryRegistry queryRegistry;
+
+    @Value("${opensearch.url}")
+    private String openSearchBaseUrl;
 
     public LoadRunnerService(MetricsReporterClient metricsReporterClient,
-                             MetricsCollectorService metricsCollectorService) {
+                             MetricsCollectorService metricsCollectorService, QueryRegistry queryRegistry) {
         this.metricsReporterClient = metricsReporterClient;
         this.metricsCollectorService = metricsCollectorService;
+        this.queryRegistry = queryRegistry;
     }
 
     /**
-     * Executes n query executions simultaneously and waits for all to complete.
+     * Executes n query executions simultaneously, each on a single thread
+     * and waits until all threads are completed.
      *
      * @param queryExecutions List of query executions to run in parallel
      * @throws InterruptedException if the execution is interrupted while waiting
@@ -81,6 +90,119 @@ public class LoadRunnerService {
             // Shutdown executor service
             shutdownExecutorService(executorService);
         }
+    }
+
+    /**
+     * Executes queries according to the ScenarioConfig
+     *
+     * @param scenarioConfig scenario configuration
+     */
+    public void execute(ScenarioConfig scenarioConfig) {
+        log.info("Started execution of scenario {} ...", scenarioConfig.getName());
+
+        // Parameter check
+        if (scenarioConfig == null) {
+            log.error("executeQueries: No configuration provided");
+            return;
+        }
+
+        // Load query template
+        final String templateFile;
+        try {
+            templateFile = scenarioConfig.getQuery().getType().getTemplatePath();
+        } catch (IllegalArgumentException ex) {
+            log.error("executeQueries: Unknown queryPath in config: {}", scenarioConfig.getQuery().getType().getTemplatePath());
+            return;
+        }
+
+        String indexName = scenarioConfig.getDocumentType() == DocumentType.ANO ? "ano-index" : "duo-index";
+
+        // Create QueryExecution
+        OpenSearchQueryExecution query = new OpenSearchQueryExecution(
+                scenarioConfig.getName(),
+                indexName,
+                templateFile,
+                scenarioConfig.getQuery().getParameters(),
+                openSearchBaseUrl,
+                metricsCollectorService
+        );
+
+        int MAX_THREADS = 50;
+
+        // Number of parallel threads
+        int threadPoolSize = scenarioConfig.getConcurrency().getThreadPoolSize();
+        if (threadPoolSize > MAX_THREADS) {
+            threadPoolSize = MAX_THREADS;
+            log.warn("executeQueries: Too many concurrency threads specified." +
+                    "Maximal threadPoolSize is {}", MAX_THREADS);
+        }
+
+        // Setup threadPool and countDownLatch
+        ExecutorService executorService = Executors.newFixedThreadPool(threadPoolSize);
+        CountDownLatch latch = new CountDownLatch(threadPoolSize);
+
+        int clientSize = scenarioConfig.getConcurrency().getClientSize();
+
+        try {
+            // Submit all query executions to the thread pool
+            for (int i = 0; i < threadPoolSize; i++) {
+                executorService.submit(() -> {
+                    int queryCounter = 0;
+                    long start = System.nanoTime();
+                    try {
+
+                        log.debug("Thread with ID {}: Starting query executions ", Thread.currentThread().threadId());
+
+                        long durationNs = scenarioConfig.getDuration().toNanos();
+                        int queriesPerSecondTotal = scenarioConfig.getQueriesPerSecond();
+                        int queriesPerSecondPerThread = queriesPerSecondTotal /
+                                scenarioConfig.getConcurrency().getThreadPoolSize();
+                        int batchesPerSecond = Math.max(1, queriesPerSecondPerThread / clientSize);
+                        long sleepBetweenBatchesMs = 1000L / batchesPerSecond;
+
+                        while (System.nanoTime() - start < durationNs) {
+                            // execute batch
+                            for (int j = 0; j < clientSize; j++) {
+                                query.run();
+                                queryCounter++;
+                            }
+                            // rate limit
+                            Thread.sleep(sleepBetweenBatchesMs);
+                        }
+
+                        log.debug("Thread with ID {}: Finished query executions ", Thread.currentThread().threadId());
+
+                    } catch (Exception e) {
+                        log.error("Error executing queries in thread {}", Thread.currentThread().threadId(), e);
+                    } finally {
+                        log.info("Thread with ID {} finished after {}s and executed {} queries.", Thread.currentThread().threadId(), (System.nanoTime() - start) / 1_000_000_000.0, queryCounter);
+                        latch.countDown();
+                    }
+                });
+            }
+
+            // Wait for all threads to complete
+            log.info("Waiting for all {} threads to complete", threadPoolSize);
+            boolean completed = latch.await(Long.MAX_VALUE, TimeUnit.SECONDS);
+            // TODO: Set a timeout per queryExecution
+            // boolean completed = latch.await(10, TimeUnit.MINUTES);
+
+            if (completed) {
+                log.info("Calling MetricsReporterClient");
+                metricsReporterClient.reportMetrics(metricsCollectorService.getMetrics());
+                log.info("All {} threads completed successfully", threadPoolSize);
+            } else {
+                log.warn("Timeout waiting for execution threads to complete");
+            }
+
+        } catch (InterruptedException e) {
+            log.error("Error when awaiting all threads", e);
+        } finally {
+            // Shutdown executor service
+            shutdownExecutorService(executorService);
+        }
+
+
     }
 
     /**

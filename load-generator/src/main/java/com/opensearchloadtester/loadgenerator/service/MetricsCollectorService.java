@@ -60,7 +60,7 @@ public class MetricsCollectorService {
 
         metrics.addMetrics(requestType, roundtripMilSec, jsonResponse);
 
-        log.info(metrics.toString());
+        //log.info(metrics.toString());
 
 
 //        try {
