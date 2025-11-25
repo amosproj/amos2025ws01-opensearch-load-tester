@@ -88,7 +88,8 @@ public class OpenSearchQueryExecution implements QueryExecution {
                     restTemplate.postForEntity(url, entity, String.class);
             long tookMs = System.currentTimeMillis() - start;
 
-            metricsCollectorService.appendMetrics(id, tookMs, response.toString());
+            // Store only the JSON body, not the entire ResponseEntity with headers
+            metricsCollectorService.appendMetrics(id, tookMs, response.getBody());
 
             int status = response.getStatusCodeValue();
             JsonNode json = mapper.readTree(response.getBody());

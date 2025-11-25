@@ -98,7 +98,11 @@ public class LoadRunnerService {
      * @param scenarioConfig scenario configuration
      */
     public void execute(ScenarioConfig scenarioConfig) {
-        log.info("Started execution of scenario {} ...", scenarioConfig.getName());
+        log.info("Started execution of scenario: {}", scenarioConfig.getName());
+        log.info("Scenario duration: {} ({} seconds)", 
+            scenarioConfig.getDuration(), 
+            scenarioConfig.getDuration().getSeconds());
+        
 
         // Parameter check
         if (scenarioConfig == null) {
@@ -140,6 +144,9 @@ public class LoadRunnerService {
         CountDownLatch latch = new CountDownLatch(threadPoolSize);
 
         int clientSize = scenarioConfig.getConcurrency().getClientSize();
+        
+        // Track overall test start time
+        long testStartTime = System.currentTimeMillis();
 
         try {
             // Submit all query executions to the thread pool
@@ -185,12 +192,22 @@ public class LoadRunnerService {
             // TODO: Set a timeout per queryExecution
             // boolean completed = latch.await(10, TimeUnit.MINUTES);
 
+            long testEndTime = System.currentTimeMillis();
+            long actualDurationMs = testEndTime - testStartTime;
+            double actualDurationSeconds = actualDurationMs / 1000.0;
+            
             if (completed) {
                 log.info("Calling MetricsReporterClient");
                 metricsReporterClient.reportMetrics(metricsCollectorService.getMetrics());
-                log.info("All {} threads completed successfully", threadPoolSize);
+                log.info("Scenario '{}' completed successfully. All {} threads finished.", scenarioConfig.getName(), threadPoolSize);
+                log.info("Test duration - Expected: {} ({}s), Actual: {}s", 
+                    scenarioConfig.getDuration(), 
+                    scenarioConfig.getDuration().getSeconds(),
+                    String.format("%.2f", actualDurationSeconds));
             } else {
                 log.warn("Timeout waiting for execution threads to complete");
+                log.warn("Scenario '{}' did not complete within expected duration. Actual runtime: {}s", 
+                    scenarioConfig.getName(), String.format("%.2f", actualDurationSeconds));
             }
 
         } catch (InterruptedException e) {

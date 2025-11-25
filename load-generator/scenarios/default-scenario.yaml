@@ -1,7 +1,7 @@
 ---
 name: default-scenario
 document_type: ANO
-duration: PT5M
+duration: PT10S
 queries_per_second: 50
 warm_up_duration: PT30S
 ramp_up_duration: PT1M

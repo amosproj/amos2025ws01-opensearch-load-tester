@@ -75,6 +75,8 @@ services:
       - opensearch-loadtester-network
     ports:
       - "8080:8080"
+    volumes:
+      - ./reports:/app/reports
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O
             - http://metrics-reporter:8080/api/health
@@ -104,10 +106,12 @@ services:
       - "9200:9200" # OpenSearch REST API
       #- "9600:9600" # OpenSearch Performance Analyzer
     healthcheck:
-      test: [ "CMD-SHELL",
-            "curl -s \
-            http://test-target-opensearch:9200/_cluster/health
-            | grep green || exit 1"]
+      test: [
+          "CMD-SHELL",
+          "curl -s \
+          http://test-target-opensearch:9200/_cluster/health
+          | grep green || exit 1",
+        ]
       interval: 10s
       timeout: 5s
       retries: 20
