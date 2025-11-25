@@ -70,8 +70,6 @@ public class OpenSearchQueryExecution implements QueryExecution {
             }
 
             // 3) Prepare HTTP call to OpenSearch
-
-
             String url = openSearchBaseUrl + indexName + "/_search";
             RestTemplate restTemplate = new RestTemplate();
 

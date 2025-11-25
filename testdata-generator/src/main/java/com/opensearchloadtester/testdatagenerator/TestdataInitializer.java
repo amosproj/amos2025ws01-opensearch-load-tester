@@ -31,7 +31,6 @@ public class TestdataInitializer implements CommandLineRunner {
         } catch (Exception e) {
             log.error("Unexpected error during batch pre-loading", e);
             throw new RuntimeException("Failed to initialize test data", e);
-            System.exit(1);
         }
     }
 }
