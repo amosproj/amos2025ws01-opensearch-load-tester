@@ -2,10 +2,6 @@ name: Test & Build Testdata Generator
 
 on:
   push:
-    paths:
-      - 'testdata-generator/**'
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
     inputs:
       data_mode:

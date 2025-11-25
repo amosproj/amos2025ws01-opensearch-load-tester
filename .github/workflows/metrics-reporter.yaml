@@ -2,8 +2,6 @@ name: Test & Build Metrics Reporter
 
 on:
   push:
-    paths:
-      - 'metrics-reporter/**'
   pull_request:
     branches: [ main ]
   workflow_dispatch:

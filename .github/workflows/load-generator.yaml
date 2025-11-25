@@ -25,7 +25,7 @@ jobs:
       - name: Run unit tests inside Maven/Temurin container
         env:
           OPENSEARCH_URL: http://test-target-opensearch:9200
-          METRICS_REORTER_URL: http//metrics-reporter:8080/api
+          METRICS_REPORTER_URL: http//metrics-reporter:8080/api
         run: |
           NETWORK=$(docker inspect --format='{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}' test-target-opensearch)
           echo "Using network: $NETWORK"
@@ -34,7 +34,7 @@ jobs:
               --name metrics-reporter \
               -v "${{ github.workspace }}/load-generator":/app:rw \
               -w /app \
-              -e METRICS_REORTER_URL \
+              -e METRICS_REPORTER_URL \
               -e OPENSEARCH_URL \
               maven:3.9-eclipse-temurin-25 \
               sh -c "mvn dependency:go-offline -B && mvn -B test"
