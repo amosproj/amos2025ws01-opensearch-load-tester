@@ -1,6 +1,7 @@
 package com.opensearchloadtester.metricsreporter.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRawValue;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -28,9 +29,22 @@ public class QueryResult {
     private Long roundtripMs;
     
     /**
+     * OpenSearch internal query execution time in milliseconds (from "took" field)
+     */
+    @JsonProperty("opensearch_took_ms")
+    private Long opensearchTookMs;
+    
+    /**
+     * Number of hits/documents returned by the query (from "hits.total.value")
+     */
+    @JsonProperty("hits_count")
+    private Integer hitsCount;
+    
+    /**
      * The complete raw JSON response from OpenSearch (includes took, hits, score, errors, etc.)
      */
     @JsonProperty("json_response")
+    @JsonRawValue
     private String jsonResponse;
     
     /**
