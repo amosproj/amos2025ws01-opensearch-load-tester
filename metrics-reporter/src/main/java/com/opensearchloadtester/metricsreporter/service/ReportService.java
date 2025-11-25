@@ -81,7 +81,7 @@ public class ReportService {
         
         // Create CSV file with headers
         if (!Files.exists(csvPath)) {
-            String csvHeaders = "Load Generator Instance,Request Type,Roundtrip (ms),Has Error,JSON Response\n";
+            String csvHeaders = "Load Generator Instance,Request Type,Roundtrip (ms),OpenSearch Took (ms),Hits Count,Has Error,JSON Response\n";
             Files.writeString(csvPath, csvHeaders);
             log.info("Created initial CSV report file: {}", csvPath.toAbsolutePath());
         }
@@ -164,6 +164,8 @@ public class ReportService {
                     result.getLoadGeneratorInstance(),
                     result.getRequestType(),
                     result.getRoundtripMs(),
+                    result.getOpensearchTookMs(),
+                    result.getHitsCount(),
                     result.getHasError(),
                     escapeForCsv(result.getJsonResponse())
                 );
@@ -193,9 +195,15 @@ public class ReportService {
             // Check if response contains an error
             boolean hasError = jsonResponse != null && jsonResponse.contains("\"error\"");
             
+            // Extract took and hits from JSON response
+            Long opensearchTookMs = extractTookFromResponse(jsonResponse);
+            Integer hitsCount = extractHitsCountFromResponse(jsonResponse);
+            
             QueryResult queryResult = new QueryResult(
                 requestType,
                 roundtripMs,
+                opensearchTookMs,
+                hitsCount,
                 jsonResponse,
                 hasError,
                 instanceName
@@ -205,6 +213,54 @@ public class ReportService {
         }
         
         return queryResults;
+    }
+    
+    /**
+     * Extracts the "took" value from OpenSearch JSON response.
+     *
+     * @param jsonResponse The raw JSON response string
+     * @return The took value in milliseconds, or null if not found
+     */
+    private Long extractTookFromResponse(String jsonResponse) {
+        if (jsonResponse == null) {
+            return null;
+        }
+        try {
+            // Simple regex to extract "took":123
+            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\"took\"\\s*:\\s*(\\d+)");
+            java.util.regex.Matcher matcher = pattern.matcher(jsonResponse);
+            if (matcher.find()) {
+                return Long.parseLong(matcher.group(1));
+            }
+        } catch (Exception e) {
+            log.debug("Could not extract 'took' from response: {}", e.getMessage());
+        }
+        return null;
+    }
+    
+    /**
+     * Extracts the hits count from OpenSearch JSON response.
+     *
+     * @param jsonResponse The raw JSON response string
+     * @return The number of hits, or null if not found
+     */
+    private Integer extractHitsCountFromResponse(String jsonResponse) {
+        if (jsonResponse == null) {
+            return null;
+        }
+        try {
+            // Look for "hits":{"total":{"value":123
+            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(
+                "\"hits\"\\s*:\\s*\\{\\s*\"total\"\\s*:\\s*\\{\\s*\"value\"\\s*:\\s*(\\d+)"
+            );
+            java.util.regex.Matcher matcher = pattern.matcher(jsonResponse);
+            if (matcher.find()) {
+                return Integer.parseInt(matcher.group(1));
+            }
+        } catch (Exception e) {
+            log.debug("Could not extract 'hits.total.value' from response: {}", e.getMessage());
+        }
+        return null;
     }
 
     
@@ -255,9 +311,15 @@ public class ReportService {
                     totalErrors++;
                 }
                 
+                // Extract took and hits from JSON response
+                Long opensearchTookMs = extractTookFromResponse(jsonResponse);
+                Integer hitsCount = extractHitsCountFromResponse(jsonResponse);
+                
                 QueryResult queryResult = new QueryResult(
                     requestType,
                     roundtripMs,
+                    opensearchTookMs,
+                    hitsCount,
                     jsonResponse,
                     hasError,
                     instanceName
@@ -318,6 +380,8 @@ public class ReportService {
                 "Load Generator Instance",
                 "Request Type",
                 "Roundtrip (ms)",
+                "OpenSearch Took (ms)",
+                "Hits Count",
                 "Has Error",
                 "JSON Response"
             )
@@ -330,6 +394,8 @@ public class ReportService {
                     result.getLoadGeneratorInstance(),
                     result.getRequestType(),
                     result.getRoundtripMs(),
+                    result.getOpensearchTookMs(),
+                    result.getHitsCount(),
                     result.getHasError(),
                     // Escape newlines and quotes in JSON response for CSV
                     escapeForCsv(result.getJsonResponse())
