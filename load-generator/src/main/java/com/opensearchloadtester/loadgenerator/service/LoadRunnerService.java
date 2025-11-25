@@ -115,12 +115,10 @@ public class LoadRunnerService {
             return;
         }
 
-        String indexName = scenarioConfig.getDocumentType() == DocumentType.ANO ? "ano-index" : "duo-index";
-
         // Create QueryExecution
         OpenSearchQueryExecution query = new OpenSearchQueryExecution(
                 scenarioConfig.getName(),
-                indexName,
+                scenarioConfig.getDocumentType().getIndex(),
                 templateFile,
                 scenarioConfig.getQuery().getParameters(),
                 openSearchBaseUrl,
