@@ -40,3 +40,6 @@ bin/
 
 # All CSV-Files 
 *.csv 
+
+reports/*.csv
+reports/*.json
