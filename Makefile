@@ -35,7 +35,6 @@ loadtest:
 		make clean; \
 		make build; \
 		make run; \
-		make curl; \
 	fi
 
 build:
