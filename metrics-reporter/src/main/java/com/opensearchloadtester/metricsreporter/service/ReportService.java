@@ -357,6 +357,13 @@ public class ReportService {
 
         log.info("Report created with {} total queries, {} errors, from {} instances", 
             report.getTotalQueries(), report.getTotalErrors(), instances.size());
+        log.info("Statistics - Roundtrip: avg={}ms, min={}ms, max={}ms | OpenSearch Took: avg={}ms, min={}ms, max={}ms",
+            String.format("%.2f", statistics.getRoundtripMs().getAverage()),
+            statistics.getRoundtripMs().getMin(),
+            statistics.getRoundtripMs().getMax(),
+            String.format("%.2f", statistics.getOpensearchTookMs().getAverage()),
+            statistics.getOpensearchTookMs().getMin(),
+            statistics.getOpensearchTookMs().getMax());
 
         return report;
     }
