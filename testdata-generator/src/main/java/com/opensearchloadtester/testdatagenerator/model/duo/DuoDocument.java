@@ -1,76 +1,44 @@
 package com.opensearchloadtester.testdatagenerator.model.duo;
 
-import com.opensearchloadtester.testdatagenerator.model.Document;
+import com.opensearchloadtester.testdatagenerator.model.AbstractDocument;
 import lombok.AccessLevel;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
-@Data
-@NoArgsConstructor(access = AccessLevel.PRIVATE) // DuoDocument Objects must be created via random() method
-public class DuoDocument implements Document {
+@Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PRIVATE) // DuoDocument objects must be created via random() method
+public class DuoDocument extends AbstractDocument {
 
     /**
-     * Attributes of a Document Instance correspond to the data stored in an OpenSearch Interface.
+     * Attributes of a DuoDocument correspond to the data stored in an OpenSearch index.
      * Wrapper Classes are used for datatypes to ensure stability for null entries.
      */
-    private String id;
-    private String customAll;
-    private Instant lastDocumentChange;
-    private String dssDataspaceId;
-    private String dssDocumentId;
-    private String dssDocumentName;
-    private Long contentLength;
     private String ocrFulltext;
-    private String contentType;
-    private String etag;
-    private String dssVersion;
-    private String dssLastModifiedUserIdKey;
-    private Instant dssLastModifiedDatetime;
     private DuoMetadata dssCustomMetadataDuo;
-    private String dssCreationUserDisplayName;
-    private String dssLastModifiedUserDisplayName;
-    private String dssCreationUserIdKey;
-    private String dssProcessingFlagOwner;
 
-    // Method to create a random DuoDocument Object
+    // Method to create a random DuoDocument object
     public static DuoDocument random() {
-        Random rand = new Random();
-        DuoDocument res = new DuoDocument();
-        res.id = "id-" + rand.nextInt(100000);
-        res.customAll = "This is customAll from " + res.id;
-        res.lastDocumentChange = Instant.now();
-        res.dssDataspaceId = "dataspace-" + rand.nextInt(1001);
-        res.dssDocumentId = "document-" + rand.nextInt(10000);
-        res.dssDocumentName = "Payroll-" + res.dssDocumentId + "-random";
-        res.contentLength = rand.nextLong(10000);
-        res.ocrFulltext = "This is OCR fulltext from " + res.id;
-        res.contentType = "Document";
-        res.etag = "etag-" + rand.nextInt(100000000);
-        res.dssVersion = "1.0";
-        res.dssLastModifiedUserIdKey = "user-random";
-        res.dssLastModifiedDatetime = Instant.now();
-        res.dssCustomMetadataDuo = DuoMetadata.random();
-        res.dssCreationUserDisplayName = "RandomGenerator";
-        res.dssLastModifiedUserDisplayName = "RandomGenerator";
-        res.dssCreationUserIdKey = "user-random";
-        res.dssProcessingFlagOwner = "owner-random";
-        return res;
+        DuoDocument duoDocument = fillCommonFieldsRandomly(new DuoDocument());
+
+        // Fill with random values without purpose
+        duoDocument.ocrFulltext = "This is OCR fulltext from " + duoDocument.id;
+        duoDocument.dssCustomMetadataDuo = DuoMetadata.random();
+        return duoDocument;
     }
 
     /**
-     * Nested Class for PayrollInfo of Duo OpenSearch Indices
+     * Nested Class for DuoMetadata of DuoDocument
      */
-    @Data
+    @Getter
+    @Setter
     public static class DuoMetadata {
-        /**
-         * Attributes correspond to the data stored in an OpenSearch Interface.
-         * Wrapper Classes are used for datatypes to ensure stability for null entries.
-         */
+
         private String bookingState;
         private Instant bookingStateChangedAt;
         private Long companyId;
@@ -99,74 +67,74 @@ public class DuoDocument implements Document {
         private String transactionIds;
 
 
-        // Method to create a random DuoMetadata Object
+        // Method to create a random DuoMetadata object
         public static DuoMetadata random() {
-            Random rand = new Random();
-            DuoMetadata meta = new DuoMetadata();
+            DuoMetadata duoMetadata = new DuoMetadata();
+
+            // Fill with random values without purpose
             List<String> states = List.of("Open", "Paid", "Closed");
-            meta.bookingState = states.get(rand.nextInt(states.size()));
-            meta.bookingStateChangedAt = Instant.now();
-            meta.companyId = rand.nextLong(10000);
+            duoMetadata.bookingState = states.get(RANDOM.nextInt(states.size()));
+            duoMetadata.bookingStateChangedAt = Instant.now();
+            duoMetadata.companyId = RANDOM.nextLong(10000);
             List<String> curr = List.of("EUR", "USD");
-            meta.currency = curr.get(rand.nextInt(curr.size()));
-            meta.customerNumber = "customer-" + rand.nextInt(10000);
-            meta.deletedAt = Instant.MAX;
-            meta.documentType = rand.nextInt(6);
-            meta.documentCategory = "Invoice";
+            duoMetadata.currency = curr.get(RANDOM.nextInt(curr.size()));
+            duoMetadata.customerNumber = "customer-" + RANDOM.nextInt(10000);
+            duoMetadata.deletedAt = Instant.MAX;
+            duoMetadata.documentType = RANDOM.nextInt(6);
+            duoMetadata.documentCategory = "Invoice";
             List<String> invTypes = List.of("Standard", "Urgent", "Reminder");
-            meta.documentInvoiceType = invTypes.get(rand.nextInt(invTypes.size()));
-            meta.einvoiceFulltext = "This is fulltext of invoice " + meta.invoiceNumber;
-            meta.hasPositionCorrection = false;
-            meta.invoiceBusinessPartnerId = rand.nextLong(10000);
-            meta.invoiceBusinessPartner = "partner-" + meta.invoiceBusinessPartnerId.toString();
-            meta.invoiceDate = Instant.now();
-            meta.invoiceNumber = "inv-" + rand.nextInt(10000);
-            meta.lastModifiedDatetime = Instant.now();
-            meta.lastModifiedUserIdKey = "user-random";
+            duoMetadata.documentInvoiceType = invTypes.get(RANDOM.nextInt(invTypes.size()));
+            duoMetadata.einvoiceFulltext = "This is fulltext of invoice " + duoMetadata.invoiceNumber;
+            duoMetadata.hasPositionCorrection = false;
+            duoMetadata.invoiceBusinessPartnerId = RANDOM.nextLong(10000);
+            duoMetadata.invoiceBusinessPartner = "partner-" + duoMetadata.invoiceBusinessPartnerId.toString();
+            duoMetadata.invoiceDate = Instant.now();
+            duoMetadata.invoiceNumber = "inv-" + RANDOM.nextInt(10000);
+            duoMetadata.lastModifiedDatetime = Instant.now();
+            duoMetadata.lastModifiedUserIdKey = "user-random";
             List<String> loc = List.of("Germany", "England", "Spain", "France");
-            meta.location = loc.get(rand.nextInt(loc.size()));
-            meta.paidAt = Instant.now();
-            meta.paidStatus = states.get(rand.nextInt(states.size()));
+            duoMetadata.location = loc.get(RANDOM.nextInt(loc.size()));
+            duoMetadata.paidAt = Instant.now();
+            duoMetadata.paidStatus = states.get(RANDOM.nextInt(states.size()));
             List<Position> pos = new ArrayList<>();
-            int numPos = rand.nextInt(50);
+            int numPos = RANDOM.nextInt(50);
             for (int i = 0; i < numPos; i++) {
                 pos.add(Position.random());
             }
-            meta.positions = pos;
-            meta.totalGrossAmount = rand.nextDouble(10000000);
-            meta.uploaderScId = "up-" + rand.nextInt(1000);
-            meta.timeOfUpload = Instant.now();
+            duoMetadata.positions = pos;
+            duoMetadata.totalGrossAmount = RANDOM.nextDouble(10000000);
+            duoMetadata.uploaderScId = "up-" + RANDOM.nextInt(1000);
+            duoMetadata.timeOfUpload = Instant.now();
             List<String> appStates = List.of("Approved", "Not approved", "In progress");
-            meta.documentApprovalState = appStates.get(rand.nextInt(appStates.size()));
-            meta.transactionIds = "trans-" + rand.nextInt(10000000);
-            return meta;
+            duoMetadata.documentApprovalState = appStates.get(RANDOM.nextInt(appStates.size()));
+            duoMetadata.transactionIds = "trans-" + RANDOM.nextInt(10000000);
+            return duoMetadata;
         }
     }
 
     /**
-     * Nested Class for Positions of Duo OpenSearch Indices
+     * Nested Class for Positions of DuoMetadata
      */
-    @Data
+    @Getter
+    @Setter
     public static class Position {
-        /**
-         * Attributes correspond to the data stored in an OpenSearch Interface.
-         * Wrapper Classes are used for datatypes to ensure stability for null entries.
-         */
+
         private String note;
         private String costCenter1;
         private String costCenter2;
         private Instant serviceDate;
 
 
-        // Method to generate a random Position Object
+        // Method to generate a random Position object
         public static Position random() {
-            Random rand = new Random();
-            Position res = new Position();
-            res.note = "This is a sample note " + rand.nextInt(10000);
-            res.costCenter1 = "cc-" + rand.nextInt(10000);
-            res.costCenter2 = "cc-" + rand.nextInt(10000);
-            res.serviceDate = Instant.now();
-            return res;
+            Position position = new Position();
+
+            // Fill with random values without purpose
+            position.note = "This is a sample note " + RANDOM.nextInt(10000);
+            position.costCenter1 = "cc-" + RANDOM.nextInt(10000);
+            position.costCenter2 = "cc-" + RANDOM.nextInt(10000);
+            position.serviceDate = Instant.now();
+            return position;
         }
     }
 }

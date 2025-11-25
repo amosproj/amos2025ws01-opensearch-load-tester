@@ -1,5 +1,6 @@
 package com.opensearchloadtester.testdatagenerator.service;
 
+import com.opensearchloadtester.testdatagenerator.config.DataGenerationProperties.DocumentType;
 import com.opensearchloadtester.testdatagenerator.model.Document;
 
 import java.util.List;
@@ -16,5 +17,5 @@ public interface DataGenerator {
      * @param count of documents to generate
      * @return list of Document objects
      */
-    List<Document> generateData(int count);
+    List<Document> generateData(DocumentType documentType, int count);
 }

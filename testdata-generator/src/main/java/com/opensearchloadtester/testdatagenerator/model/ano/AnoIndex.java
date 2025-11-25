@@ -1,5 +1,6 @@
 package com.opensearchloadtester.testdatagenerator.model.ano;
 
+import com.opensearchloadtester.testdatagenerator.model.Index;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.opensearch.client.opensearch._types.mapping.Property;
@@ -9,15 +10,27 @@ import org.opensearch.client.opensearch.indices.IndexSettings;
 import java.util.Map;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE) // AnoIndex Objects must not be instantiated
-public final class AnoIndex {
+public final class AnoIndex implements Index {
 
     private static final String INDEX_NAME = "ano-index";
 
-    public static String getName() {
+    private static AnoIndex INSTANCE = null;
+
+
+    public static AnoIndex getInstance() {
+        if (INSTANCE == null) {
+            INSTANCE = new AnoIndex();
+        }
+        return INSTANCE;
+    }
+
+    @Override
+    public String getName() {
         return INDEX_NAME;
     }
 
-    public static IndexSettings getSettings() {
+    @Override
+    public IndexSettings getSettings() {
         // TODO: add remaining settings
         return new IndexSettings.Builder()
                 .numberOfShards(5)
@@ -25,7 +38,8 @@ public final class AnoIndex {
                 .build();
     }
 
-    public static TypeMapping getMapping() {
+    @Override
+    public TypeMapping getMapping() {
         // TODO: add remaining properties
         return new TypeMapping.Builder()
                 .properties(Map.ofEntries(
