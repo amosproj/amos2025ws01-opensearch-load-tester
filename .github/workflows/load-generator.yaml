@@ -25,7 +25,7 @@ jobs:
       - name: Run unit tests inside Maven/Temurin container
         env:
           OPENSEARCH_URL: http://test-target-opensearch:9200
-          METRICS_REPORTER_URL: http//metrics-reporter:8080/api
+          METRICS_REPORTER_URL: http://metrics-reporter:8080/api
         run: |
           NETWORK=$(docker inspect --format='{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}' test-target-opensearch)
           echo "Using network: $NETWORK"

@@ -18,12 +18,12 @@ jobs:
 
       - name: start opensearch container
         run: |
-          docker compose -f docker-compose.yaml up --scale load-generator=3 \
+          docker compose -f docker-compose.yaml up --scale load-generator=2 \
             --wait -d test-target-opensearch testdata-generator load-generator
 
       - name: Run unit tests inside Maven/Temurin container
         env:
-          LOAD_GENERATOR_REPLICAS: 3
+          LOAD_GENERATOR_REPLICAS: 2
         run: |
           NETWORK=$(docker inspect --format='{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}' test-target-opensearch)
           echo "Using network: $NETWORK"
