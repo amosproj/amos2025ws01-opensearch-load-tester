@@ -1,0 +1,46 @@
+name: Test & Build Load Generator
+
+on:
+  push:
+    paths:
+      - 'load-generator/**'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  load-generator:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: start opensearch container
+        run: |
+          docker compose -f docker-compose.yaml up --wait -d test-target-opensearch testdata-generator
+
+      - name: Run unit tests inside Maven/Temurin container
+        env:
+          OPENSEARCH_URL: http://test-target-opensearch:9200
+          METRICS_REORTER_URL: http//metrics-reporter:8080/api
+        run: |
+          NETWORK=$(docker inspect --format='{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}' test-target-opensearch)
+          echo "Using network: $NETWORK"
+          docker run --rm \
+              --network "$NETWORK" \
+              --name metrics-reporter \
+              -v "${{ github.workspace }}/load-generator":/app:rw \
+              -w /app \
+              -e METRICS_REORTER_URL \
+              -e OPENSEARCH_URL \
+              maven:3.9-eclipse-temurin-25 \
+              sh -c "mvn dependency:go-offline -B && mvn -B test"
+
+      - name: Upload Test Reports
+        uses: actions/upload-artifact@v5
+        with:
+          name: load-generator-test-reports
+          path: load-generator/target/surefire-reports/**
