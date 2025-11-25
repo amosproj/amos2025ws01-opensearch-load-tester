@@ -38,7 +38,6 @@ public class ReportService {
     
     @Value("${report.json.filename:test_run_report.json}")
     private String jsonFilename;
-    
     @Value("${report.csv.filename:test_run_report.csv}")
     private String csvFilename;
 
@@ -216,49 +215,46 @@ public class ReportService {
     }
     
     /**
-     * Extracts the "took" value from OpenSearch JSON response.
+     * Extracts the "took" value from OpenSearch JSON response by parsing the JSON.
      *
      * @param jsonResponse The raw JSON response string
      * @return The took value in milliseconds, or null if not found
      */
     private Long extractTookFromResponse(String jsonResponse) {
-        if (jsonResponse == null) {
+        if (jsonResponse == null || jsonResponse.isEmpty()) {
             return null;
         }
         try {
-            // Simple regex to extract "took":123
-            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\"took\"\\s*:\\s*(\\d+)");
-            java.util.regex.Matcher matcher = pattern.matcher(jsonResponse);
-            if (matcher.find()) {
-                return Long.parseLong(matcher.group(1));
+            com.fasterxml.jackson.databind.JsonNode root = objectMapper.readTree(jsonResponse);
+            if (root.has("took")) {
+                return root.get("took").asLong();
             }
         } catch (Exception e) {
-            log.debug("Could not extract 'took' from response: {}", e.getMessage());
+            log.debug("Could not parse JSON to extract 'took' from response: {}", e.getMessage());
         }
         return null;
     }
     
     /**
-     * Extracts the hits count from OpenSearch JSON response.
+     * Extracts the hits count from OpenSearch JSON response by parsing the JSON.
      *
      * @param jsonResponse The raw JSON response string
      * @return The number of hits, or null if not found
      */
     private Integer extractHitsCountFromResponse(String jsonResponse) {
-        if (jsonResponse == null) {
+        if (jsonResponse == null || jsonResponse.isEmpty()) {
             return null;
         }
         try {
-            // Look for "hits":{"total":{"value":123
-            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(
-                "\"hits\"\\s*:\\s*\\{\\s*\"total\"\\s*:\\s*\\{\\s*\"value\"\\s*:\\s*(\\d+)"
-            );
-            java.util.regex.Matcher matcher = pattern.matcher(jsonResponse);
-            if (matcher.find()) {
-                return Integer.parseInt(matcher.group(1));
+            com.fasterxml.jackson.databind.JsonNode root = objectMapper.readTree(jsonResponse);
+            if (root.has("hits")) {
+                com.fasterxml.jackson.databind.JsonNode hitsNode = root.get("hits");
+                if (hitsNode.has("total") && hitsNode.get("total").has("value")) {
+                    return hitsNode.get("total").get("value").asInt();
+                }
             }
         } catch (Exception e) {
-            log.debug("Could not extract 'hits.total.value' from response: {}", e.getMessage());
+            log.debug("Could not parse JSON to extract 'hits.total.value' from response: {}", e.getMessage());
         }
         return null;
     }

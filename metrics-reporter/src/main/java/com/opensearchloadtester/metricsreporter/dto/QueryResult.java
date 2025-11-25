@@ -2,6 +2,7 @@ package com.opensearchloadtester.metricsreporter.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRawValue;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -45,6 +46,7 @@ public class QueryResult {
      */
     @JsonProperty("json_response")
     @JsonRawValue
+    @JsonDeserialize(using = RawJsonDeserializer.class)
     private String jsonResponse;
     
     /**
