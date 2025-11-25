@@ -1,0 +1,45 @@
+name: Test & Build Metrics Reporter
+
+on:
+  push:
+    paths:
+      - 'metrics-reporter/**'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  metrics-reporter:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: start opensearch container
+        run: |
+          docker compose -f docker-compose.yaml up --scale load-generator=3 \
+            --wait -d test-target-opensearch testdata-generator load-generator
+
+      - name: Run unit tests inside Maven/Temurin container
+        env:
+          LOAD_GENERATOR_REPLICAS: 3
+        run: |
+          NETWORK=$(docker inspect --format='{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}' test-target-opensearch)
+          echo "Using network: $NETWORK"
+          docker run --rm \
+              --network "$NETWORK" \
+            -v "${{ github.workspace }}/metrics-reporter":/app:rw \
+            -w /app \
+            -e LOAD_GENERATOR_REPLICAS \
+            maven:3.9-eclipse-temurin-25 \
+            sh -c "mvn dependency:go-offline -B && mvn -B test"
+
+      - name: Upload Test Reports
+        uses: actions/upload-artifact@v5
+        with:
+          name: metrics-reporter-test-reports
+          path: metrics-reporter/target/surefire-reports/**
+
