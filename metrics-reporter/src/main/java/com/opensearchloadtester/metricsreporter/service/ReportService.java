@@ -189,14 +189,37 @@ public class ReportService {
         for (int i = 0; i < metrics.getRequestType().size(); i++) {
             String requestType = metrics.getRequestType(i);
             Long roundtripMs = metrics.getRoundtripMilSec(i);
-            String jsonResponse = metrics.getJsonResponse(i);
+            String jsonResponseStr = metrics.getJsonResponse(i);
             
-            // Check if response contains an error
-            boolean hasError = jsonResponse != null && jsonResponse.contains("\"error\"");
+            // Parse JSON response
+            com.fasterxml.jackson.databind.JsonNode jsonResponse = null;
+            Long opensearchTookMs = null;
+            Integer hitsCount = null;
+            boolean hasError = false;
             
-            // Extract took and hits from JSON response
-            Long opensearchTookMs = extractTookFromResponse(jsonResponse);
-            Integer hitsCount = extractHitsCountFromResponse(jsonResponse);
+            try {
+                jsonResponse = objectMapper.readTree(jsonResponseStr);
+                
+                // Extract took
+                if (jsonResponse.has("took")) {
+                    opensearchTookMs = jsonResponse.get("took").asLong();
+                }
+                
+                // Extract hits count
+                if (jsonResponse.has("hits")) {
+                    com.fasterxml.jackson.databind.JsonNode hitsNode = jsonResponse.get("hits");
+                    if (hitsNode.has("total") && hitsNode.get("total").has("value")) {
+                        hitsCount = hitsNode.get("total").get("value").asInt();
+                    }
+                }
+                
+                // Check for errors
+                hasError = jsonResponse.has("error");
+                
+            } catch (Exception e) {
+                log.warn("Failed to parse JSON response for {}: {}", requestType, e.getMessage());
+                hasError = true;
+            }
             
             QueryResult queryResult = new QueryResult(
                 requestType,
@@ -214,51 +237,6 @@ public class ReportService {
         return queryResults;
     }
     
-    /**
-     * Extracts the "took" value from OpenSearch JSON response by parsing the JSON.
-     *
-     * @param jsonResponse The raw JSON response string
-     * @return The took value in milliseconds, or null if not found
-     */
-    private Long extractTookFromResponse(String jsonResponse) {
-        if (jsonResponse == null || jsonResponse.isEmpty()) {
-            return null;
-        }
-        try {
-            com.fasterxml.jackson.databind.JsonNode root = objectMapper.readTree(jsonResponse);
-            if (root.has("took")) {
-                return root.get("took").asLong();
-            }
-        } catch (Exception e) {
-            log.debug("Could not parse JSON to extract 'took' from response: {}", e.getMessage());
-        }
-        return null;
-    }
-    
-    /**
-     * Extracts the hits count from OpenSearch JSON response by parsing the JSON.
-     *
-     * @param jsonResponse The raw JSON response string
-     * @return The number of hits, or null if not found
-     */
-    private Integer extractHitsCountFromResponse(String jsonResponse) {
-        if (jsonResponse == null || jsonResponse.isEmpty()) {
-            return null;
-        }
-        try {
-            com.fasterxml.jackson.databind.JsonNode root = objectMapper.readTree(jsonResponse);
-            if (root.has("hits")) {
-                com.fasterxml.jackson.databind.JsonNode hitsNode = root.get("hits");
-                if (hitsNode.has("total") && hitsNode.get("total").has("value")) {
-                    return hitsNode.get("total").get("value").asInt();
-                }
-            }
-        } catch (Exception e) {
-            log.debug("Could not parse JSON to extract 'hits.total.value' from response: {}", e.getMessage());
-        }
-        return null;
-    }
-
     
     /**
      * Returns the absolute path to the JSON report file.
@@ -299,17 +277,41 @@ public class ReportService {
             for (int i = 0; i < metrics.getRequestType().size(); i++) {
                 String requestType = metrics.getRequestType(i);
                 Long roundtripMs = metrics.getRoundtripMilSec(i);
-                String jsonResponse = metrics.getJsonResponse(i);
+                String jsonResponseStr = metrics.getJsonResponse(i);
                 
-                // Check if response contains an error
-                boolean hasError = jsonResponse != null && jsonResponse.contains("\"error\"");
-                if (hasError) {
+                // Parse JSON response
+                com.fasterxml.jackson.databind.JsonNode jsonResponse = null;
+                Long opensearchTookMs = null;
+                Integer hitsCount = null;
+                boolean hasError = false;
+                
+                try {
+                    jsonResponse = objectMapper.readTree(jsonResponseStr);
+                    
+                    // Extract took
+                    if (jsonResponse.has("took")) {
+                        opensearchTookMs = jsonResponse.get("took").asLong();
+                    }
+                    
+                    // Extract hits count
+                    if (jsonResponse.has("hits")) {
+                        com.fasterxml.jackson.databind.JsonNode hitsNode = jsonResponse.get("hits");
+                        if (hitsNode.has("total") && hitsNode.get("total").has("value")) {
+                            hitsCount = hitsNode.get("total").get("value").asInt();
+                        }
+                    }
+                    
+                    // Check for errors
+                    hasError = jsonResponse.has("error");
+                    if (hasError) {
+                        totalErrors++;
+                    }
+                    
+                } catch (Exception e) {
+                    log.warn("Failed to parse JSON response for {}: {}", requestType, e.getMessage());
+                    hasError = true;
                     totalErrors++;
                 }
-                
-                // Extract took and hits from JSON response
-                Long opensearchTookMs = extractTookFromResponse(jsonResponse);
-                Integer hitsCount = extractHitsCountFromResponse(jsonResponse);
                 
                 QueryResult queryResult = new QueryResult(
                     requestType,
@@ -406,18 +408,17 @@ public class ReportService {
     }
 
     /**
-     * Helper method to escape special characters in JSON for CSV export.
-     * Replaces newlines and handles quotes properly.
+     * Helper method to convert JsonNode to compact string for CSV export.
      *
-     * @param json The JSON string to escape
-     * @return Escaped string suitable for CSV
+     * @param jsonNode The JsonNode to convert
+     * @return Compact string representation suitable for CSV
      */
-    private String escapeForCsv(String json) {
-        if (json == null) {
+    private String escapeForCsv(com.fasterxml.jackson.databind.JsonNode jsonNode) {
+        if (jsonNode == null) {
             return "";
         }
-        // Remove excessive whitespace and newlines for better CSV readability
-        return json.replaceAll("\\s+", " ").trim();
+        // Convert to compact string (no pretty printing for CSV)
+        return jsonNode.toString();
     }
 }
 

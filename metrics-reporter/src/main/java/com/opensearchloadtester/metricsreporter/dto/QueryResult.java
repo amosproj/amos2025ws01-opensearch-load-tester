@@ -1,8 +1,7 @@
 package com.opensearchloadtester.metricsreporter.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonRawValue;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -45,9 +44,7 @@ public class QueryResult {
      * The complete raw JSON response from OpenSearch (includes took, hits, score, errors, etc.)
      */
     @JsonProperty("json_response")
-    @JsonRawValue
-    @JsonDeserialize(using = RawJsonDeserializer.class)
-    private String jsonResponse;
+    private JsonNode jsonResponse;
     
     /**
      * Indicates whether this query resulted in an error (derived from response)
