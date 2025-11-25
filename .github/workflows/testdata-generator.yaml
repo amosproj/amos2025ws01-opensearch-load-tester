@@ -1,0 +1,64 @@
+name: Test & Build Testdata Generator
+
+on:
+  push:
+    paths:
+      - 'testdata-generator/**'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      data_mode:
+        description: 'DATA_GENERATION_MODE'
+        required: false
+        default: 'DYNAMIC'
+      data_count:
+        description: 'DATA_GENERATION_COUNT'
+        required: false
+        default: '10'
+      data_type:
+        description: 'DATA_GENERATION_DOCUMENT_TYPE'
+        required: false
+        default: 'ANO'
+
+jobs:
+  testdata-generator:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: start opensearch container
+        run: |
+          docker compose -f docker-compose.yaml up --wait -d test-target-opensearch
+
+      - name: Run unit tests inside Maven/Temurin container
+        env:
+          DATA_GENERATION_DOCUMENT_TYPE: ${{ github.event.inputs.data_type || 'ANO' }}
+          DATA_GENERATION_MODE: ${{ github.event.inputs.data_mode || 'DYNAMIC' }}
+          DATA_GENERATION_COUNT: ${{ github.event.inputs.data_count || '10' }}
+          DATA_GENERATION_OUTPUT_PATH: data/testdata.json
+          OPENSEARCH_URL: http://test-target-opensearch:9200
+        run: |
+          NETWORK=$(docker inspect --format='{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}' test-target-opensearch)
+          echo "Using network: $NETWORK"
+          docker run --rm \
+              --network "$NETWORK" \
+            -v "${{ github.workspace }}/testdata-generator":/app:rw \
+            -w /app \
+            -e DATA_GENERATION_DOCUMENT_TYPE \
+            -e DATA_GENERATION_MODE \
+            -e DATA_GENERATION_OUTPUT_PATH \
+            -e DATA_GENERATION_COUNT \
+            -e OPENSEARCH_URL \
+            maven:3.9-eclipse-temurin-25 \
+            sh -c "mvn dependency:go-offline -B && mvn -B test"
+
+      - name: Upload Test Reports
+        uses: actions/upload-artifact@v5
+        with:
+          name: testdata-generator-test-reports
+          path: testdata-generator/target/surefire-reports
