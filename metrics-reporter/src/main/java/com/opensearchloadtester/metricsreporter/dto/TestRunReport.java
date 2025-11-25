@@ -1,6 +1,7 @@
 package com.opensearchloadtester.metricsreporter.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,7 +16,22 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonPropertyOrder({
+    "report_generated_at",
+    "statistics",
+    "total_queries",
+    "total_errors",
+    "load_generator_instances",
+    "query_results"
+    
+})
 public class TestRunReport {
+    
+    /**
+     * Aggregated statistics for all query results
+     */
+    @JsonProperty("statistics")
+    private Statistics statistics;
     
     /**
      * Timestamp when the report was generated
@@ -46,5 +62,53 @@ public class TestRunReport {
      */
     @JsonProperty("load_generator_instances")
     private List<String> loadGeneratorInstances;
+    
+    /**
+     * Statistics class containing aggregated metrics
+     */
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Statistics {
+        @JsonProperty("roundtrip_ms")
+        private RoundtripStats roundtripMs;
+        
+        @JsonProperty("opensearch_took_ms")
+        private OpenSearchTookStats opensearchTookMs;
+    }
+    
+    /**
+     * Statistics for roundtrip times
+     */
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class RoundtripStats {
+        @JsonProperty("average")
+        private Double average;
+        
+        @JsonProperty("min")
+        private Long min;
+        
+        @JsonProperty("max")
+        private Long max;
+    }
+    
+    /**
+     * Statistics for OpenSearch took times
+     */
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class OpenSearchTookStats {
+        @JsonProperty("average")
+        private Double average;
+        
+        @JsonProperty("min")
+        private Long min;
+        
+        @JsonProperty("max")
+        private Long max;
+    }
 }
 
