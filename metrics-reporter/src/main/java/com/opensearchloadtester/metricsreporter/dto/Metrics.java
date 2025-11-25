@@ -25,6 +25,8 @@ public class Metrics {
         this.loadGeneratorInstance = loadGeneratorInstance;
     }
 
+
+    // TODO: check if roundtripMilSec == 0 is 100% a non valid value.
     public void addMetrics(String requestType, long roundtripMilSec, String jsonResponse) {
         if (requestType == null || roundtripMilSec == 0 || jsonResponse == null) {
             log.error("Error when adding Metrics requestType: " +
