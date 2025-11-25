@@ -34,13 +34,16 @@ services:
       dockerfile: Dockerfile
     deploy:
       replicas: ${LOAD_GENERATOR_REPLICAS:-1}
+    volumes:
+      - ./load-generator/scenarios:/app/scenarios:ro
     environment:
       - SPRING_APPLICATION_NAME=load-generator
       - OPENSEARCH_URL=${OPENSEARCH_URL:-http://test-target-opensearch:9200}
-      - METRICS_REPORTER_URL=${METRICS_REPORTER_URL-http://metrics-reporter:8080/api/}
+      - METRICS_REPORTER_URL=${METRICS_REPORTER_URL:-http://metrics-reporter:8080/api/}
       - LOGGING_LEVEL_ROOT=${LOGGING_LVL_ROOT:-ERROR}
       - LOGGING_LEVEL_ORG_ELASTICSEARCH=${LOGGING_LVL_ELASTIC:-ERROR}
       - LOGGING_LEVEL_COM_OPENSEARCHLOADTESTER_LOADGENERATOR=${LOGGING_LVL_LOAD_GEN:-INFO}
+      - SCENARIO_CONFIG_PATH=${SCENARIO_CONFIG_PATH:-scenarios/default-scenario.yaml}
     networks:
       - opensearch-loadtester-network
     healthcheck:
@@ -54,6 +57,8 @@ services:
     depends_on:
       testdata-generator:
         condition: service_completed_successfully
+      metrics-reporter:
+        condition: service_healthy
 
   metrics-reporter:
     build:
@@ -70,19 +75,16 @@ services:
       - opensearch-loadtester-network
     ports:
       - "8080:8080"
+    volumes:
+      - ./reports:/app/reports
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O
-            - http://localhost:8080/api/health
+            - http://metrics-reporter:8080/api/health
             || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-    depends_on:
-      testdata-generator:
-        condition: service_completed_successfully
-      load-generator:
-        condition: service_healthy
 
   test-target-opensearch:
     image: opensearchproject/opensearch:2.16.0
@@ -104,10 +106,12 @@ services:
       - "9200:9200" # OpenSearch REST API
       #- "9600:9600" # OpenSearch Performance Analyzer
     healthcheck:
-      test: [ "CMD-SHELL",
-            "curl -s \
-            http://test-target-opensearch:9200/_cluster/health
-            | grep green || exit 1"]
+      test: [
+          "CMD-SHELL",
+          "curl -s \
+          http://test-target-opensearch:9200/_cluster/health
+          | grep green || exit 1",
+        ]
       interval: 10s
       timeout: 5s
       retries: 20

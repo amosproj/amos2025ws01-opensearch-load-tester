@@ -59,7 +59,7 @@ public class OpenSearchQueryExecution implements QueryExecution {
         log.debug("[{}] Starting OpenSearch query {}", id, queryFile);
         try {
             // 1) JSON template from resources/queries/<file>
-            ClassPathResource resource = new ClassPathResource("queries/" + queryFile);
+            ClassPathResource resource = new ClassPathResource(queryFile);
             byte[] bytes = resource.getInputStream().readAllBytes();
             String body = new String(bytes, StandardCharsets.UTF_8);
 
@@ -88,7 +88,8 @@ public class OpenSearchQueryExecution implements QueryExecution {
                     restTemplate.postForEntity(url, entity, String.class);
             long tookMs = System.currentTimeMillis() - start;
 
-            metricsCollectorService.appendMetrics(id, tookMs, response.toString());
+            // Store only the JSON body, not the entire ResponseEntity with headers
+            metricsCollectorService.appendMetrics(id, tookMs, response.getBody());
 
             int status = response.getStatusCodeValue();
             JsonNode json = mapper.readTree(response.getBody());

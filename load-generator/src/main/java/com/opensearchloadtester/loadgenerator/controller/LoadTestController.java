@@ -1,5 +1,6 @@
 package com.opensearchloadtester.loadgenerator.controller;
 
+import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
 import com.opensearchloadtester.loadgenerator.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,15 +31,18 @@ public class LoadTestController {
     private final LoadRunnerService loadRunnerService;
     private final QueryRegistry queryRegistry;
     private final MetricsCollectorService metricsCollectorService;
+    private final ScenarioConfig scenarioConfig;
     @Value("${opensearch.url}")
     private String openSearchBaseUrl;
 
     public LoadTestController(LoadRunnerService loadRunnerService,
                               QueryRegistry queryRegistry,
-                              MetricsCollectorService metricsCollectorService) {
+                              MetricsCollectorService metricsCollectorService,
+                              ScenarioConfig scenarioConfig) {
         this.loadRunnerService = loadRunnerService;
         this.queryRegistry = queryRegistry;
         this.metricsCollectorService = metricsCollectorService;
+        this.scenarioConfig = scenarioConfig;
     }
 
     /**
@@ -186,6 +190,12 @@ public class LoadTestController {
     @GetMapping("/health")
     public ResponseEntity<String> health() {
         return ResponseEntity.ok("Load Generator is running!\n");
+    }
+
+    @PostMapping("/test")
+    public void testExecution() {
+        log.debug("Config file: {}", scenarioConfig.toString());
+        loadRunnerService.execute(scenarioConfig);
     }
 }
 
