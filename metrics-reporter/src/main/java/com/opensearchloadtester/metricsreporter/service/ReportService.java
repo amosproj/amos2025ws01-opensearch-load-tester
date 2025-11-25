@@ -66,7 +66,13 @@ public class ReportService {
         
         // Create empty JSON file with initial structure
         if (!Files.exists(jsonPath)) {
+            // Create empty statistics
+            TestRunReport.RoundtripStats emptyRoundtripStats = new TestRunReport.RoundtripStats(0.0, 0L, 0L);
+            TestRunReport.OpenSearchTookStats emptyOpenSearchTookStats = new TestRunReport.OpenSearchTookStats(0.0, 0L, 0L);
+            TestRunReport.Statistics emptyStatistics = new TestRunReport.Statistics(emptyRoundtripStats, emptyOpenSearchTookStats);
+            
             TestRunReport emptyReport = new TestRunReport(
+                emptyStatistics,
                 LocalDateTime.now(),
                 0,
                 0,
@@ -127,6 +133,10 @@ public class ReportService {
             .distinct()
             .collect(Collectors.toList());
         existingReport.setLoadGeneratorInstances(instances);
+        
+        // Recalculate statistics with all query results
+        TestRunReport.Statistics updatedStatistics = calculateStatistics(existingReport.getQueryResults());
+        existingReport.setStatistics(updatedStatistics);
         
         // Write updated report back to file
         String updatedJson = objectMapper.writeValueAsString(existingReport);
@@ -333,7 +343,11 @@ public class ReportService {
             .distinct()
             .collect(Collectors.toList());
 
+        // Calculate statistics
+        TestRunReport.Statistics statistics = calculateStatistics(queryResults);
+
         TestRunReport report = new TestRunReport(
+            statistics,
             LocalDateTime.now(),
             queryResults.size(),
             totalErrors,
@@ -345,6 +359,78 @@ public class ReportService {
             report.getTotalQueries(), report.getTotalErrors(), instances.size());
 
         return report;
+    }
+    
+    /**
+     * Calculates aggregated statistics from query results.
+     *
+     * @param queryResults List of query results to analyze
+     * @return Statistics object with averages, min, and max values
+     */
+    private TestRunReport.Statistics calculateStatistics(List<QueryResult> queryResults) {
+        // Collect roundtrip values (filter out nulls)
+        List<Long> roundtripValues = queryResults.stream()
+            .map(QueryResult::getRoundtripMs)
+            .filter(value -> value != null)
+            .collect(Collectors.toList());
+        
+        // Collect OpenSearch took values (filter out nulls)
+        List<Long> opensearchTookValues = queryResults.stream()
+            .map(QueryResult::getOpensearchTookMs)
+            .filter(value -> value != null)
+            .collect(Collectors.toList());
+        
+        // Calculate roundtrip statistics
+        TestRunReport.RoundtripStats roundtripStats = new TestRunReport.RoundtripStats();
+        if (!roundtripValues.isEmpty()) {
+            double roundtripAvg = roundtripValues.stream()
+                .mapToLong(Long::longValue)
+                .average()
+                .orElse(0.0);
+            long roundtripMin = roundtripValues.stream()
+                .mapToLong(Long::longValue)
+                .min()
+                .orElse(0L);
+            long roundtripMax = roundtripValues.stream()
+                .mapToLong(Long::longValue)
+                .max()
+                .orElse(0L);
+            
+            roundtripStats.setAverage(roundtripAvg);
+            roundtripStats.setMin(roundtripMin);
+            roundtripStats.setMax(roundtripMax);
+        } else {
+            roundtripStats.setAverage(0.0);
+            roundtripStats.setMin(0L);
+            roundtripStats.setMax(0L);
+        }
+        
+        // Calculate OpenSearch took statistics
+        TestRunReport.OpenSearchTookStats opensearchTookStats = new TestRunReport.OpenSearchTookStats();
+        if (!opensearchTookValues.isEmpty()) {
+            double opensearchTookAvg = opensearchTookValues.stream()
+                .mapToLong(Long::longValue)
+                .average()
+                .orElse(0.0);
+            long opensearchTookMin = opensearchTookValues.stream()
+                .mapToLong(Long::longValue)
+                .min()
+                .orElse(0L);
+            long opensearchTookMax = opensearchTookValues.stream()
+                .mapToLong(Long::longValue)
+                .max()
+                .orElse(0L);
+            
+            opensearchTookStats.setAverage(opensearchTookAvg);
+            opensearchTookStats.setMin(opensearchTookMin);
+            opensearchTookStats.setMax(opensearchTookMax);
+        } else {
+            opensearchTookStats.setAverage(0.0);
+            opensearchTookStats.setMin(0L);
+            opensearchTookStats.setMax(0L);
+        }
+        
+        return new TestRunReport.Statistics(roundtripStats, opensearchTookStats);
     }
 
     /**
