@@ -4,8 +4,10 @@ import com.opensearchloadtester.testdatagenerator.config.DataGenerationPropertie
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableConfigurationProperties(DataGenerationProperties.class)
+@EnableScheduling
 @SpringBootApplication
 public class TestdataGeneratorApplication {
 

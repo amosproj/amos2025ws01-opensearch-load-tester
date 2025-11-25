@@ -1,18 +1,11 @@
 package com.opensearchloadtester.testdatagenerator;
 
 import com.opensearchloadtester.testdatagenerator.config.DataGenerationProperties;
-import com.opensearchloadtester.testdatagenerator.model.Document;
-import com.opensearchloadtester.testdatagenerator.model.Index;
-import com.opensearchloadtester.testdatagenerator.model.ano.AnoIndex;
-import com.opensearchloadtester.testdatagenerator.model.duo.DuoIndex;
-import com.opensearchloadtester.testdatagenerator.service.DataGenerator;
-import com.opensearchloadtester.testdatagenerator.service.OpenSearchDataService;
+import com.opensearchloadtester.testdatagenerator.service.TestdataPreloadService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 @Slf4j
 @Component
@@ -20,29 +13,25 @@ import java.util.List;
 public class TestdataInitializer implements CommandLineRunner {
 
     private final DataGenerationProperties dataGenerationProperties;
-    private final DataGenerator dataGenerator;
-    private final OpenSearchDataService openSearchDataService;
+    private final TestdataPreloadService preloadService;
 
     @Override
     public void run(String... args) {
-        final Index index = switch (dataGenerationProperties.getDocumentType()) {
-            case ANO -> AnoIndex.getInstance();
-            case DUO -> DuoIndex.getInstance();
-        };
+        if (!dataGenerationProperties.isPreloadOnStartup()) {
+            log.debug("Preload on startup is disabled. Skipping batch pre-loading job.");
+            return;
+        }
+        log.debug("Preload on startup is enabled. Running batch pre-loading job at startup.");
 
         try {
-            log.info("Started test data initialization in '{}' mode", dataGenerationProperties.getMode());
+            preloadService.preloadTestdata();
+            log.info("Batch pre-loading job finished. Application will now terminate.");
+            System.exit(0);// because service_completed_successfully in yaml and Spring Scheduling is still enabled even if schedule is false
 
-            openSearchDataService.createIndex(index.getName(), index.getSettings(), index.getMapping());
-            List<Document> documents = dataGenerator.generateData(dataGenerationProperties.getDocumentType(),
-                    dataGenerationProperties.getCount());
-            openSearchDataService.bulkIndexDocuments(index.getName(), documents);
-            openSearchDataService.refreshIndex(index.getName());
-
-            log.info("Finished test data initialization successfully");
         } catch (Exception e) {
-            log.error("Unexpected error while initializing test data", e);
+            log.error("Unexpected error during batch pre-loading", e);
             throw new RuntimeException("Failed to initialize test data", e);
+            System.exit(1);
         }
     }
 }

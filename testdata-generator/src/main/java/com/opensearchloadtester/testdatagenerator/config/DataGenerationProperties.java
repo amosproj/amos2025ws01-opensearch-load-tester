@@ -23,4 +23,18 @@ public class DataGenerationProperties {
     private String outputPath;
     @Min(1)
     private int count;
+
+    // Number of documents per batch during pre-loading.
+    private int batchSize;
+
+    //If true, the pre-load job runs automatically on application startup.
+    private boolean preloadOnStartup = true;
+
+    //If true, the pre-load job runs periodically using @Scheduled.
+    private boolean preloadSchedulerEnabled = false;
+
+    //Cron expression for the scheduled pre-load job.
+    private String preloadCron = "0 0 2 * * *";
+
+
 }
