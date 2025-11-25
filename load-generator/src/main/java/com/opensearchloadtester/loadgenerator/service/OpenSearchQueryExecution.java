@@ -59,7 +59,7 @@ public class OpenSearchQueryExecution implements QueryExecution {
         log.debug("[{}] Starting OpenSearch query {}", id, queryFile);
         try {
             // 1) JSON template from resources/queries/<file>
-            ClassPathResource resource = new ClassPathResource("queries/" + queryFile);
+            ClassPathResource resource = new ClassPathResource(queryFile);
             byte[] bytes = resource.getInputStream().readAllBytes();
             String body = new String(bytes, StandardCharsets.UTF_8);
 

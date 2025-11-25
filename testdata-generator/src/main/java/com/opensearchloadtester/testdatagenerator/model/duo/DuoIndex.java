@@ -34,7 +34,7 @@ public class DuoIndex implements Index {
         // TODO: add remaining settings
         return new IndexSettings.Builder()
                 .numberOfShards(5)
-                .numberOfReplicas(1)
+                .numberOfReplicas(0)
                 .build();
     }
 
