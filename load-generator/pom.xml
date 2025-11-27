@@ -28,6 +28,7 @@
 	</scm>
 	<properties>
 		<java.version>25</java.version>
+        <common-dto.version>0.0.1-SNAPSHOT</common-dto.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -55,6 +56,12 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.opensearchloadtester</groupId>
+            <artifactId>common-dto</artifactId>
+            <version>${common-dto.version}</version>
         </dependency>
 	</dependencies>
 

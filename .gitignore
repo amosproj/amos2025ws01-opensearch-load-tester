@@ -35,6 +35,9 @@ out/
 .project
 bin/
 
+# Maven/Java build
+target/
+
 # MacOS
 .DS_Store
 
