@@ -23,16 +23,14 @@ public class LoadRunner {
 
     private final MetricsReporterClient metricsReporterClient;
     private final MetricsCollectorService metricsCollectorService;
-    private final QueryRegistry queryRegistry;
 
     @Value("${opensearch.url}")
     private String openSearchBaseUrl;
 
     public LoadRunner(MetricsReporterClient metricsReporterClient,
-                      MetricsCollectorService metricsCollectorService, QueryRegistry queryRegistry) {
+                      MetricsCollectorService metricsCollectorService) {
         this.metricsReporterClient = metricsReporterClient;
         this.metricsCollectorService = metricsCollectorService;
-        this.queryRegistry = queryRegistry;
     }
 
     /**

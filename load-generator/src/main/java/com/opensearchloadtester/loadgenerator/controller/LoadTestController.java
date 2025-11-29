@@ -29,18 +29,15 @@ import java.util.Map;
 public class LoadTestController {
 
     private final LoadRunner loadRunner;
-    private final QueryRegistry queryRegistry;
     private final MetricsCollectorService metricsCollectorService;
     private final ScenarioConfig scenarioConfig;
     @Value("${opensearch.url}")
     private String openSearchBaseUrl;
 
     public LoadTestController(LoadRunner loadRunner,
-                              QueryRegistry queryRegistry,
                               MetricsCollectorService metricsCollectorService,
                               ScenarioConfig scenarioConfig) {
         this.loadRunner = loadRunner;
-        this.queryRegistry = queryRegistry;
         this.metricsCollectorService = metricsCollectorService;
         this.scenarioConfig = scenarioConfig;
     }
@@ -79,15 +76,8 @@ public class LoadTestController {
                             MAX_THREADS, MAX_ITERATIONS));
         }
 
-        // 1) Look up queryId in registry and handle unknown IDs
-        final String templateFile;
-        try {
-            templateFile = queryRegistry.getTemplateFile(queryId);
-        } catch (IllegalArgumentException ex) {
-            log.error("Unknown queryId requested: {}", queryId);
-            return ResponseEntity.badRequest()
-                    .body("Unknown queryId: " + queryId + "\n");
-        }
+        // 1) Look up query template-file path
+        final String templateFilePath = request.getQueryType().getTemplatePath();
 
         // Default index if none provided
         String indexName = request.getIndexName();
@@ -112,7 +102,7 @@ public class LoadTestController {
                         new QueryExecutionTask(
                                 id,
                                 indexName,
-                                templateFile,
+                                templateFilePath,
                                 params,
                                 openSearchBaseUrl,
                                 metricsCollectorService
@@ -140,15 +130,6 @@ public class LoadTestController {
 
         log.debug("Query run {} finished successfully", queryId);
         return ResponseEntity.ok("Query run finished successfully\n");
-    }
-
-
-    /**
-     * List of ids of the querys that where defined in the query registry
-     */
-    @GetMapping("/queries")
-    public ResponseEntity<?> listQueries() {
-        return ResponseEntity.ok(queryRegistry.listQueryIds());
     }
 
 
