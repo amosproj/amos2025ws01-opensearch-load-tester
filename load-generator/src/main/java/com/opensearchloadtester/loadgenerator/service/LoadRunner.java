@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Service
-public class LoadRunnerService {
+public class LoadRunner {
 
     private final MetricsReporterClient metricsReporterClient;
     private final MetricsCollectorService metricsCollectorService;
@@ -28,8 +28,8 @@ public class LoadRunnerService {
     @Value("${opensearch.url}")
     private String openSearchBaseUrl;
 
-    public LoadRunnerService(MetricsReporterClient metricsReporterClient,
-                             MetricsCollectorService metricsCollectorService, QueryRegistry queryRegistry) {
+    public LoadRunner(MetricsReporterClient metricsReporterClient,
+                      MetricsCollectorService metricsCollectorService, QueryRegistry queryRegistry) {
         this.metricsReporterClient = metricsReporterClient;
         this.metricsCollectorService = metricsCollectorService;
         this.queryRegistry = queryRegistry;
@@ -97,12 +97,12 @@ public class LoadRunnerService {
      *
      * @param scenarioConfig scenario configuration
      */
-    public void execute(ScenarioConfig scenarioConfig) {
+    public void executeScenario(ScenarioConfig scenarioConfig) {
         log.info("Started execution of scenario: {}", scenarioConfig.getName());
-        log.info("Scenario duration: {} ({} seconds)", 
-            scenarioConfig.getDuration(), 
-            scenarioConfig.getDuration().getSeconds());
-        
+        log.info("Scenario duration: {} ({} seconds)",
+                scenarioConfig.getDuration(),
+                scenarioConfig.getDuration().getSeconds());
+
 
         // Parameter check
         if (scenarioConfig == null) {
@@ -144,7 +144,7 @@ public class LoadRunnerService {
         CountDownLatch latch = new CountDownLatch(threadPoolSize);
 
         int clientSize = scenarioConfig.getConcurrency().getClientSize();
-        
+
         // Track overall test start time
         long testStartTime = System.currentTimeMillis();
 
@@ -195,19 +195,19 @@ public class LoadRunnerService {
             long testEndTime = System.currentTimeMillis();
             long actualDurationMs = testEndTime - testStartTime;
             double actualDurationSeconds = actualDurationMs / 1000.0;
-            
+
             if (completed) {
                 log.info("Calling MetricsReporterClient");
                 metricsReporterClient.reportMetrics(metricsCollectorService.getMetrics());
                 log.info("Scenario '{}' completed successfully. All {} threads finished.", scenarioConfig.getName(), threadPoolSize);
-                log.info("Test duration - Expected: {} ({}s), Actual: {}s", 
-                    scenarioConfig.getDuration(), 
-                    scenarioConfig.getDuration().getSeconds(),
-                    String.format("%.2f", actualDurationSeconds));
+                log.info("Test duration - Expected: {} ({}s), Actual: {}s",
+                        scenarioConfig.getDuration(),
+                        scenarioConfig.getDuration().getSeconds(),
+                        String.format("%.2f", actualDurationSeconds));
             } else {
                 log.warn("Timeout waiting for execution threads to complete");
-                log.warn("Scenario '{}' did not complete within expected duration. Actual runtime: {}s", 
-                    scenarioConfig.getName(), String.format("%.2f", actualDurationSeconds));
+                log.warn("Scenario '{}' did not complete within expected duration. Actual runtime: {}s",
+                        scenarioConfig.getName(), String.format("%.2f", actualDurationSeconds));
             }
 
         } catch (InterruptedException e) {

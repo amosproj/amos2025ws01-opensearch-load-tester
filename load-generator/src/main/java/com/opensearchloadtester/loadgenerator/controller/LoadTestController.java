@@ -28,18 +28,18 @@ import java.util.Map;
 @RequestMapping("/api/load-test")
 public class LoadTestController {
 
-    private final LoadRunnerService loadRunnerService;
+    private final LoadRunner loadRunner;
     private final QueryRegistry queryRegistry;
     private final MetricsCollectorService metricsCollectorService;
     private final ScenarioConfig scenarioConfig;
     @Value("${opensearch.url}")
     private String openSearchBaseUrl;
 
-    public LoadTestController(LoadRunnerService loadRunnerService,
+    public LoadTestController(LoadRunner loadRunner,
                               QueryRegistry queryRegistry,
                               MetricsCollectorService metricsCollectorService,
                               ScenarioConfig scenarioConfig) {
-        this.loadRunnerService = loadRunnerService;
+        this.loadRunner = loadRunner;
         this.queryRegistry = queryRegistry;
         this.metricsCollectorService = metricsCollectorService;
         this.scenarioConfig = scenarioConfig;
@@ -156,7 +156,7 @@ public class LoadTestController {
         try {
             // 3) Execute all queries in parallel
             // This call blocks until all executions have finished
-            loadRunnerService.executeQueries(executions);
+            loadRunner.executeQueries(executions);
         } catch (InterruptedException ie) {
             // Restore interrupt flag and inform the client
             Thread.currentThread().interrupt();
@@ -195,7 +195,7 @@ public class LoadTestController {
     @PostMapping("/test")
     public void testExecution() {
         log.debug("Config file: {}", scenarioConfig.toString());
-        loadRunnerService.execute(scenarioConfig);
+        loadRunner.executeScenario(scenarioConfig);
     }
 }
 
