@@ -46,38 +46,6 @@ public class LoadTestController {
     }
 
     /**
-     * Starts a load test with n parallel query execution threads.
-     *
-     * @param threadCount Number of parallel threads to spawn
-     * @return Response indicating success or failure
-     */
-    @PostMapping("/start")
-    public ResponseEntity<String> startLoadTest(@RequestParam(defaultValue = "5") int threadCount) {
-        log.info("Received request to start load test with {} threads (NoOpQueryExecution demo)", threadCount);
-
-        try {
-            // Create query executions using factory pattern
-            QueryExecutionFactory factory = threadId ->
-                    new NoOpQueryExecution("query-" + threadId, 1000);
-
-            loadRunnerService.executeQueries(threadCount, factory);
-
-            return ResponseEntity.ok(
-                    String.format("Load test completed successfully with %d threads%n", threadCount)
-            );
-        } catch (InterruptedException e) {
-            log.error("Load test was interrupted", e);
-            Thread.currentThread().interrupt();
-            return ResponseEntity.status(500)
-                    .body("Load test was interrupted: " + e.getMessage() + "\n");
-        } catch (Exception e) {
-            log.error("Error executing load test", e);
-            return ResponseEntity.status(500)
-                    .body("Error executing load test: " + e.getMessage() + "\n");
-        }
-    }
-
-    /**
      * Endpoint to throw a query run against OpenSearch
      *
      */
@@ -133,15 +101,15 @@ public class LoadTestController {
             params = Map.of();
         }
 
-        // 2) Build list of QueryExecution instances
-        List<QueryExecution> executions = new ArrayList<>();
+        // 2) Build list of query execution tasks
+        List<QueryExecutionTask> executions = new ArrayList<>();
 
         for (int t = 0; t < threads; t++) {
             for (int i = 0; i < iterations; i++) {
                 String id = queryId + "-t" + t + "-it" + i;
 
                 executions.add(
-                        new OpenSearchQueryExecution(
+                        new QueryExecutionTask(
                                 id,
                                 indexName,
                                 templateFile,

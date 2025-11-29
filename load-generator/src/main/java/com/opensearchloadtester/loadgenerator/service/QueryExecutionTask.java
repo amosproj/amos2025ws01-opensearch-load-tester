@@ -25,7 +25,7 @@ import java.util.Map;
  * - Write per-run CSV files with selected fields from each hit.
  */
 @Slf4j
-public class OpenSearchQueryExecution implements QueryExecution {
+public class QueryExecutionTask implements Runnable {
 
     private final String id;
     private final String indexName;
@@ -38,12 +38,12 @@ public class OpenSearchQueryExecution implements QueryExecution {
     @Value("${opensearch.url}")
     String openSearchBaseUrl;
 
-    public OpenSearchQueryExecution(String id,
-                                    String indexName,
-                                    String queryFile,
-                                    Map<String, String> params,
-                                    String openSearchBaseUrl,
-                                    MetricsCollectorService metricsCollectorService) {
+    public QueryExecutionTask(String id,
+                              String indexName,
+                              String queryFile,
+                              Map<String, String> params,
+                              String openSearchBaseUrl,
+                              MetricsCollectorService metricsCollectorService) {
         this.id = id;
         this.indexName = indexName;
         this.queryFile = queryFile;
@@ -106,7 +106,6 @@ public class OpenSearchQueryExecution implements QueryExecution {
         }
     }
 
-    @Override
     public String getId() {
         return id;
     }

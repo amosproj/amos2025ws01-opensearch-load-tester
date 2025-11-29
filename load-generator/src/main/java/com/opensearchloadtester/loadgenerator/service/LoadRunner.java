@@ -39,16 +39,16 @@ public class LoadRunner {
      * Executes n query executions simultaneously, each on a single thread
      * and waits until all threads are completed.
      *
-     * @param queryExecutions List of query executions to run in parallel
+     * @param queryExecutionTasks List of query execution tasks to run in parallel
      * @throws InterruptedException if the execution is interrupted while waiting
      */
-    public void executeQueries(List<QueryExecution> queryExecutions) throws InterruptedException {
-        if (queryExecutions == null || queryExecutions.isEmpty()) {
+    public void executeQueries(List<QueryExecutionTask> queryExecutionTasks) throws InterruptedException {
+        if (queryExecutionTasks == null || queryExecutionTasks.isEmpty()) {
             log.warn("No query executions provided, nothing to execute");
             return;
         }
 
-        int threadCount = queryExecutions.size();
+        int threadCount = queryExecutionTasks.size();
 
         // TODO: resources can be a problem here, use a thread pool with a max size
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
@@ -56,15 +56,15 @@ public class LoadRunner {
 
         try {
             // Submit all query executions to the thread pool
-            for (QueryExecution queryExecution : queryExecutions) {
+            for (QueryExecutionTask queryExecutionTask : queryExecutionTasks) {
                 executorService.submit(() -> {
                     try {
-                        log.debug("Starting query execution: {}", queryExecution.getId());
-                        queryExecution.run();
-                        log.debug("Completed query execution: {}", queryExecution.getId());
+                        log.debug("Starting query execution: {}", queryExecutionTask.getId());
+                        queryExecutionTask.run();
+                        log.debug("Completed query execution: {}", queryExecutionTask.getId());
 
                     } catch (Exception e) {
-                        log.error("Error executing query: {}", queryExecution.getId(), e);
+                        log.error("Error executing query: {}", queryExecutionTask.getId(), e);
                     } finally {
                         latch.countDown();
                     }
@@ -119,8 +119,8 @@ public class LoadRunner {
             return;
         }
 
-        // Create QueryExecution
-        OpenSearchQueryExecution query = new OpenSearchQueryExecution(
+        // Create QueryExecutionTask
+        QueryExecutionTask query = new QueryExecutionTask(
                 scenarioConfig.getName(),
                 scenarioConfig.getDocumentType().getIndex(),
                 templateFile,
@@ -218,28 +218,6 @@ public class LoadRunner {
         }
 
 
-    }
-
-    /**
-     * Executes n query executions simultaneously using a factory to create them.
-     *
-     * @param threadCount           Number of query execution threads to spawn
-     * @param queryExecutionFactory Factory to create query execution instances
-     * @throws InterruptedException if the execution is interrupted while waiting
-     */
-    public void executeQueries(int threadCount, QueryExecutionFactory queryExecutionFactory)
-            throws InterruptedException {
-        if (threadCount <= 0) {
-            log.warn("Invalid thread count: {}, nothing to execute", threadCount);
-            return;
-        }
-
-        List<QueryExecution> queryExecutions = new ArrayList<>();
-        for (int i = 0; i < threadCount; i++) {
-            queryExecutions.add(queryExecutionFactory.create(i));
-        }
-
-        executeQueries(queryExecutions);
     }
 
     /**
