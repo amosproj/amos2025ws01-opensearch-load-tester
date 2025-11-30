@@ -1,6 +1,5 @@
 package com.opensearchloadtester.loadgenerator.service;
 
-import com.opensearchloadtester.loadgenerator.model.DocumentType;
 import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -99,10 +98,10 @@ public class LoadRunnerService {
      */
     public void execute(ScenarioConfig scenarioConfig) {
         log.info("Started execution of scenario: {}", scenarioConfig.getName());
-        log.info("Scenario duration: {} ({} seconds)", 
-            scenarioConfig.getDuration(), 
-            scenarioConfig.getDuration().getSeconds());
-        
+        log.info("Scenario duration: {} ({} seconds)",
+                scenarioConfig.getDuration(),
+                scenarioConfig.getDuration().getSeconds());
+
 
         // Parameter check
         if (scenarioConfig == null) {
@@ -144,7 +143,7 @@ public class LoadRunnerService {
         CountDownLatch latch = new CountDownLatch(threadPoolSize);
 
         int clientSize = scenarioConfig.getConcurrency().getClientSize();
-        
+
         // Track overall test start time
         long testStartTime = System.currentTimeMillis();
 
@@ -152,6 +151,12 @@ public class LoadRunnerService {
             // Submit all query executions to the thread pool
             for (int i = 0; i < threadPoolSize; i++) {
                 executorService.submit(() -> {
+
+                    // TODO: Delete later - Simple warmup
+                    for (int k = 0; k < 100; k++) {
+                        query.run();
+                    }
+
                     int queryCounter = 0;
                     long start = System.nanoTime();
                     try {
@@ -162,17 +167,18 @@ public class LoadRunnerService {
                         int queriesPerSecondTotal = scenarioConfig.getQueriesPerSecond();
                         int queriesPerSecondPerThread = queriesPerSecondTotal /
                                 scenarioConfig.getConcurrency().getThreadPoolSize();
-                        int batchesPerSecond = Math.max(1, queriesPerSecondPerThread / clientSize);
-                        long sleepBetweenBatchesMs = 1000L / batchesPerSecond;
+                        long oneQueryDurationMs = 1000L / queriesPerSecondPerThread;
+                        log.debug("Maximal single query execution time {} ms  ", oneQueryDurationMs);
 
+                        long startQueryTime;
+                        long queryTime;
                         while (System.nanoTime() - start < durationNs) {
-                            // execute batch
-                            for (int j = 0; j < clientSize; j++) {
-                                query.run();
-                                queryCounter++;
-                            }
-                            // rate limit
-                            Thread.sleep(sleepBetweenBatchesMs);
+                            startQueryTime = System.currentTimeMillis();
+                            query.run();
+                            queryCounter++;
+                            queryTime = System.currentTimeMillis() - startQueryTime;
+                            log.debug("Query took {} ms  ", queryTime);
+                            Thread.sleep(oneQueryDurationMs - queryTime);
                         }
 
                         log.debug("Thread with ID {}: Finished query executions ", Thread.currentThread().threadId());
@@ -195,19 +201,19 @@ public class LoadRunnerService {
             long testEndTime = System.currentTimeMillis();
             long actualDurationMs = testEndTime - testStartTime;
             double actualDurationSeconds = actualDurationMs / 1000.0;
-            
+
             if (completed) {
                 log.info("Calling MetricsReporterClient");
                 metricsReporterClient.reportMetrics(metricsCollectorService.getMetrics());
                 log.info("Scenario '{}' completed successfully. All {} threads finished.", scenarioConfig.getName(), threadPoolSize);
-                log.info("Test duration - Expected: {} ({}s), Actual: {}s", 
-                    scenarioConfig.getDuration(), 
-                    scenarioConfig.getDuration().getSeconds(),
-                    String.format("%.2f", actualDurationSeconds));
+                log.info("Test duration - Expected: {} ({}s), Actual: {}s",
+                        scenarioConfig.getDuration(),
+                        scenarioConfig.getDuration().getSeconds(),
+                        String.format("%.2f", actualDurationSeconds));
             } else {
                 log.warn("Timeout waiting for execution threads to complete");
-                log.warn("Scenario '{}' did not complete within expected duration. Actual runtime: {}s", 
-                    scenarioConfig.getName(), String.format("%.2f", actualDurationSeconds));
+                log.warn("Scenario '{}' did not complete within expected duration. Actual runtime: {}s",
+                        scenarioConfig.getName(), String.format("%.2f", actualDurationSeconds));
             }
 
         } catch (InterruptedException e) {
