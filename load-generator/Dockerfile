@@ -1,20 +1,20 @@
-# Multi-stage build for Load Generator (build common-dto + load-generator)
+# Multi-stage build for Load Generator (build common-core + load-generator)
 FROM maven:3.9-eclipse-temurin-25 AS build
 
 WORKDIR /app
 
 # Copy poms first (dependency download layer)
-COPY common-dto/pom.xml common-dto/pom.xml
+COPY common-core/pom.xml common-core/pom.xml
 COPY load-generator/pom.xml load-generator/pom.xml
 
-# Pre-fetch deps for common-dto
-RUN mvn -f common-dto/pom.xml dependency:go-offline -B
+# Pre-fetch deps for common-core
+RUN mvn -f common-core/pom.xml dependency:go-offline -B
 
 # Copy shared DTO sources and build/install it locally
-COPY common-dto/src common-dto/src
-RUN mvn -f common-dto/pom.xml clean install -DskipTests
+COPY common-core/src common-core/src
+RUN mvn -f common-core/pom.xml clean install -DskipTests
 
-# Copy load-generator sources and fetch deps (now common-dto is in local repo)
+# Copy load-generator sources and fetch deps (now common-core is in local repo)
 COPY load-generator/src load-generator/src
 RUN mvn -f load-generator/pom.xml dependency:go-offline -B
 
@@ -38,4 +38,3 @@ COPY --from=build /app/load-generator/target/*.jar app.jar
 
 # Run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
-

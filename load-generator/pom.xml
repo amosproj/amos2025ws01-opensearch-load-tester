@@ -28,7 +28,7 @@
 	</scm>
 	<properties>
 		<java.version>25</java.version>
-        <common-dto.version>0.0.1-SNAPSHOT</common-dto.version>
+        <common-core.version>0.0.1-SNAPSHOT</common-core.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -60,8 +60,8 @@
 
         <dependency>
             <groupId>com.opensearchloadtester</groupId>
-            <artifactId>common-dto</artifactId>
-            <version>${common-dto.version}</version>
+            <artifactId>common-core</artifactId>
+            <version>${common-core.version}</version>
         </dependency>
 	</dependencies>
 
