@@ -45,7 +45,7 @@ public class ReportService {
     private String csvFilename;
     @Value("${report.ndjson.filename:tmp_query_results.ndjson}")
     private String ndjsonFilename;
-    @Value("${report.fulljson.filename:query_results_full.json}")
+    @Value("${report.fulljson.filename:query_results.json}")
     private String fullJsonFilename;
 
     private final StatsAccumulator stats = new StatsAccumulator();
