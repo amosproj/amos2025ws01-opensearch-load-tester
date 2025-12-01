@@ -90,11 +90,11 @@ public class ReportController {
                 ));
 
                 if (jsonExportEnabled) {
-                    message.append("Summary JSON: ").append(reportService.getJsonReportPath()).append("\n");
+                    message.append("Full JSON report: ").append(reportService.getFullJsonReportPath()).append("\n");
+                    message.append("Statistics JSON: ").append(reportService.getStatisticsReportPath()).append("\n");
                 }
                 if (csvExportEnabled) {
                     message.append("CSV report: ").append(reportService.getCsvReportPath()).append("\n");
-                    message.append("NDJSON report: ").append(reportService.getNdjsonReportPath()).append("\n");
                 }
 
                 return ResponseEntity.ok(message.toString());

@@ -1,6 +1,8 @@
 package com.opensearchloadtester.metricsreporter.service;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.opensearchloadtester.common.dto.Metrics;
@@ -12,6 +14,7 @@ import org.apache.commons.csv.CSVPrinter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.BufferedReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -31,16 +34,19 @@ import java.util.Set;
 public class ReportService {
 
     private final ObjectMapper objectMapper;
+    private final ObjectWriter ndjsonWriter;
 
     @Value("${report.output.directory:./reports}")
     private String outputDirectory;
 
     @Value("${report.stats.filename:statistics.json}")
     private String statsFilename;
-    @Value("${report.csv.filename:test_run_report.csv}")
+    @Value("${report.csv.filename:query_results.csv}")
     private String csvFilename;
-    @Value("${report.ndjson.filename:test_run_report.ndjson}")
+    @Value("${report.ndjson.filename:tmp_query_results.ndjson}")
     private String ndjsonFilename;
+    @Value("${report.fulljson.filename:query_results_full.json}")
+    private String fullJsonFilename;
 
     private final StatsAccumulator stats = new StatsAccumulator();
     private boolean filesInitialized = false;
@@ -50,6 +56,7 @@ public class ReportService {
         this.objectMapper.registerModule(new JavaTimeModule());
         this.objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
         this.objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        this.ndjsonWriter = this.objectMapper.writer().without(SerializationFeature.INDENT_OUTPUT);
     }
 
     /**
@@ -141,7 +148,7 @@ public class ReportService {
 
         try (FileWriter writer = new FileWriter(ndjsonPath.toFile(), true)) {
             for (QueryResult result : queryResults) {
-                writer.write(objectMapper.writeValueAsString(result));
+                writer.write(ndjsonWriter.writeValueAsString(result));
                 writer.write("\n");
             }
             writer.flush();
@@ -238,6 +245,13 @@ public class ReportService {
     }
 
     /**
+     * Returns the absolute path to the full JSON report file containing all query results.
+     */
+    public Path getFullJsonReportPath() {
+        return Paths.get(outputDirectory, fullJsonFilename).toAbsolutePath();
+    }
+
+    /**
      * Finalizes reports by writing a summary JSON without loading all query results into memory.
      */
     public synchronized TestRunReport finalizeReports(Set<String> loadGeneratorInstances) throws IOException {
@@ -256,6 +270,9 @@ public class ReportService {
 
         Path statsPath = Paths.get(outputDirectory, statsFilename);
         objectMapper.writeValue(statsPath.toFile(), report);
+        Path ndjsonPath = Paths.get(outputDirectory, ndjsonFilename);
+        Path fullJsonPath = Paths.get(outputDirectory, fullJsonFilename);
+        writeFullJsonReport(ndjsonPath, fullJsonPath);
 
         log.info("Summary written: queries={}, errors={}, instances={}", report.getTotalQueries(), report.getTotalErrors(), report.getLoadGeneratorInstances().size());
         log.info("Roundtrip stats: avg={}ms min={}ms max={}ms | Took stats: avg={}ms min={}ms max={}ms",
@@ -269,9 +286,40 @@ public class ReportService {
         return report;
     }
 
+    /**
+     * Builds a valid JSON array file from the NDJSON stream so tools like Grafana can import it.
+     */
+    private void writeFullJsonReport(Path ndjsonPath, Path fullJsonPath) throws IOException {
+        if (!Files.exists(ndjsonPath)) {
+            log.warn("NDJSON report file {} not found; skipping full JSON export", ndjsonPath.toAbsolutePath());
+            return;
+        }
+
+        try (BufferedReader reader = Files.newBufferedReader(ndjsonPath);
+             FileWriter writer = new FileWriter(fullJsonPath.toFile())) {
+            JsonGenerator generator = objectMapper.getFactory().createGenerator(writer);
+            generator.useDefaultPrettyPrinter();
+            generator.writeStartArray();
+
+            String line;
+            int count = 0;
+            while ((line = reader.readLine()) != null) {
+                if (line.isBlank()) {
+                    continue;
+                }
+                generator.writeTree(objectMapper.readTree(line));
+                count++;
+            }
+
+            generator.writeEndArray();
+            generator.flush();
+            log.info("Full JSON report written to {} with {} query results", fullJsonPath.toAbsolutePath(), count);
+        }
+    }
+
     @lombok.Getter
     private static class StatsAccumulator {
-        // Keep total
+        // total query count must stay below 2.147.483.647 (int max value) else we will have to use long for this field
         private int totalQueries = 0;
         private int totalErrors = 0;
 
