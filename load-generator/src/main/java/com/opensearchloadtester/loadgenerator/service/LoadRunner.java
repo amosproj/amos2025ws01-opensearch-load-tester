@@ -1,12 +1,11 @@
 package com.opensearchloadtester.loadgenerator.service;
 
-import com.opensearchloadtester.loadgenerator.model.DocumentType;
 import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.opensearch.client.opensearch.generic.OpenSearchGenericClient;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -19,19 +18,12 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class LoadRunner {
 
+    private final OpenSearchGenericClient openSearchClient;
     private final MetricsReporterClient metricsReporterClient;
     private final MetricsCollectorService metricsCollectorService;
-
-    @Value("${opensearch.url}")
-    private String openSearchBaseUrl;
-
-    public LoadRunner(MetricsReporterClient metricsReporterClient,
-                      MetricsCollectorService metricsCollectorService) {
-        this.metricsReporterClient = metricsReporterClient;
-        this.metricsCollectorService = metricsCollectorService;
-    }
 
     /**
      * Executes n query executions simultaneously, each on a single thread
@@ -123,7 +115,7 @@ public class LoadRunner {
                 scenarioConfig.getDocumentType().getIndex(),
                 templateFile,
                 scenarioConfig.getQuery().getParameters(),
-                openSearchBaseUrl,
+                openSearchClient,
                 metricsCollectorService
         );
 

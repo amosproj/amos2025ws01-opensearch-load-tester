@@ -2,8 +2,9 @@ package com.opensearchloadtester.loadgenerator.controller;
 
 import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
 import com.opensearchloadtester.loadgenerator.service.*;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.opensearch.client.opensearch.generic.OpenSearchGenericClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,22 +26,14 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/load-test")
 public class LoadTestController {
 
     private final LoadRunner loadRunner;
     private final MetricsCollectorService metricsCollectorService;
     private final ScenarioConfig scenarioConfig;
-    @Value("${opensearch.url}")
-    private String openSearchBaseUrl;
-
-    public LoadTestController(LoadRunner loadRunner,
-                              MetricsCollectorService metricsCollectorService,
-                              ScenarioConfig scenarioConfig) {
-        this.loadRunner = loadRunner;
-        this.metricsCollectorService = metricsCollectorService;
-        this.scenarioConfig = scenarioConfig;
-    }
+    private final OpenSearchGenericClient openSearchClient;
 
     /**
      * Endpoint to throw a query run against OpenSearch
@@ -104,7 +97,7 @@ public class LoadTestController {
                                 indexName,
                                 templateFilePath,
                                 params,
-                                openSearchBaseUrl,
+                                openSearchClient,
                                 metricsCollectorService
                         )
                 );

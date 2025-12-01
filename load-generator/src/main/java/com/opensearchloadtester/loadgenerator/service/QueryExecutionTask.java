@@ -2,111 +2,95 @@ package com.opensearchloadtester.loadgenerator.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.opensearch.client.opensearch.generic.*;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
- * Executes a single OpenSearch search request based on a JSON template.
- * <p>
- * Responsibilities:
- * - Load the query template JSON from classpath (resources/queries).
- * - Replace {{placeholders}} with runtime parameters.
- * - Send the HTTP POST request to OpenSearch.
- * - Log basic metrics (status, timings, hit count).
- * - Write per-run CSV files with selected fields from each hit.
+ * Executes a single OpenSearch query based on a JSON template.
  */
 @Slf4j
+@RequiredArgsConstructor
 public class QueryExecutionTask implements Runnable {
 
+    @Getter
     private final String id;
-    private final String indexName;
-    private final String queryFile;
-    private final Map<String, String> params;
-    ObjectMapper mapper = new ObjectMapper();
 
+    private final String index;
+    private final String queryTemplatePath;
+    private final Map<String, String> queryParams;
+    private final OpenSearchGenericClient openSearchClient;
     private final MetricsCollectorService metricsCollectorService;
 
-    @Value("${opensearch.url}")
-    String openSearchBaseUrl;
-
-    public QueryExecutionTask(String id,
-                              String indexName,
-                              String queryFile,
-                              Map<String, String> params,
-                              String openSearchBaseUrl,
-                              MetricsCollectorService metricsCollectorService) {
-        this.id = id;
-        this.indexName = indexName;
-        this.queryFile = queryFile;
-        this.params = params;
-        this.openSearchBaseUrl = openSearchBaseUrl;
-        this.metricsCollectorService = metricsCollectorService;
-    }
+    ObjectMapper mapper = new ObjectMapper();
 
     @Override
     public void run() {
 
-        // High-level marker that this run started
-        log.debug("[{}] Starting OpenSearch query {}", id, queryFile);
         try {
-            // 1) JSON template from resources/queries/<file>
-            ClassPathResource resource = new ClassPathResource(queryFile);
-            byte[] bytes = resource.getInputStream().readAllBytes();
-            String body = new String(bytes, StandardCharsets.UTF_8);
+            // Load query template JSON
+            String queryTemplate = loadQueryTemplate(queryTemplatePath);
 
-            // 2) Substitute {{param}} with real values
-            for (Map.Entry<String, String> e : params.entrySet()) {
-                String placeholder = "{{" + e.getKey() + "}}";
-                body = body.replace(placeholder, e.getValue());
-            }
+            // Substitute placeholders in query template with provided values
+            String query = applyQueryParams(queryTemplate, queryParams);
 
-            // 3) Prepare HTTP call to OpenSearch
+            // Send query to OpenSearch and measure end-to-end client-side round-trip time
+            Request request = Requests.builder()
+                    .endpoint("/" + index + "/_search")
+                    .method("POST")
+                    .json(query)
+                    .build();
 
+            long startTime = System.nanoTime();
+            Response response = openSearchClient.execute(request);
+            long requestDurationMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
 
-            String url = openSearchBaseUrl + indexName + "/_search";
-            RestTemplate restTemplate = new RestTemplate();
+            // Collect performance metrics
+            String responseBodyAsString = response.getBody()
+                    .map(Body::bodyAsString)
+                    .orElse("");
 
-            // Configure headers and basic auth for OpenSearch
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setBasicAuth("admin", "admin");
+            metricsCollectorService.appendMetrics(id, requestDurationMillis, responseBodyAsString);
 
-            HttpEntity<String> entity = new HttpEntity<>(body, headers);
+            int status = response.getStatus();
 
-            // Measure client-side round-trip time
-            long start = System.currentTimeMillis();
-            ResponseEntity<String> response =
-                    restTemplate.postForEntity(url, entity, String.class);
-            long tookMs = System.currentTimeMillis() - start;
+            JsonNode responseBodyAsJsonNode = mapper.readTree(responseBodyAsString);
+            int totalHits = responseBodyAsJsonNode.path("hits").path("total").path("value").asInt();
+            long openSearchExecutionMillis = responseBodyAsJsonNode.path("took").asLong(-1);
 
-            // Store only the JSON body, not the entire ResponseEntity with headers
-            metricsCollectorService.appendMetrics(id, tookMs, response.getBody());
-
-            int status = response.getStatusCodeValue();
-            JsonNode json = mapper.readTree(response.getBody());
-
-            // Extract basic metrics from the OpenSearch response
-            int totalHits = json.path("hits").path("total").path("value").asInt();
-            long osTook = json.path("took").asLong(-1);
-
-            log.debug("[{}] Status {}, clientTimeMs={}, osTookMs={}, totalHits={}",
-                    id, status, tookMs, osTook, totalHits);
-
-        } catch (Exception e) {
-            log.error("[{}] Error executing query {}: {}", id, queryFile, e.getMessage(), e);
+            log.debug("[{}] Status {}, requestDurationMillis={}, openSearchExecutionMillis={}, totalHits={}",
+                    id, status, requestDurationMillis, openSearchExecutionMillis, totalHits);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
-    public String getId() {
-        return id;
+    private String loadQueryTemplate(String path) {
+        ClassPathResource resource = new ClassPathResource(path);
+        if (!resource.exists()) {
+            throw new IllegalStateException(String.format("Query template '%s' not found", path));
+        }
+        try {
+            return resource.getContentAsString(StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            log.error("Failed to read query template '{}': {}", path, e.getMessage());
+            throw new UncheckedIOException(String.format("Failed to read query template '%s'", path), e);
+        }
+    }
+
+    private String applyQueryParams(String template, Map<String, String> params) {
+        String result = template;
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            result = result.replace("{{" + entry.getKey() + "}}", entry.getValue());
+        }
+        return result;
     }
 }
