@@ -30,8 +30,8 @@ services:
 
   load-generator:
     build:
-      context: ./load-generator
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: load-generator/Dockerfile
     deploy:
       replicas: ${LOAD_GENERATOR_REPLICAS:-1}
     volumes:
@@ -62,8 +62,8 @@ services:
 
   metrics-reporter:
     build:
-      context: ./metrics-reporter
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: metrics-reporter/Dockerfile
     container_name: metrics-reporter
     environment:
       - SPRING_APPLICATION_NAME=metrics-reporter

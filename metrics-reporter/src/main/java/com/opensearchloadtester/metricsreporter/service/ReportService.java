@@ -3,7 +3,7 @@ package com.opensearchloadtester.metricsreporter.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.opensearchloadtester.metricsreporter.dto.Metrics;
+import com.opensearchloadtester.common.dto.Metrics;
 import com.opensearchloadtester.metricsreporter.dto.QueryResult;
 import com.opensearchloadtester.metricsreporter.dto.TestRunReport;
 import lombok.extern.slf4j.Slf4j;

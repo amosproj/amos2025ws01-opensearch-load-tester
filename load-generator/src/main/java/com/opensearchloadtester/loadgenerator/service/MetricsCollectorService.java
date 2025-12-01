@@ -1,6 +1,6 @@
 package com.opensearchloadtester.loadgenerator.service;
 
-import com.opensearchloadtester.loadgenerator.dto.Metrics;
+import com.opensearchloadtester.common.dto.Metrics;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.Getter;
