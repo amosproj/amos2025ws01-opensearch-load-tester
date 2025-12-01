@@ -119,21 +119,16 @@ public class LoadRunner {
                 metricsCollectorService
         );
 
-        int MAX_THREADS = 50;
-
+        // TODO: Deprecated, remove threadPoolSize
         // Number of parallel threads
-        int threadPoolSize = scenarioConfig.getConcurrency().getThreadPoolSize();
-        if (threadPoolSize > MAX_THREADS) {
-            threadPoolSize = MAX_THREADS;
-            log.warn("executeQueries: Too many concurrency threads specified." +
-                    "Maximal threadPoolSize is {}", MAX_THREADS);
-        }
+        int threadPoolSize = 5;
 
         // Setup threadPool and countDownLatch
         ExecutorService executorService = Executors.newFixedThreadPool(threadPoolSize);
         CountDownLatch latch = new CountDownLatch(threadPoolSize);
 
-        int clientSize = scenarioConfig.getConcurrency().getClientSize();
+        // TODO: Deprecated, remove clientSize
+        int clientSize = 10;
 
         // Track overall test start time
         long testStartTime = System.currentTimeMillis();
@@ -150,8 +145,7 @@ public class LoadRunner {
 
                         long durationNs = scenarioConfig.getDuration().toNanos();
                         int queriesPerSecondTotal = scenarioConfig.getQueriesPerSecond();
-                        int queriesPerSecondPerThread = queriesPerSecondTotal /
-                                scenarioConfig.getConcurrency().getThreadPoolSize();
+                        int queriesPerSecondPerThread = queriesPerSecondTotal / threadPoolSize;
                         int batchesPerSecond = Math.max(1, queriesPerSecondPerThread / clientSize);
                         long sleepBetweenBatchesMs = 1000L / batchesPerSecond;
 
