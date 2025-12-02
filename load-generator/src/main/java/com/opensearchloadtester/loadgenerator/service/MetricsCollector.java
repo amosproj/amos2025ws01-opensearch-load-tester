@@ -1,6 +1,6 @@
 package com.opensearchloadtester.loadgenerator.service;
 
-import com.opensearchloadtester.loadgenerator.dto.Metrics;
+import com.opensearchloadtester.common.dto.Metrics;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

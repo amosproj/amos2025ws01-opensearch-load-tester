@@ -2,7 +2,7 @@ package com.opensearchloadtester.loadgenerator.client;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.opensearchloadtester.loadgenerator.dto.Metrics;
+import com.opensearchloadtester.common.dto.Metrics;
 import com.opensearchloadtester.loadgenerator.exception.MetricsReporterAccessException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
