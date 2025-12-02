@@ -3,14 +3,12 @@ package com.opensearchloadtester.loadgenerator.service;
 import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * Service responsible for executing multiple queries simultaneously using thread pools.
@@ -35,79 +33,22 @@ public class LoadRunnerService {
     }
 
     /**
-     * Executes n query executions simultaneously, each on a single thread
-     * and waits until all threads are completed.
-     *
-     * @param queryExecutions List of query executions to run in parallel
-     * @throws InterruptedException if the execution is interrupted while waiting
-     */
-    public void executeQueries(List<QueryExecution> queryExecutions) throws InterruptedException {
-        if (queryExecutions == null || queryExecutions.isEmpty()) {
-            log.warn("No query executions provided, nothing to execute");
-            return;
-        }
-
-        int threadCount = queryExecutions.size();
-
-        // TODO: resources can be a problem here, use a thread pool with a max size
-        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
-        CountDownLatch latch = new CountDownLatch(threadCount);
-
-        try {
-            // Submit all query executions to the thread pool
-            for (QueryExecution queryExecution : queryExecutions) {
-                executorService.submit(() -> {
-                    try {
-                        log.debug("Starting query execution: {}", queryExecution.getId());
-                        queryExecution.run();
-                        log.debug("Completed query execution: {}", queryExecution.getId());
-
-                    } catch (Exception e) {
-                        log.error("Error executing query: {}", queryExecution.getId(), e);
-                    } finally {
-                        latch.countDown();
-                    }
-                });
-            }
-
-            // Wait for all threads to complete
-            log.info("Waiting for all {} query execution threads to complete", threadCount);
-            boolean completed = latch.await(Long.MAX_VALUE, TimeUnit.SECONDS);
-            // TODO: Use this for production to set a timeout
-            // boolean completed = latch.await(10, TimeUnit.MINUTES);
-
-            if (completed) {
-                log.info("Calling MetricsReporterClient");
-                metricsReporterClient.reportMetrics(metricsCollectorService.getMetrics());
-
-                log.info("All {} query execution threads completed successfully", threadCount);
-            } else {
-                log.warn("Timeout waiting for query execution threads to complete");
-            }
-
-        } finally {
-            // Shutdown executor service
-            shutdownExecutorService(executorService);
-        }
-    }
-
-    /**
      * Executes queries according to the ScenarioConfig
      *
      * @param scenarioConfig scenario configuration
      */
     public void execute(ScenarioConfig scenarioConfig) {
-        log.info("Started execution of scenario: {}", scenarioConfig.getName());
-        log.info("Scenario duration: {} ({} seconds)",
-                scenarioConfig.getDuration(),
-                scenarioConfig.getDuration().getSeconds());
-
 
         // Parameter check
         if (scenarioConfig == null) {
             log.error("executeQueries: No configuration provided");
             return;
         }
+
+        log.info("Started execution of scenario: {}", scenarioConfig.getName());
+        log.info("Scenario duration: {} ({} seconds)",
+                scenarioConfig.getDuration(),
+                scenarioConfig.getDuration().getSeconds());
 
         // Load query template
         final String templateFile;
@@ -128,73 +69,27 @@ public class LoadRunnerService {
                 metricsCollectorService
         );
 
-        int MAX_THREADS = 50;
-
-        // Number of parallel threads
-        int threadPoolSize = scenarioConfig.getConcurrency().getThreadPoolSize();
-        if (threadPoolSize > MAX_THREADS) {
-            threadPoolSize = MAX_THREADS;
-            log.warn("executeQueries: Too many concurrency threads specified." +
-                    "Maximal threadPoolSize is {}", MAX_THREADS);
-        }
-
-        // Setup threadPool and countDownLatch
-        ExecutorService executorService = Executors.newFixedThreadPool(threadPoolSize);
-        CountDownLatch latch = new CountDownLatch(threadPoolSize);
-
-        int clientSize = scenarioConfig.getConcurrency().getClientSize();
-
         // Track overall test start time
         long testStartTime = System.currentTimeMillis();
 
+        ScheduledExecutorService executorService = Executors
+                .newSingleThreadScheduledExecutor();
+
         try {
-            // Submit all query executions to the thread pool
-            for (int i = 0; i < threadPoolSize; i++) {
-                executorService.submit(() -> {
+            long durationNs = scenarioConfig.getDuration().toNanos();
+            int qpsTotal = scenarioConfig.getQueriesPerSecond();
+            int qpsPerLoadGen = qpsTotal / Integer.parseInt(System.getenv("LOAD_GENERATOR_REPLICAS"));
+            long durationPerQuery = 1000_000_000L / qpsPerLoadGen;
+            log.debug("Schedule delay:  {} ms  ", durationPerQuery);
 
-                    // TODO: Delete later - Simple warmup
-                    for (int k = 0; k < 100; k++) {
-                        query.run();
-                    }
+            // Start scheduled query execution
+            ScheduledFuture<?> future = executorService.scheduleAtFixedRate(query, durationPerQuery/2, durationPerQuery, TimeUnit.NANOSECONDS);
+            executorService.schedule(() -> future.cancel(false), durationNs, TimeUnit.NANOSECONDS);
 
-                    int queryCounter = 0;
-                    long start = System.nanoTime();
-                    try {
-
-                        log.debug("Thread with ID {}: Starting query executions ", Thread.currentThread().threadId());
-
-                        long durationNs = scenarioConfig.getDuration().toNanos();
-                        int queriesPerSecondTotal = scenarioConfig.getQueriesPerSecond();
-                        int queriesPerSecondPerThread = queriesPerSecondTotal /
-                                scenarioConfig.getConcurrency().getThreadPoolSize();
-                        long oneQueryDurationMs = 1000L / queriesPerSecondPerThread;
-                        log.debug("Maximal single query execution time {} ms  ", oneQueryDurationMs);
-
-                        long startQueryTime;
-                        long queryTime;
-                        while (System.nanoTime() - start < durationNs) {
-                            startQueryTime = System.currentTimeMillis();
-                            query.run();
-                            queryCounter++;
-                            queryTime = System.currentTimeMillis() - startQueryTime;
-                            log.debug("Query took {} ms  ", queryTime);
-                            Thread.sleep(oneQueryDurationMs - queryTime);
-                        }
-
-                        log.debug("Thread with ID {}: Finished query executions ", Thread.currentThread().threadId());
-
-                    } catch (Exception e) {
-                        log.error("Error executing queries in thread {}", Thread.currentThread().threadId(), e);
-                    } finally {
-                        log.info("Thread with ID {} finished after {}s and executed {} queries.", Thread.currentThread().threadId(), (System.nanoTime() - start) / 1_000_000_000.0, queryCounter);
-                        latch.countDown();
-                    }
-                });
-            }
-
-            // Wait for all threads to complete
-            log.info("Waiting for all {} threads to complete", threadPoolSize);
-            boolean completed = latch.await(Long.MAX_VALUE, TimeUnit.SECONDS);
+            // TODO: Wait for all threads to complete
+            log.info("Waiting for all threads to complete");
+            boolean completed = true;
+            executorService.awaitTermination(durationNs + 2000_000_000L, TimeUnit.NANOSECONDS);
             // TODO: Set a timeout per queryExecution
             // boolean completed = latch.await(10, TimeUnit.MINUTES);
 
@@ -202,10 +97,11 @@ public class LoadRunnerService {
             long actualDurationMs = testEndTime - testStartTime;
             double actualDurationSeconds = actualDurationMs / 1000.0;
 
+
             if (completed) {
                 log.info("Calling MetricsReporterClient");
                 metricsReporterClient.reportMetrics(metricsCollectorService.getMetrics());
-                log.info("Scenario '{}' completed successfully. All {} threads finished.", scenarioConfig.getName(), threadPoolSize);
+                log.info("Scenario '{}' completed successfully. All threads finished.", scenarioConfig.getName());
                 log.info("Test duration - Expected: {} ({}s), Actual: {}s",
                         scenarioConfig.getDuration(),
                         scenarioConfig.getDuration().getSeconds(),
@@ -216,36 +112,13 @@ public class LoadRunnerService {
                         scenarioConfig.getName(), String.format("%.2f", actualDurationSeconds));
             }
 
-        } catch (InterruptedException e) {
-            log.error("Error when awaiting all threads", e);
+        } catch (Exception e) {
+            log.error("Error executing queries:", e);
         } finally {
             // Shutdown executor service
             shutdownExecutorService(executorService);
         }
 
-
-    }
-
-    /**
-     * Executes n query executions simultaneously using a factory to create them.
-     *
-     * @param threadCount           Number of query execution threads to spawn
-     * @param queryExecutionFactory Factory to create query execution instances
-     * @throws InterruptedException if the execution is interrupted while waiting
-     */
-    public void executeQueries(int threadCount, QueryExecutionFactory queryExecutionFactory)
-            throws InterruptedException {
-        if (threadCount <= 0) {
-            log.warn("Invalid thread count: {}, nothing to execute", threadCount);
-            return;
-        }
-
-        List<QueryExecution> queryExecutions = new ArrayList<>();
-        for (int i = 0; i < threadCount; i++) {
-            queryExecutions.add(queryExecutionFactory.create(i));
-        }
-
-        executeQueries(queryExecutions);
     }
 
     /**

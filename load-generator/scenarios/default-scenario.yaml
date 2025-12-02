@@ -2,7 +2,7 @@
 name: default-scenario
 document_type: ANO
 duration: PT10S
-queries_per_second: 50
+queries_per_second: 25
 warm_up_duration: PT30S
 ramp_up_duration: PT1M
 concurrency:
