@@ -30,7 +30,7 @@ public class QueryExecutionTask implements Runnable {
     private final OpenSearchGenericClient openSearchClient;
     private final MetricsCollectorService metricsCollectorService;
 
-    ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper = new ObjectMapper();
 
     @Override
     public void run() {
