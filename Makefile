@@ -19,6 +19,8 @@ loadtest:
 	replicas=$${replicas:-3}; \
 	read -p "Anzahl zu generierende Datensätze (default: 1000): " records; \
 	records=$${records:-1000}; \
+	read -p "Art der Testdata (default: ANO): " type; \
+	type=$${type:-ANO}; \
 	echo ""; \
 	echo "Konfiguriere Loadtest mit:"; \
 	echo "  - Load-Generator Replicas: $$replicas"; \
@@ -26,6 +28,7 @@ loadtest:
 	echo ""; \
 	sed -i.bak "s/^LOAD_GENERATOR_REPLICAS=.*/LOAD_GENERATOR_REPLICAS=$$replicas/" .env; \
 	sed -i.bak "s/^TEST_DATA_GENERATION_COUNT=.*/TEST_DATA_GENERATION_COUNT=$$records/" .env; \
+	sed -i.bak "s/^TEST_DATA_GENERATION_DOCUMENT_TYPE=.*/TEST_DATA_GENERATION_DOCUMENT_TYPE=$$type/" .env; \
 	rm -f .env.bak; \
 	echo ".env wurde aktualisiert"; \
 	echo ""; \
