@@ -9,13 +9,13 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.format.DateTimeFormatter;
+import java.util.concurrent.TimeUnit;
 import java.text.DecimalFormat;
-import java.time.LocalDate;
 import java.util.ArrayList;
+import java.time.LocalDate;
 import java.time.Instant;
 import java.util.Locale;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @Getter
 @Setter
@@ -36,6 +36,14 @@ public class DuoDocument extends AbstractDocument {
         // Fill with random values
         duoDocument.ocrFulltext = OcrTextGenerator.generateOcrText();
         duoDocument.dssCustomMetadataDuo = DuoMetadata.random();
+
+        duoDocument.dssDocumentName = "Rechnung " +
+                duoDocument.dssCustomMetadataDuo.getInvoiceNumber() +
+                " - " + duoDocument.dssCustomMetadataDuo.getInvoiceBusinessPartner() + ".pdf";
+
+        duoDocument.customAll = duoDocument.dssCustomMetadataDuo.getInvoiceBusinessPartner() + " " +
+                duoDocument.dssCustomMetadataDuo.getInvoiceNumber() + " " +
+                duoDocument.ocrFulltext;
         return duoDocument;
     }
 
@@ -58,7 +66,7 @@ public class DuoDocument extends AbstractDocument {
         private String einvoiceFulltext;
         private Boolean hasPositionCorrection;
         private String invoiceBusinessPartner;
-        private Long invoiceBusinessPartnerId;
+        private Integer invoiceBusinessPartnerId;
         private Instant invoiceDate;
         private String invoiceNumber;
         private Instant lastModifiedDatetime;
@@ -81,67 +89,83 @@ public class DuoDocument extends AbstractDocument {
             duoMetadata.bookingState = "TO_BOOK";
             duoMetadata.bookingStateChangedAt = null;
             duoMetadata.companyId = RANDOM.nextLong(100000);
-            // Only EUR in examples
-            duoMetadata.currency = "Eur";
-            duoMetadata.customerNumber = null;
+            duoMetadata.currency = RANDOM.nextBoolean() ? "EUR" : "USD";
+            duoMetadata.customerNumber = String.valueOf(OcrTextGenerator.faker.random().nextDouble() < 0.7
+                    ? OcrTextGenerator.faker.number().numberBetween(1000, 1000000)
+                    : null);
             duoMetadata.deletedAt = null;
             duoMetadata.documentType = RANDOM.nextInt(-4,4000);
             List<String> documentCategoryTypes = List.of("SUPPLIER_INVOICE", "OTHER", "SALES_INVOICE");
             duoMetadata.documentCategory = documentCategoryTypes.get(RANDOM.nextInt(documentCategoryTypes.size()));
             List<String> invTypes = List.of("null", "E_INVOICE", "OTHER");
             duoMetadata.documentInvoiceType = invTypes.get(RANDOM.nextInt(invTypes.size()));
-            // TODO: ???
-            duoMetadata.einvoiceFulltext = "This is fulltext of invoice " + duoMetadata.invoiceNumber;
             duoMetadata.hasPositionCorrection = false;
             // Set to null in ~30% of cases, otherwise a random long
-            if (RANDOM.nextDouble() < 0.30) {
-                duoMetadata.invoiceBusinessPartnerId = null;
-            } else {
-                // TODO: Dirty :(
-                duoMetadata.invoiceBusinessPartnerId = Math.abs(RANDOM.nextLong()) % 1_000_000_000L;
-            }
+            duoMetadata.invoiceBusinessPartnerId = OcrTextGenerator.faker.random().nextDouble() < 0.7
+                    ? OcrTextGenerator.faker.number().numberBetween(1000, 1000000)
+                    : null;
             duoMetadata.invoiceBusinessPartner = OcrTextGenerator.faker.company().name();
-            // TODO: Need coordonation
-            duoMetadata.invoiceDate = Instant.now(); // faker.date().past(...).toInstant() DEPRECATED
+            duoMetadata.invoiceDate = OcrTextGenerator.faker.timeAndDate().past(3650, TimeUnit.DAYS);
             duoMetadata.invoiceNumber = RANDOM.nextInt(99999) + "/" + RANDOM.nextInt(9999);
 
-            // TODO: Need coordonation
-            duoMetadata.lastModifiedDatetime = Instant.now();
+            if ("E_INVOICE".equals(duoMetadata.documentInvoiceType)) {
+                String sender = OcrTextGenerator.faker.internet().emailAddress();
+                String recipient = OcrTextGenerator.faker.internet().emailAddress();
+                String subject = OcrTextGenerator.faker.options().option(
+                        "Rechnung " + duoMetadata.invoiceNumber,
+                        "Ihre Rechnung " + duoMetadata.invoiceNumber + " von " + duoMetadata.invoiceBusinessPartner,
+                        "Neue Rechnung: " + duoMetadata.invoiceNumber
+                );
+                String body = OcrTextGenerator.faker.options().option(
+                        "Sehr geehrte Damen und Herren, " +
+                                "anbei erhalten Sie unsere Rechnung " + duoMetadata.invoiceNumber + ". " +
+                                "Mit freundlichen Grüßen,  " +
+                                duoMetadata.invoiceBusinessPartner,
+                        "Hallo, " +
+                                "anbei die Rechnung " + duoMetadata.invoiceNumber + ". " +
+                                "Viele Grüße,  " +
+                                duoMetadata.invoiceBusinessPartner,
+                        "Guten Tag, " +
+                                "im Anhang finden Sie die Rechnung " + duoMetadata.invoiceNumber + " für Ihre Unterlagen.  " +
+                                "Bei Fragen stehen wir Ihnen gerne zur Verfügung. " +
+                                "Beste Grüße,  " +
+                                duoMetadata.invoiceBusinessPartner
+                );
+                duoMetadata.einvoiceFulltext = "From: " + sender + "  " +
+                        "To: " + recipient + "  " +
+                        "Subject: " + subject + " " +
+                        body;
+            } else {
+                duoMetadata.einvoiceFulltext = null;
+            }
+            duoMetadata.lastModifiedDatetime = OcrTextGenerator.faker.timeAndDate().past(90, TimeUnit.DAYS);
 
             int variant = OcrTextGenerator.faker.random().nextInt(3);
             switch (variant) {
-                case 0:
-                    duoMetadata.lastModifiedUserIdKey = "rzId-not-set";
-                    break;
-                case 1:
-                    duoMetadata.lastModifiedUserIdKey = java.util.UUID.randomUUID().toString();
-                    break;
-                default:
-                    duoMetadata.lastModifiedUserIdKey = OcrTextGenerator.faker.number().numberBetween(0, 1000) + "@sca.dt3v.de";
-                    break;
+                case 0 -> duoMetadata.lastModifiedUserIdKey = "rzId-not-set";
+                case 1 -> duoMetadata.lastModifiedUserIdKey = java.util.UUID.randomUUID().toString();
+                default ->
+                        duoMetadata.lastModifiedUserIdKey = OcrTextGenerator.faker.number().numberBetween(0, 1000) + "@sca.dt3v.de";
             }
 
             List<String> loc = List.of("BELEGE", "BELEGFREIGABE");
             duoMetadata.location = loc.get(RANDOM.nextInt(loc.size()));
-
-            // TODO: Need coordonation
-            duoMetadata.paidAt = Instant.now();
             List<String> states = List.of("NOT_PAID", "FULLY_PAID");
             duoMetadata.paidStatus = states.get(RANDOM.nextInt(states.size()));
+            duoMetadata.paidAt = "FULLY_PAID".equals(duoMetadata.paidStatus)
+                    ? OcrTextGenerator.faker.timeAndDate().past(180, TimeUnit.DAYS)
+                    : null;
 
-            // TODO: ??
             List<Position> pos = new ArrayList<>();
-            // From examples allways 0 positions
-            int numPos = RANDOM.nextInt(1);
+            // From examples always 0 positions
+            int numPos = RANDOM.nextInt(0,1);
             for (int i = 0; i < numPos; i++) {
                 pos.add(Position.random());
             }
             duoMetadata.positions = pos;
             duoMetadata.totalGrossAmount = RANDOM.nextDouble(10000000);
             duoMetadata.uploaderScId = RANDOM.nextInt(1000) + "@sca.dt3v.de";
-
-            // TODO: Need coordonation
-            duoMetadata.timeOfUpload =  Instant.now(); //2025-09-30T12:50:40.076353Z
+            duoMetadata.timeOfUpload =  OcrTextGenerator.faker.timeAndDate().past(3560, TimeUnit.DAYS);
             List<String> appStates = List.of("APPROVED", "NOT_RELEVANT", "UNDISPATCHED");
             duoMetadata.documentApprovalState = appStates.get(RANDOM.nextInt(appStates.size()));
             // From examples
@@ -162,8 +186,6 @@ public class DuoDocument extends AbstractDocument {
         private String costCenter2;
         private Instant serviceDate;
 
-
-        // TODO: Kann raus?
         // Method to generate a random Position object
         public static Position random() {
             Position position = new Position();
@@ -172,7 +194,7 @@ public class DuoDocument extends AbstractDocument {
             position.note = "This is a sample note " + RANDOM.nextInt(10000);
             position.costCenter1 = "cc-" + RANDOM.nextInt(10000);
             position.costCenter2 = "cc-" + RANDOM.nextInt(10000);
-            position.serviceDate = Instant.now();
+            position.serviceDate = OcrTextGenerator.faker.timeAndDate().past(365, TimeUnit.DAYS);
             return position;
         }
     }
@@ -184,7 +206,7 @@ public class DuoDocument extends AbstractDocument {
     @Setter
     public static class OcrTextGenerator {
 
-        private static final Faker faker = new Faker(new Locale("de"));
+        private static final Faker faker = new Faker(Locale.GERMAN);
         private static final DecimalFormat df = new DecimalFormat("#,##0.00");
         private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
@@ -208,8 +230,8 @@ public class DuoDocument extends AbstractDocument {
             sb.append(buyerCity).append(" ");
 
             // Invoice Data
-            LocalDate date = LocalDate.now().minusDays(faker.number().numberBetween(0, 365));
-            String invoiceNr = String.valueOf(faker.number().randomNumber(10, true));
+            LocalDate date = LocalDate.now().minusDays(faker.number().numberBetween(0, 3560));
+            String invoiceNr = String.valueOf(faker.number().randomNumber());
 
             sb.append("RECHNUNG Nr. ").append(invoiceNr).append(" ");
             sb.append("Datum: ").append(date.format(dtf)).append(" ");
@@ -223,26 +245,13 @@ public class DuoDocument extends AbstractDocument {
             String intro;
             int introVariant = faker.number().numberBetween(0, 6);
             switch (introVariant) {
-                case 0:
-                    intro = "Für die Lieferung/Leistung berechnen wir Ihnen:";
-                    break;
-                case 1:
-                    intro = "Gemäß Auftrag stellen wir folgende Positionen in Rechnung:";
-                    break;
-                case 2:
-                    intro = "Vielen Dank für Ihr Vertrauen. Hiermit stellen wir Ihnen folgende Leistungen in Rechnung:";
-                    break;
-                case 3:
-                    intro = "Für die Lieferung vom " + date.format(dtf) + " berechnen wir:";
-                    break;
-                case 4:
-                    intro = "Geliefert wurden am " + date.format(dtf) + ":";
-                    break;
-                case 5:
-                    intro = "Verbindungsnachweis für den Zeitraum " + date.getMonthValue() + "/" + date.getYear() + ":";
-                    break;
-                default:
-                    intro = "Rechnungspositionen:";
+                case 0 -> intro = "Für die Lieferung/Leistung berechnen wir Ihnen:";
+                case 1 -> intro = "Gemäß Auftrag stellen wir folgende Positionen in Rechnung:";
+                case 2 -> intro = "Vielen Dank für Ihr Vertrauen. Hiermit stellen wir Ihnen folgende Leistungen in Rechnung:";
+                case 3 -> intro = "Für die Lieferung vom " + date.format(dtf) + " berechnen wir:";
+                case 4 -> intro = "Geliefert wurden am " + date.format(dtf) + ":";
+                case 5 -> intro = "Verbindungsnachweis für den Zeitraum " + date.getMonthValue() + "/" + date.getYear() + ":";
+                default -> intro = "Rechnungspositionen:";
             }
             sb.append(intro).append(" ");
 
@@ -257,9 +266,9 @@ public class DuoDocument extends AbstractDocument {
                 int itemType = faker.number().numberBetween(0, 3);
                 // FRom examples
                 switch (itemType) {
-                    case 0: item = faker.commerce().productName(); break;
-                    case 1: item = faker.commerce().material(); break;
-                    default: item = "Service: " + faker.company().profession(); break;
+                    case 0 -> item = faker.commerce().productName();
+                    case 1 -> item = faker.commerce().material();
+                    default -> item = "Service: " + faker.company().profession();
                 }
 
                 int qty = faker.number().numberBetween(1, 50);
