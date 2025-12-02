@@ -1,7 +1,7 @@
 package com.opensearchloadtester.loadgenerator.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.opensearchloadtester.loadgenerator.dto.Metrics;
+import com.opensearchloadtester.common.dto.Metrics;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
