@@ -2,7 +2,7 @@ package com.opensearchloadtester.loadgenerator.client;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.opensearchloadtester.common.dto.Metrics;
+import com.opensearchloadtester.common.dto.ReportDto;
 import com.opensearchloadtester.loadgenerator.exception.MetricsReporterAccessException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
@@ -29,11 +29,11 @@ public class MetricsReporterClient {
     /**
      * Sends the given metrics as JSON to the configured Metrics Reporter service.
      */
-    public void reportMetrics(Metrics metrics) {
+    public void reportMetrics(ReportDto reportDto) {
         String jsonBody;
 
         try {
-            jsonBody = mapper.writeValueAsString(metrics);
+            jsonBody = mapper.writeValueAsString(reportDto);
         } catch (JsonProcessingException e) {
             log.error("Failed to serialize Metrics to JSON: {}", e.getMessage());
             throw new MetricsReporterAccessException("Failed to serialize Metrics to JSON", e);

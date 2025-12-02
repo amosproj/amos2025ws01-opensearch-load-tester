@@ -33,7 +33,6 @@ public class LoadRunner {
         String queryTemplatePath = scenarioConfig.getQuery().getType().getTemplatePath();
 
         QueryExecutionTask query = new QueryExecutionTask(
-                scenarioConfig.getName(),
                 scenarioConfig.getDocumentType().getIndex(),
                 queryTemplatePath,
                 scenarioConfig.getQuery().getParameters(),
@@ -106,7 +105,7 @@ public class LoadRunner {
 
             if (completed) {
                 log.info("Calling MetricsReporterClient");
-                metricsReporterClient.reportMetrics(metricsCollector.getMetrics());
+                metricsReporterClient.reportMetrics(metricsCollector.getReport());
                 log.info("Scenario '{}' completed successfully. All {} threads finished.",
                         scenarioConfig.getName(), threadPoolSize);
                 log.info("Test duration - Expected: {} ({}s), Actual: {}s",

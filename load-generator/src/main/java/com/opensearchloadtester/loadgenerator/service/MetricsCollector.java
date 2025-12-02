@@ -1,6 +1,7 @@
 package com.opensearchloadtester.loadgenerator.service;
 
-import com.opensearchloadtester.common.dto.Metrics;
+import com.opensearchloadtester.common.dto.MetricsDto;
+import com.opensearchloadtester.common.dto.ReportDto;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -10,9 +11,9 @@ import org.springframework.stereotype.Component;
 public class MetricsCollector {
 
     @Getter
-    private final Metrics metrics = new Metrics(System.getenv("HOSTNAME"));
+    private final ReportDto report = new ReportDto(System.getenv("HOSTNAME"));
 
-    public void appendMetrics(String requestType, long roundtripMilSec, String jsonResponse) {
-        metrics.addMetrics(requestType, roundtripMilSec, jsonResponse);
+    public void appendMetrics(MetricsDto metricsDto) {
+        report.addMetrics(metricsDto);
     }
 }
