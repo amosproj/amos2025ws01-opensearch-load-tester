@@ -56,7 +56,7 @@ public class MetricsCollectorService {
 //        }
     }
 
-    public synchronized void appendMetrics(String requestType, long roundtripMilSec, String jsonResponse) {
+    public void appendMetrics(String requestType, long roundtripMilSec, String jsonResponse) {
 
         metrics.addMetrics(requestType, roundtripMilSec, jsonResponse);
 

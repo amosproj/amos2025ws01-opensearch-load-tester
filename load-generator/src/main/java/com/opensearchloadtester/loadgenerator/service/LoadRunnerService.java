@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Service responsible for executing multiple queries simultaneously using thread pools.
@@ -69,16 +70,29 @@ public class LoadRunnerService {
 
         ScheduledExecutorService executorService = Executors
                 .newSingleThreadScheduledExecutor();
+        ExecutorService workers = Executors.newCachedThreadPool();
 
         try {
             long durationNs = scenarioConfig.getDuration().toNanos();
             int qpsTotal = scenarioConfig.getQueriesPerSecond();
             int qpsPerLoadGen = qpsTotal / Integer.parseInt(System.getenv("LOAD_GENERATOR_REPLICAS"));
             long durationPerQuery = 1000_000_000L / qpsPerLoadGen;
+            AtomicInteger queryCounter = new AtomicInteger();
             log.debug("Schedule delay:  {} ms  ", durationPerQuery);
 
             // Start scheduled query execution
-            ScheduledFuture<?> future = executorService.scheduleAtFixedRate(query, durationPerQuery / 2, durationPerQuery, TimeUnit.NANOSECONDS);
+            ScheduledFuture<?> future = executorService.scheduleAtFixedRate(() -> {
+                        try {
+                            workers.submit(query);
+                            queryCounter.getAndIncrement();
+                        } catch (RejectedExecutionException | OutOfMemoryError e) {
+                            log.warn("Failed to create a new thread. QPS cannot be reached...", e);
+                            log.warn("Please increase REPLICAS amount!");
+                        }
+                    },
+                    durationPerQuery / 2,
+                    durationPerQuery,
+                    TimeUnit.NANOSECONDS);
             executorService.schedule(() -> future.cancel(false), durationNs, TimeUnit.NANOSECONDS);
 
             // TODO: Wait for all threads to complete
@@ -87,6 +101,11 @@ public class LoadRunnerService {
             executorService.awaitTermination(durationNs + 2000_000_000L, TimeUnit.NANOSECONDS);
             // TODO: Set a timeout per queryExecution
             // boolean completed = latch.await(10, TimeUnit.MINUTES);
+
+            // Check if QPS fulfilled
+            if (queryCounter.get() != qpsPerLoadGen * scenarioConfig.getDuration().toSeconds()) {
+                log.warn("Load Generator can't keep up with QPS... please increase REPLICA amount!");
+            }
 
             long testEndTime = System.currentTimeMillis();
             long actualDurationMs = testEndTime - testStartTime;
