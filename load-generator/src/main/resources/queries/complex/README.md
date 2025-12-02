@@ -27,3 +27,4 @@ Notes:
 
 - `percentiles` can be removed if not needed; they add extra CPU/memory per bucket.
 - `Highlight` is expensive but maybe not needed, if so drop it
+- `script_score` (or any scripted scoring) is very expensive because the script runs for every hit; avoid it unless you truly need custom scoring.
