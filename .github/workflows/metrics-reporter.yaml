@@ -17,9 +17,13 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: start opensearch container
-        run: |
-          docker compose -f docker-compose.yaml up --scale load-generator=2 \
-            --wait -d test-target-opensearch testdata-generator load-generator
+        run: docker compose -f docker-compose.yaml up --wait -d test-target-opensearch
+
+      - name: Start testdata-generator
+        run: docker compose -f docker-compose.yaml up -d testdata-generator
+
+      - name: Start testdata-generator
+        run: docker compose -f docker-compose.yaml -d up --scale load-generator=2 load-generator
 
       - name: Run unit tests inside Maven/Temurin container
         env:
