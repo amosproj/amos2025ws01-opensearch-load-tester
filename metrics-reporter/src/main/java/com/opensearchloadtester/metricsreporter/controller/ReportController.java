@@ -1,6 +1,6 @@
 package com.opensearchloadtester.metricsreporter.controller;
 
-import com.opensearchloadtester.metricsreporter.dto.Metrics;
+import com.opensearchloadtester.common.dto.Metrics;
 import com.opensearchloadtester.metricsreporter.dto.TestRunReport;
 import com.opensearchloadtester.metricsreporter.service.ReportService;
 import lombok.extern.slf4j.Slf4j;
