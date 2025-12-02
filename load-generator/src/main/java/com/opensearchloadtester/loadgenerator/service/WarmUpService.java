@@ -31,8 +31,8 @@ public class WarmUpService {
      */
     public void runWarmUp(ScenarioConfig scenarioConfig) {
 
-        int warmupRequests = 20;      // Hardcoded request count
-        long minWarmupMs = 2000L;     // Minimum warm-up duration: 2 seconds
+        int warmupRequests = 40;      // Hardcoded request count
+        long minWarmupMs = 10000L;     // Minimum warm-up duration: 2 seconds
 
         log.info("Warm-up: running {} requests", warmupRequests);
 
@@ -64,7 +64,7 @@ public class WarmUpService {
 
             long spent = System.currentTimeMillis() - warmupStart;
 
-            // Ensure the warm-up lasts at least 2 seconds
+            // Ensure the warm-up lasts at least 10 seconds
             if (spent < minWarmupMs) {
                 Thread.sleep(minWarmupMs - spent);
             }
