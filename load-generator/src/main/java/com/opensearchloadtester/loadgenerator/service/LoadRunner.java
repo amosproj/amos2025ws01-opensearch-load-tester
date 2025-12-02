@@ -24,7 +24,7 @@ public class LoadRunner {
 
     private final OpenSearchGenericClient openSearchClient;
     private final MetricsReporterClient metricsReporterClient;
-    private final MetricsCollectorService metricsCollectorService;
+    private final MetricsCollector metricsCollector;
 
     /**
      * Executes n query executions simultaneously, each on a single thread
@@ -70,7 +70,7 @@ public class LoadRunner {
 
             if (completed) {
                 log.info("Calling MetricsReporterClient");
-                metricsReporterClient.reportMetrics(metricsCollectorService.getMetrics());
+                metricsReporterClient.reportMetrics(metricsCollector.getMetrics());
 
                 log.info("All {} query execution threads completed successfully", threadCount);
             } else {
@@ -117,7 +117,7 @@ public class LoadRunner {
                 templateFile,
                 scenarioConfig.getQuery().getParameters(),
                 openSearchClient,
-                metricsCollectorService
+                metricsCollector
         );
 
         // TODO: Deprecated, remove threadPoolSize
@@ -183,7 +183,7 @@ public class LoadRunner {
 
             if (completed) {
                 log.info("Calling MetricsReporterClient");
-                metricsReporterClient.reportMetrics(metricsCollectorService.getMetrics());
+                metricsReporterClient.reportMetrics(metricsCollector.getMetrics());
                 log.info("Scenario '{}' completed successfully. All {} threads finished.", scenarioConfig.getName(), threadPoolSize);
                 log.info("Test duration - Expected: {} ({}s), Actual: {}s",
                         scenarioConfig.getDuration(),

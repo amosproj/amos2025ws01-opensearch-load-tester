@@ -28,7 +28,7 @@ public class QueryExecutionTask implements Runnable {
     private final String queryTemplatePath;
     private final Map<String, String> queryParams;
     private final OpenSearchGenericClient openSearchClient;
-    private final MetricsCollectorService metricsCollectorService;
+    private final MetricsCollector metricsCollector;
 
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -58,7 +58,7 @@ public class QueryExecutionTask implements Runnable {
                     .map(Body::bodyAsString)
                     .orElse("");
 
-            metricsCollectorService.appendMetrics(id, requestDurationMillis, responseBodyAsString);
+            metricsCollector.appendMetrics(id, requestDurationMillis, responseBodyAsString);
 
             int status = response.getStatus();
 
