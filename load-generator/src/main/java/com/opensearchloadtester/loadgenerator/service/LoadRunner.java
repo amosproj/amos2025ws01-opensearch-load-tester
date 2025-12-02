@@ -1,5 +1,6 @@
 package com.opensearchloadtester.loadgenerator.service;
 
+import com.opensearchloadtester.loadgenerator.client.MetricsReporterClient;
 import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
