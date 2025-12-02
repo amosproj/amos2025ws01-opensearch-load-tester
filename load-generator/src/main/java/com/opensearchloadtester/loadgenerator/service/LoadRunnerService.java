@@ -3,11 +3,8 @@ package com.opensearchloadtester.loadgenerator.service;
 import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.*;
 
 /**
@@ -20,16 +17,14 @@ public class LoadRunnerService {
 
     private final MetricsReporterClient metricsReporterClient;
     private final MetricsCollectorService metricsCollectorService;
-    private final QueryRegistry queryRegistry;
 
     @Value("${opensearch.url}")
     private String openSearchBaseUrl;
 
     public LoadRunnerService(MetricsReporterClient metricsReporterClient,
-                             MetricsCollectorService metricsCollectorService, QueryRegistry queryRegistry) {
+                             MetricsCollectorService metricsCollectorService) {
         this.metricsReporterClient = metricsReporterClient;
         this.metricsCollectorService = metricsCollectorService;
-        this.queryRegistry = queryRegistry;
     }
 
     /**
@@ -83,7 +78,7 @@ public class LoadRunnerService {
             log.debug("Schedule delay:  {} ms  ", durationPerQuery);
 
             // Start scheduled query execution
-            ScheduledFuture<?> future = executorService.scheduleAtFixedRate(query, durationPerQuery/2, durationPerQuery, TimeUnit.NANOSECONDS);
+            ScheduledFuture<?> future = executorService.scheduleAtFixedRate(query, durationPerQuery / 2, durationPerQuery, TimeUnit.NANOSECONDS);
             executorService.schedule(() -> future.cancel(false), durationNs, TimeUnit.NANOSECONDS);
 
             // TODO: Wait for all threads to complete

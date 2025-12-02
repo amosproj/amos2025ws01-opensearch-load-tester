@@ -56,14 +56,9 @@ public class MetricsCollectorService {
 //        }
     }
 
-    int queryCount = 0;
-
     public synchronized void appendMetrics(String requestType, long roundtripMilSec, String jsonResponse) {
 
         metrics.addMetrics(requestType, roundtripMilSec, jsonResponse);
-
-        queryCount++;
-        log.info("Received {} queries so far", queryCount);
 
         //log.info(metrics.toString());
 
