@@ -19,6 +19,7 @@ public class ScenarioConfig {
     private Duration duration;
     @Min(1)
     private int queriesPerSecond;
+    private boolean warmUpEnabled ;
     private Duration warmUpDuration;
     private Duration rampUpDuration;
     private ConcurrencyConfig concurrency;

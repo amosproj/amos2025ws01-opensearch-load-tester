@@ -1,5 +1,6 @@
 package com.opensearchloadtester.loadgenerator.service;
 
+import com.opensearchloadtester.loadgenerator.model.DocumentType;
 import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -151,12 +152,6 @@ public class LoadRunnerService {
             // Submit all query executions to the thread pool
             for (int i = 0; i < threadPoolSize; i++) {
                 executorService.submit(() -> {
-
-                    // TODO: Delete later - Simple warmup
-                    for (int k = 0; k < 100; k++) {
-                        query.run();
-                    }
-
                     int queryCounter = 0;
                     long start = System.nanoTime();
                     try {
@@ -167,18 +162,17 @@ public class LoadRunnerService {
                         int queriesPerSecondTotal = scenarioConfig.getQueriesPerSecond();
                         int queriesPerSecondPerThread = queriesPerSecondTotal /
                                 scenarioConfig.getConcurrency().getThreadPoolSize();
-                        long oneQueryDurationMs = 1000L / queriesPerSecondPerThread;
-                        log.debug("Maximal single query execution time {} ms  ", oneQueryDurationMs);
+                        int batchesPerSecond = Math.max(1, queriesPerSecondPerThread / clientSize);
+                        long sleepBetweenBatchesMs = 1000L / batchesPerSecond;
 
-                        long startQueryTime;
-                        long queryTime;
                         while (System.nanoTime() - start < durationNs) {
-                            startQueryTime = System.currentTimeMillis();
-                            query.run();
-                            queryCounter++;
-                            queryTime = System.currentTimeMillis() - startQueryTime;
-                            log.debug("Query took {} ms  ", queryTime);
-                            Thread.sleep(oneQueryDurationMs - queryTime);
+                            // execute batch
+                            for (int j = 0; j < clientSize; j++) {
+                                query.run();
+                                queryCounter++;
+                            }
+                            // rate limit
+                            Thread.sleep(sleepBetweenBatchesMs);
                         }
 
                         log.debug("Thread with ID {}: Finished query executions ", Thread.currentThread().threadId());
