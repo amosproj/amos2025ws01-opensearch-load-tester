@@ -56,7 +56,7 @@ public class OpenSearchQueryExecution implements QueryExecution {
     public void run() {
 
         // High-level marker that this run started
-        log.debug("[{}] Starting OpenSearch query {}", id, queryFile);
+        log.debug("[{}] Starting OpenSearch query {} in thread {}", id, queryFile, Thread.currentThread().getName());
         try {
             // 1) JSON template from resources/queries/<file>
             ClassPathResource resource = new ClassPathResource(queryFile);
