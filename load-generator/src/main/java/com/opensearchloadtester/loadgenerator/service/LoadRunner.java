@@ -1,68 +1,42 @@
 package com.opensearchloadtester.loadgenerator.service;
 
+import com.opensearchloadtester.loadgenerator.client.MetricsReporterClient;
 import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import org.opensearch.client.opensearch.generic.OpenSearchGenericClient;
+import org.springframework.stereotype.Component;
 
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * Service responsible for executing multiple queries simultaneously using thread pools.
- * Manages thread lifecycle and ensures proper shutdown when all queries are completed.
- */
 @Slf4j
-@Service
-public class LoadRunnerService {
+@Component
+@RequiredArgsConstructor
+public class LoadRunner {
 
+    private final OpenSearchGenericClient openSearchClient;
     private final MetricsReporterClient metricsReporterClient;
-    private final MetricsCollectorService metricsCollectorService;
-
-    @Value("${opensearch.url}")
-    private String openSearchBaseUrl;
-
-    public LoadRunnerService(MetricsReporterClient metricsReporterClient,
-                             MetricsCollectorService metricsCollectorService) {
-        this.metricsReporterClient = metricsReporterClient;
-        this.metricsCollectorService = metricsCollectorService;
-    }
+    private final MetricsCollector metricsCollector;
 
     /**
      * Executes queries according to the ScenarioConfig
      *
      * @param scenarioConfig scenario configuration
      */
-    public void execute(ScenarioConfig scenarioConfig) {
+    public void executeScenario(ScenarioConfig scenarioConfig) {
+        log.info("Started '{}' execution (duration: {} sec)",
+                scenarioConfig.getName(), scenarioConfig.getDuration().getSeconds());
 
-        // Parameter check
-        if (scenarioConfig == null) {
-            log.error("executeQueries: No configuration provided");
-            return;
-        }
+        String queryTemplatePath = scenarioConfig.getQuery().getType().getTemplatePath();
 
-        log.info("Started execution of scenario: {}", scenarioConfig.getName());
-        log.info("Scenario duration: {} ({} seconds)",
-                scenarioConfig.getDuration(),
-                scenarioConfig.getDuration().getSeconds());
-
-        // Load query template
-        final String templateFile;
-        try {
-            templateFile = scenarioConfig.getQuery().getType().getTemplatePath();
-        } catch (IllegalArgumentException ex) {
-            log.error("executeQueries: Unknown queryPath in config: {}", scenarioConfig.getQuery().getType().getTemplatePath());
-            return;
-        }
-
-        // Create QueryExecution
-        OpenSearchQueryExecution query = new OpenSearchQueryExecution(
+        QueryExecutionTask query = new QueryExecutionTask(
                 scenarioConfig.getName(),
                 scenarioConfig.getDocumentType().getIndex(),
-                templateFile,
+                queryTemplatePath,
                 scenarioConfig.getQuery().getParameters(),
-                openSearchBaseUrl,
-                metricsCollectorService
+                openSearchClient,
+                metricsCollector
         );
 
         // Track overall test start time
@@ -114,7 +88,7 @@ public class LoadRunnerService {
 
             if (completed) {
                 log.info("Calling MetricsReporterClient");
-                metricsReporterClient.reportMetrics(metricsCollectorService.getMetrics());
+                metricsReporterClient.reportMetrics(metricsCollector.getMetrics());
                 log.info("Scenario '{}' completed successfully. All threads finished.", scenarioConfig.getName());
                 log.info("Test duration - Expected: {} ({}s), Actual: {}s",
                         scenarioConfig.getDuration(),
@@ -132,7 +106,6 @@ public class LoadRunnerService {
             // Shutdown executor service
             shutdownExecutorService(executorService);
         }
-
     }
 
     /**
