@@ -3,7 +3,7 @@ name: Intregration Test
 on:
 ## Does not work for now bc spring boot doesn't closes exits yet
   push:
-    branches: [ main ]
+#    branches: [ main ]
 #  pull_request:
 #    branches: [ main ]
   workflow_dispatch:
