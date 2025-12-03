@@ -40,7 +40,7 @@ public abstract class AbstractDocument implements Document {
     protected Instant lastDocumentChange;
 
     protected static final Random RANDOM = new Random();
-    private static final Faker faker = new Faker(Locale.GERMAN);
+    protected static final Faker faker = new Faker(Locale.GERMAN);
 
     protected static <T extends AbstractDocument> T fillCommonFieldsRandomly(T document) {
         // Fill with random values

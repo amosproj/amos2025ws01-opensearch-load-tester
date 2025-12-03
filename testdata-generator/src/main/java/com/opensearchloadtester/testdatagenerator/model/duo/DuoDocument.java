@@ -90,8 +90,8 @@ public class DuoDocument extends AbstractDocument {
             duoMetadata.bookingStateChangedAt = null;
             duoMetadata.companyId = RANDOM.nextLong(100000);
             duoMetadata.currency = RANDOM.nextBoolean() ? "EUR" : "USD";
-            duoMetadata.customerNumber = String.valueOf(OcrTextGenerator.faker.random().nextDouble() < 0.7
-                    ? OcrTextGenerator.faker.number().numberBetween(1000, 1000000)
+            duoMetadata.customerNumber = String.valueOf(faker.random().nextDouble() < 0.7
+                    ? faker.number().numberBetween(1000, 1000000)
                     : null);
             duoMetadata.deletedAt = null;
             duoMetadata.documentType = RANDOM.nextInt(-4,4000);
@@ -101,22 +101,22 @@ public class DuoDocument extends AbstractDocument {
             duoMetadata.documentInvoiceType = invTypes.get(RANDOM.nextInt(invTypes.size()));
             duoMetadata.hasPositionCorrection = false;
             // Set to null in ~30% of cases, otherwise a random long
-            duoMetadata.invoiceBusinessPartnerId = OcrTextGenerator.faker.random().nextDouble() < 0.7
-                    ? OcrTextGenerator.faker.number().numberBetween(1000, 1000000)
+            duoMetadata.invoiceBusinessPartnerId = faker.random().nextDouble() < 0.7
+                    ? faker.number().numberBetween(1000, 1000000)
                     : null;
-            duoMetadata.invoiceBusinessPartner = OcrTextGenerator.faker.company().name();
-            duoMetadata.invoiceDate = OcrTextGenerator.faker.timeAndDate().past(3650, TimeUnit.DAYS);
+            duoMetadata.invoiceBusinessPartner = faker.company().name();
+            duoMetadata.invoiceDate = faker.timeAndDate().past(3650, TimeUnit.DAYS);
             duoMetadata.invoiceNumber = RANDOM.nextInt(99999) + "/" + RANDOM.nextInt(9999);
 
             if ("E_INVOICE".equals(duoMetadata.documentInvoiceType)) {
-                String sender = OcrTextGenerator.faker.internet().emailAddress();
-                String recipient = OcrTextGenerator.faker.internet().emailAddress();
-                String subject = OcrTextGenerator.faker.options().option(
+                String sender = faker.internet().emailAddress();
+                String recipient = faker.internet().emailAddress();
+                String subject = faker.options().option(
                         "Rechnung " + duoMetadata.invoiceNumber,
                         "Ihre Rechnung " + duoMetadata.invoiceNumber + " von " + duoMetadata.invoiceBusinessPartner,
                         "Neue Rechnung: " + duoMetadata.invoiceNumber
                 );
-                String body = OcrTextGenerator.faker.options().option(
+                String body = faker.options().option(
                         "Sehr geehrte Damen und Herren, " +
                                 "anbei erhalten Sie unsere Rechnung " + duoMetadata.invoiceNumber + ". " +
                                 "Mit freundlichen Grüßen,  " +
@@ -138,14 +138,14 @@ public class DuoDocument extends AbstractDocument {
             } else {
                 duoMetadata.einvoiceFulltext = null;
             }
-            duoMetadata.lastModifiedDatetime = OcrTextGenerator.faker.timeAndDate().past(90, TimeUnit.DAYS);
+            duoMetadata.lastModifiedDatetime = faker.timeAndDate().past(90, TimeUnit.DAYS);
 
-            int variant = OcrTextGenerator.faker.random().nextInt(3);
+            int variant = faker.random().nextInt(3);
             switch (variant) {
                 case 0 -> duoMetadata.lastModifiedUserIdKey = "rzId-not-set";
                 case 1 -> duoMetadata.lastModifiedUserIdKey = java.util.UUID.randomUUID().toString();
                 default ->
-                        duoMetadata.lastModifiedUserIdKey = OcrTextGenerator.faker.number().numberBetween(0, 1000) + "@sca.dt3v.de";
+                        duoMetadata.lastModifiedUserIdKey = faker.number().numberBetween(0, 1000) + "@sca.dt3v.de";
             }
 
             List<String> loc = List.of("BELEGE", "BELEGFREIGABE");
@@ -153,7 +153,7 @@ public class DuoDocument extends AbstractDocument {
             List<String> states = List.of("NOT_PAID", "FULLY_PAID");
             duoMetadata.paidStatus = states.get(RANDOM.nextInt(states.size()));
             duoMetadata.paidAt = "FULLY_PAID".equals(duoMetadata.paidStatus)
-                    ? OcrTextGenerator.faker.timeAndDate().past(180, TimeUnit.DAYS)
+                    ? faker.timeAndDate().past(180, TimeUnit.DAYS)
                     : null;
 
             List<Position> pos = new ArrayList<>();
@@ -165,7 +165,7 @@ public class DuoDocument extends AbstractDocument {
             duoMetadata.positions = pos;
             duoMetadata.totalGrossAmount = RANDOM.nextDouble(10000000);
             duoMetadata.uploaderScId = RANDOM.nextInt(1000) + "@sca.dt3v.de";
-            duoMetadata.timeOfUpload =  OcrTextGenerator.faker.timeAndDate().past(3560, TimeUnit.DAYS);
+            duoMetadata.timeOfUpload =  faker.timeAndDate().past(3560, TimeUnit.DAYS);
             List<String> appStates = List.of("APPROVED", "NOT_RELEVANT", "UNDISPATCHED");
             duoMetadata.documentApprovalState = appStates.get(RANDOM.nextInt(appStates.size()));
             // From examples
@@ -194,7 +194,7 @@ public class DuoDocument extends AbstractDocument {
             position.note = "This is a sample note " + RANDOM.nextInt(10000);
             position.costCenter1 = "cc-" + RANDOM.nextInt(10000);
             position.costCenter2 = "cc-" + RANDOM.nextInt(10000);
-            position.serviceDate = OcrTextGenerator.faker.timeAndDate().past(365, TimeUnit.DAYS);
+            position.serviceDate = faker.timeAndDate().past(365, TimeUnit.DAYS);
             return position;
         }
     }
@@ -206,7 +206,6 @@ public class DuoDocument extends AbstractDocument {
     @Setter
     public static class OcrTextGenerator {
 
-        private static final Faker faker = new Faker(Locale.GERMAN);
         private static final DecimalFormat df = new DecimalFormat("#,##0.00");
         private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
