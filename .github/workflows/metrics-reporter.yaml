@@ -2,6 +2,8 @@ name: Test & Build Metrics Reporter
 
 on:
   push:
+    paths:
+      - 'metrics-reporter/**'
   pull_request:
     branches: [ main ]
   workflow_dispatch:
@@ -22,8 +24,8 @@ jobs:
       - name: Start testdata-generator
         run: docker compose -f docker-compose.yaml up -d testdata-generator
 
-      - name: Start testdata-generator
-        run: docker compose -f docker-compose.yaml -d up --scale load-generator=2 load-generator
+      - name: Start load-generator
+        run: docker compose -f docker-compose.yaml up -d --scale load-generator=2 load-generator
 
       - name: Run unit tests inside Maven/Temurin container
         env:
