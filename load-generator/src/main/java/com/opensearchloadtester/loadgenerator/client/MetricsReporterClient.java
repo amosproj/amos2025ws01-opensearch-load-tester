@@ -39,7 +39,9 @@ public class MetricsReporterClient {
             throw new MetricsReporterAccessException("Failed to serialize Metrics to JSON", e);
         }
 
-        HttpPost request = new HttpPost(metricsReporterUrl);
+        String url = metricsReporterUrl + "addMetrics";
+
+        HttpPost request = new HttpPost(url);
         request.setHeader("Content-Type", ContentType.APPLICATION_JSON.getMimeType());
         request.setHeader("Accept", ContentType.APPLICATION_JSON.getMimeType());
         request.setEntity(new StringEntity(jsonBody, ContentType.APPLICATION_JSON));

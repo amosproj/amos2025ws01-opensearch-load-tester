@@ -7,10 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.opensearch.generic.OpenSearchGenericClient;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Component
@@ -41,74 +39,57 @@ public class LoadRunner {
                 metricsCollector
         );
 
-        // TODO: Deprecated, remove threadPoolSize
-        int threadPoolSize = 5;
-
-        // Setup threadPool and countDownLatch
-        ExecutorService executorService = Executors.newFixedThreadPool(threadPoolSize);
-        CountDownLatch latch = new CountDownLatch(threadPoolSize);
-
-        // TODO: Deprecated, remove clientSize
-        int clientSize = 10;
-
-        // Track overall test duration
+        // Track overall test start time
         long testStartTime = System.currentTimeMillis();
 
+        ScheduledExecutorService executorService = Executors
+                .newSingleThreadScheduledExecutor();
+        ExecutorService workers = Executors.newCachedThreadPool();
+
         try {
-            // Submit all query executions to the thread pool
-            for (int i = 0; i < threadPoolSize; i++) {
-                executorService.submit(() -> {
-                    int queryCounter = 0;
-                    long start = System.nanoTime();
-                    try {
+            long durationNs = scenarioConfig.getDuration().toNanos();
+            int qpsTotal = scenarioConfig.getQueriesPerSecond();
+            int qpsPerLoadGen = qpsTotal / Integer.parseInt(System.getenv("LOAD_GENERATOR_REPLICAS"));
+            long durationPerQuery = 1000_000_000L / qpsPerLoadGen;
+            AtomicInteger queryCounter = new AtomicInteger();
+            log.debug("Schedule delay:  {} ms  ", durationPerQuery);
 
-                        log.debug("Thread with ID {}: Starting query executions ", Thread.currentThread().threadId());
-
-                        long durationNs = scenarioConfig.getDuration().toNanos();
-                        int queriesPerSecondTotal = scenarioConfig.getQueriesPerSecond();
-                        int queriesPerSecondPerThread = queriesPerSecondTotal / threadPoolSize;
-                        int batchesPerSecond = Math.max(1, queriesPerSecondPerThread / clientSize);
-                        long sleepBetweenBatchesMs = 1000L / batchesPerSecond;
-
-                        while (System.nanoTime() - start < durationNs) {
-                            // execute batch
-                            for (int j = 0; j < clientSize; j++) {
-                                query.run();
-                                queryCounter++;
-                            }
-                            // rate limit
-                            Thread.sleep(sleepBetweenBatchesMs);
+            // Start scheduled query execution
+            ScheduledFuture<?> future = executorService.scheduleAtFixedRate(() -> {
+                        try {
+                            workers.submit(query);
+                            queryCounter.getAndIncrement();
+                        } catch (RejectedExecutionException | OutOfMemoryError e) {
+                            log.warn("Failed to create a new thread. QPS cannot be reached...", e);
+                            log.warn("Please increase REPLICAS amount!");
                         }
+                    },
+                    durationPerQuery / 2,
+                    durationPerQuery,
+                    TimeUnit.NANOSECONDS);
+            executorService.schedule(() -> future.cancel(false), durationNs, TimeUnit.NANOSECONDS);
 
-                        log.debug("Thread with ID {}: Finished query executions ", Thread.currentThread().threadId());
-
-                    } catch (Exception e) {
-                        log.error("Error executing queries in thread {}", Thread.currentThread().threadId(), e);
-                    } finally {
-                        log.info("Thread with ID {} finished after {}s and executed {} queries.",
-                                Thread.currentThread().threadId(),
-                                (System.nanoTime() - start) / 1_000_000_000.0,
-                                queryCounter);
-                        latch.countDown();
-                    }
-                });
-            }
-
-            // Wait for all threads to complete
-            log.info("Waiting for all {} threads to complete", threadPoolSize);
-            boolean completed = latch.await(Long.MAX_VALUE, TimeUnit.SECONDS);
+            // TODO: Wait for all threads to complete
+            log.info("Waiting for all threads to complete");
+            boolean completed = true;
+            executorService.awaitTermination(durationNs + 2000_000_000L, TimeUnit.NANOSECONDS);
             // TODO: Set a timeout per queryExecution
             // boolean completed = latch.await(10, TimeUnit.MINUTES);
+
+            // Check if QPS fulfilled
+            if (queryCounter.get() != qpsPerLoadGen * scenarioConfig.getDuration().toSeconds()) {
+                log.warn("Load Generator can't keep up with QPS... please increase REPLICA amount!");
+            }
 
             long testEndTime = System.currentTimeMillis();
             long actualDurationMs = testEndTime - testStartTime;
             double actualDurationSeconds = actualDurationMs / 1000.0;
 
+
             if (completed) {
                 log.info("Calling MetricsReporterClient");
                 metricsReporterClient.reportMetrics(metricsCollector.getMetrics());
-                log.info("Scenario '{}' completed successfully. All {} threads finished.",
-                        scenarioConfig.getName(), threadPoolSize);
+                log.info("Scenario '{}' completed successfully. All threads finished.", scenarioConfig.getName());
                 log.info("Test duration - Expected: {} ({}s), Actual: {}s",
                         scenarioConfig.getDuration(),
                         scenarioConfig.getDuration().getSeconds(),
@@ -119,9 +100,10 @@ public class LoadRunner {
                         scenarioConfig.getName(), String.format("%.2f", actualDurationSeconds));
             }
 
-        } catch (InterruptedException e) {
-            log.error("Error when awaiting all threads", e);
+        } catch (Exception e) {
+            log.error("Error executing queries:", e);
         } finally {
+            // Shutdown executor service
             shutdownExecutorService(executorService);
         }
     }
