@@ -15,7 +15,6 @@ import java.time.Instant;
 import java.util.Locale;
 import java.util.List;
 
-@Slf4j
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PRIVATE) // AnoDocument objects must be created via random() method
@@ -28,14 +27,12 @@ public class AnoDocument extends AbstractDocument {
     private Instant dssCreationDatetime;
     private PayrollInfo dssCustomMetadataPayrollInfo;
     private Instant dssDeleteRetentionMinRetention;
-    private Long dssDocumentOrientation;
+    private int dssDocumentOrientation;
     private String dssDocumentPath;
     private String dssDocumentSource;
     private Instant dssLastModifiedUserDatetime;
     private String dssOriginalFilename;
     private Boolean dssRecyclebin;
-
-    private static final Faker faker = new Faker(Locale.GERMAN);
 
     // Method to create a random AnoDocument object
     public static AnoDocument random() {
@@ -50,7 +47,7 @@ public class AnoDocument extends AbstractDocument {
             default -> null;
         };
         // All examples were 0
-        anoDocument.dssDocumentOrientation = (long) 0;
+        anoDocument.dssDocumentOrientation = 0;
         anoDocument.dssDocumentPath = "/" + anoDocument.dssDataspaceId
                 + "/documents/" + anoDocument.dssDocumentId + "/document";
         anoDocument.dssDocumentSource = faker.internet().url();
