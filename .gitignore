@@ -46,3 +46,4 @@ target/
 
 reports/*.csv
 reports/*.json
+reports/*.ndjson
