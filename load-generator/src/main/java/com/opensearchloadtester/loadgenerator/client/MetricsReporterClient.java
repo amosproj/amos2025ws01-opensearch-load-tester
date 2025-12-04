@@ -2,7 +2,7 @@ package com.opensearchloadtester.loadgenerator.client;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.opensearchloadtester.common.dto.ReportDto;
+import com.opensearchloadtester.common.dto.LoadGeneratorReportDto;
 import com.opensearchloadtester.loadgenerator.exception.MetricsReporterAccessException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
@@ -29,7 +29,7 @@ public class MetricsReporterClient {
     /**
      * Sends the given metrics as JSON to the configured Metrics Reporter service.
      */
-    public void reportMetrics(ReportDto reportDto) {
+    public void reportMetrics(LoadGeneratorReportDto reportDto) {
         String jsonBody;
 
         try {

@@ -12,7 +12,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ReportDto {
+public class LoadGeneratorReportDto {
 
     private String loadGeneratorId;
     private final List<MetricsDto> metricsList = new ArrayList<>();
