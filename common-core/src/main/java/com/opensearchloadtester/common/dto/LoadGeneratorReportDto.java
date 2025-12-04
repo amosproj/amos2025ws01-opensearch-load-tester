@@ -15,6 +15,8 @@ import java.util.List;
 public class LoadGeneratorReportDto {
 
     private String loadGeneratorId;
+    private String scenario;
+    private String queryType;
     private final List<MetricsDto> metricsList = new ArrayList<>();
 
     public synchronized void addMetrics(MetricsDto metricsDto) {
