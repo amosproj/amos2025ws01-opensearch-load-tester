@@ -31,7 +31,6 @@ public class QueryExecutionTask implements Runnable {
 
     @Override
     public void run() {
-        log.debug("[{}] Starting OpenSearch query {} in thread {}", id, queryTemplatePath, Thread.currentThread().getName());
 
         try {
             // Load query template JSON
