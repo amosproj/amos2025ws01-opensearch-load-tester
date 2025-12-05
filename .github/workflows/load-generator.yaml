@@ -34,12 +34,12 @@ jobs:
           docker run --rm \
               --network "$NETWORK" \
               --name metrics-reporter \
-              -v "${{ github.workspace }}/load-generator":/app:rw \
+              -v "${{ github.workspace }}":/app:rw \
               -w /app \
               -e METRICS_REPORTER_URL \
               -e OPENSEARCH_URL \
               maven:3.9-eclipse-temurin-25 \
-              sh -c "mvn dependency:go-offline -B && mvn -B test"
+              sh -c "mvn -B -pl load-generator -am dependency:go-offline && mvn -B -pl load-generator -am test"
 
       - name: Upload Test Reports
         uses: actions/upload-artifact@v5

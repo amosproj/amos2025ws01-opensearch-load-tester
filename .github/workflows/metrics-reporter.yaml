@@ -34,12 +34,12 @@ jobs:
           NETWORK=$(docker inspect --format='{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}' test-target-opensearch)
           echo "Using network: $NETWORK"
           docker run --rm \
-              --network "$NETWORK" \
-            -v "${{ github.workspace }}/metrics-reporter":/app:rw \
+            --network "$NETWORK" \
+            -v "${{ github.workspace }}":/app:rw \
             -w /app \
             -e LOAD_GENERATOR_REPLICAS \
             maven:3.9-eclipse-temurin-25 \
-            sh -c "mvn dependency:go-offline -B && mvn -B test"
+            sh -c "mvn -B -pl metrics-reporter -am dependency:go-offline && mvn -B -pl metrics-reporter -am test"
 
       - name: Upload Test Reports
         uses: actions/upload-artifact@v5

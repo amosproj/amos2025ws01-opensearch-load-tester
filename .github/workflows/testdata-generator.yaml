@@ -46,7 +46,7 @@ jobs:
           NETWORK=$(docker inspect --format='{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}' test-target-opensearch)
           echo "Using network: $NETWORK"
           docker run --rm \
-              --network "$NETWORK" \
+            --network "$NETWORK" \
             -v "${{ github.workspace }}/testdata-generator":/app:rw \
             -w /app \
             -e DATA_GENERATION_DOCUMENT_TYPE \
