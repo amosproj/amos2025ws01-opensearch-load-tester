@@ -35,8 +35,15 @@ out/
 .project
 bin/
 
+# Maven/Java build
+target/
+
 # MacOS
 .DS_Store
 
 # All CSV-Files 
 *.csv 
+
+reports/*.csv
+reports/*.json
+reports/*.ndjson
