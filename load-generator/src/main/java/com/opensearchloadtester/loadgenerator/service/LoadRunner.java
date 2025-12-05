@@ -31,7 +31,6 @@ public class LoadRunner {
         String queryTemplatePath = scenarioConfig.getQuery().getType().getTemplatePath();
 
         QueryExecutionTask query = new QueryExecutionTask(
-                scenarioConfig.getName(),
                 scenarioConfig.getDocumentType().getIndex(),
                 queryTemplatePath,
                 scenarioConfig.getQuery().getParameters(),
@@ -85,10 +84,9 @@ public class LoadRunner {
             long actualDurationMs = testEndTime - testStartTime;
             double actualDurationSeconds = actualDurationMs / 1000.0;
 
-
             if (completed) {
                 log.info("Calling MetricsReporterClient");
-                metricsReporterClient.reportMetrics(metricsCollector.getMetrics());
+                metricsReporterClient.reportMetrics(metricsCollector.getReport());
                 log.info("Scenario '{}' completed successfully. All threads finished.", scenarioConfig.getName());
                 log.info("Test duration - Expected: {} ({}s), Actual: {}s",
                         scenarioConfig.getDuration(),
@@ -103,7 +101,6 @@ public class LoadRunner {
         } catch (Exception e) {
             log.error("Error executing queries:", e);
         } finally {
-            // Shutdown executor service
             shutdownExecutorService(executorService);
         }
     }
