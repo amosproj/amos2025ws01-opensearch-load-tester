@@ -1,0 +1,114 @@
+{
+  "size": 50,
+  "track_total_hits": true,
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "multi_match": {
+            "query": "Rechnung Zahlung Holz Lieferung",
+            "fields": [
+              "custom_all"
+            ],
+            "type": "most_fields",
+            "operator": "and",
+            "fuzziness": "AUTO",
+            "slop": 3
+          }
+        },
+        {
+          "range": {
+            "dss_custom_metadata.duo.invoice_date": {
+              "gte": "2016-01-01",
+              "lte": "now"
+            }
+          }
+        }
+      ],
+      "filter": [
+        {
+          "wildcard": {
+            "dss_custom_metadata.duo.invoice_business_partner.raw": "*holz*"
+          }
+        },
+        {
+          "terms": {
+            "dss_custom_metadata.duo.document_category.raw": [
+              "SALES_INVOICE",
+              "SUPPLIER_INVOICE",
+              "OTHER"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "highlight": {
+    "fields": {
+      "custom_all": {
+        "type": "fvh",
+        "fragment_size": 180,
+        "number_of_fragments": 5,
+        "no_match_size": 180
+      }
+    }
+  },
+  "aggs": {
+    "by_dataspace": {
+      "terms": {
+        "field": "dss_dataspace_id.raw",
+        "size": 5000
+      },
+      "aggs": {
+        "by_partner": {
+          "terms": {
+            "field": "dss_custom_metadata.duo.invoice_business_partner.raw",
+            "size": 5000
+          },
+          "aggs": {
+            "by_month": {
+              "date_histogram": {
+                "field": "dss_custom_metadata.duo.invoice_date",
+                "calendar_interval": "month"
+              },
+              "aggs": {
+                "paid_state": {
+                  "terms": {
+                    "field": "dss_custom_metadata.duo.paid_status.raw",
+                    "size": 10
+                  }
+                },
+                "gross_percentiles": {
+                  "percentiles": {
+                    "field": "dss_custom_metadata.duo.total_gross_amount",
+                    "percents": [
+                      50,
+                      90,
+                      99
+                    ]
+                  }
+                },
+                "invoice_cardinality": {
+                  "cardinality": {
+                    "field": "dss_custom_metadata.duo.invoice_number.raw"
+                  }
+                },
+                "top_docs": {
+                  "top_hits": {
+                    "size": 3,
+                    "_source": [
+                      "dss_document_name",
+                      "dss_dataspace_id",
+                      "dss_custom_metadata.duo.*",
+                      "content_length"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
