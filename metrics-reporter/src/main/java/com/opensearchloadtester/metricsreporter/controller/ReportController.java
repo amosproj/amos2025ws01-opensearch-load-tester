@@ -41,7 +41,7 @@ public class ReportController {
      * @param metrics DTO for metrics data
      * @return ResponseEntity with status message
      */
-    @PostMapping("/addMetrics")
+    @PostMapping("/metrics")
     public synchronized ResponseEntity<String> addMetrics(@RequestBody LoadGeneratorReportDto loadGeneratorReport) {
         if (loadGeneratorReport == null) {
             log.error("Received empty loadGeneratorReport payload");
