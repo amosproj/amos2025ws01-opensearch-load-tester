@@ -29,11 +29,11 @@ public class MetricsReporterClient {
     /**
      * Sends the given metrics as JSON to the configured Metrics Reporter service.
      */
-    public void reportMetrics(LoadGeneratorReportDto reportDto) {
+    public void reportMetrics(LoadGeneratorReportDto report) {
         String jsonBody;
 
         try {
-            jsonBody = mapper.writeValueAsString(reportDto);
+            jsonBody = mapper.writeValueAsString(report);
         } catch (JsonProcessingException e) {
             log.error("Failed to serialize Metrics to JSON: {}", e.getMessage());
             throw new MetricsReporterAccessException("Failed to serialize Metrics to JSON", e);

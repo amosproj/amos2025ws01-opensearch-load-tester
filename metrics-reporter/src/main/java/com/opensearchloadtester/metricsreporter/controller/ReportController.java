@@ -1,6 +1,6 @@
 package com.opensearchloadtester.metricsreporter.controller;
 
-import com.opensearchloadtester.common.dto.Metrics;
+import com.opensearchloadtester.common.dto.LoadGeneratorReportDto;
 import com.opensearchloadtester.metricsreporter.dto.TestRunReport;
 import com.opensearchloadtester.metricsreporter.service.ReportService;
 import lombok.extern.slf4j.Slf4j;
@@ -42,21 +42,25 @@ public class ReportController {
      * @return ResponseEntity with status message
      */
     @PostMapping("/addMetrics")
-    public synchronized ResponseEntity<String> addMetrics(@RequestBody Metrics metrics) {
-        log.info("Received metrics from load generator: {}", metrics.getLoadGeneratorInstance());
+    public synchronized ResponseEntity<String> addMetrics(@RequestBody LoadGeneratorReportDto loadGeneratorReport) {
+        if (loadGeneratorReport == null) {
+            log.error("Received empty loadGeneratorReport payload");
+            return ResponseEntity.badRequest().body("Invalid loadGeneratorReport payload\n");
+        }
 
         // Validate params
-        if (metrics.getRequestType() == null || metrics.getRoundtripMilSec() == null ||
-                metrics.getJsonResponse() == null || metrics.getLoadGeneratorInstance() == null) {
-            log.error("Invalid request parameters - requestType:{}, roundtripMilSec:{}, jsonResponse:{}, instance:{}",
-                    metrics.getRequestType(), metrics.getRoundtripMilSec(),
-                    metrics.getJsonResponse(), metrics.getLoadGeneratorInstance());
-            return ResponseEntity.badRequest().body("Invalid metrics data\n");
+        if (loadGeneratorReport.getLoadGeneratorId() == null || loadGeneratorReport.getMetricsList() == null || loadGeneratorReport.getMetricsList().isEmpty()) {
+            log.error("Invalid request parameters - loadGeneratorId:{}, scenario:{}, queryType:{}, metricsCount:{}",
+                    loadGeneratorReport.getLoadGeneratorId(), loadGeneratorReport.getScenario(), loadGeneratorReport.getQueryType(),
+                    loadGeneratorReport.getMetricsList() == null ? null : loadGeneratorReport.getMetricsList().size());
+            return ResponseEntity.badRequest().body("Invalid loadGeneratorReport payload\n");
         }
+
+        log.info("Received metrics from load generator: {}", loadGeneratorReport.getLoadGeneratorId());
 
         // Immediately process and persist metrics to avoid unbounded in-memory growth
         try {
-            reportService.processMetrics(metrics);
+            reportService.processReport(loadGeneratorReport);
         } catch (IOException e) {
             log.error("Failed to persist metrics", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -64,14 +68,14 @@ public class ReportController {
         }
 
         // Count unique reporting instances
-        reportedInstances.add(metrics.getLoadGeneratorInstance());
+        reportedInstances.add(loadGeneratorReport.getLoadGeneratorId());
         int currentCount = reportedInstances.size();
 
         log.info("Stored metrics from {}. Received {}/{} replicas. Query count: {}",
-                metrics.getLoadGeneratorInstance(),
+                loadGeneratorReport.getLoadGeneratorId(),
                 currentCount,
                 expectedReplicas,
-                metrics.getRequestType().size());
+                loadGeneratorReport.getMetricsList().size());
 
         // Check if all replicas have reported
         if (currentCount >= expectedReplicas) {
