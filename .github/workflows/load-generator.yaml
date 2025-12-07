@@ -28,7 +28,7 @@ jobs:
         run: docker compose -f docker-compose.yaml up -d metrics-reporter
 
       - name: Build load-generator image from Build Stage
-        run: docker build --target build -t load-generator-build -f load-generator/Dockerfile
+        run: docker build --target build -t load-generator-build -f load-generator/Dockerfile .
 
       - name: Run unit tests inside Build container
         env:
