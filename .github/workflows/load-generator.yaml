@@ -18,30 +18,57 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: start opensearch container
+      - name: Start opensearch container
         run: docker compose -f docker-compose.yaml up --wait -d test-target-opensearch
 
       - name: Start testdata-generator
         run: docker compose -f docker-compose.yaml up -d testdata-generator
 
-      - name: Run unit tests inside Maven/Temurin container
+      - name: Start metrics-reporter
+        run: docker compose -f docker-compose.yaml up -d metrics-reporter
+
+      - name: Build load-generator image from Build Stage
+        run: docker build --target build -t load-generator-build -f load-generator/Dockerfile
+
+      - name: Run unit tests inside Build container
         env:
           OPENSEARCH_URL: http://test-target-opensearch:9200
-          METRICS_REPORTER_URL: http://metrics-reporter:8080/api
+          METRICS_REPORTER_URL: http://metrics-reporter:8080/api/
+          SCENARIO_CONFIG_PATH: scenarios/default-scenario.yaml
+          LOAD_GENERATOR_REPLICAS: '1'
         run: |
           NETWORK=$(docker inspect --format='{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}' test-target-opensearch)
           echo "Using network: $NETWORK"
-          docker run --rm \
-              --network "$NETWORK" \
-              --name metrics-reporter \
-              -v "${{ github.workspace }}":/app:rw \
-              -w /app \
-              -e METRICS_REPORTER_URL \
-              -e OPENSEARCH_URL \
-              maven:3.9-eclipse-temurin-25 \
-              sh -c "mvn -B -pl load-generator -am dependency:go-offline && mvn -B -pl load-generator -am test"
+          docker run \
+            --name load-generator-test-runner \
+            --network "$NETWORK" \
+            -e SCENARIO_CONFIG_PATH \
+            -e METRICS_REPORTER_URL \
+            -e OPENSEARCH_URL \
+            -e LOAD_GENERATOR_REPLICAS \
+            -v ./load-generator/scenarios:/app/load-generator/scenarios:ro \
+            -v "$(pwd)/load-generator-test-reports":/out \
+            load-generator-build \
+            mvn -f /app/load-generator/pom.xml test -DtrimStackTrace=false \
+            && cp -r /app/load-generator/target/surefire-reports /out/
+
+      - name: Export Container Logs
+        if: always()
+        run: |
+          mkdir -p container-logs
+          docker compose -f docker-compose.yaml logs testdata-generator > container-logs/testdata-generator.log"
+          docker compose -f docker-compose.yaml logs  metrics-reporter > container-logs/metrics-reporter.log"
+          docker logs load-generator-test-runner > container-logs/load-generator-test-runner.log"
+
+      - name: Upload Container Logs Artifact
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: docker-container-logs
+          path: container-logs/**
 
       - name: Upload Test Reports
+        if: always()
         uses: actions/upload-artifact@v5
         with:
           name: load-generator-test-reports
