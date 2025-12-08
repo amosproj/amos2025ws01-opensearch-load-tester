@@ -31,7 +31,7 @@ public class LoadRunner {
         QueryExecutionTask query = new QueryExecutionTask(
                 scenarioConfig.getName(),
                 scenarioConfig.getDocumentType().getIndex(),
-                scenarioConfig.getQuery().getType().createInstance(),
+                scenarioConfig.getQueryType().createInstance(),
                 openSearchClient,
                 metricsCollector
         );
