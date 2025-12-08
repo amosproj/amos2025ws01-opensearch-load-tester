@@ -82,10 +82,10 @@ public class DuoIndex implements Index {
         return new TypeMapping.Builder()
                 .dynamic(DynamicMapping.False)
                 .dynamicDateFormats(
-                        "8uuuu-MM-dd'T'HH:mm:ssXXX",
-                        "8uuuu-MM-dd'T'HH:mm:ss",
-                        "8uuuu-MM-dd'T'HH:mm:ss.SSSXXX",
-                        "8uuuu-MM-dd"
+                        "uuuu-MM-dd'T'HH:mm:ssXXX",
+                        "uuuu-MM-dd'T'HH:mm:ss",
+                        "uuuu-MM-dd'T'HH:mm:ss.SSSXXX",
+                        "uuuu-MM-dd"
                 )
                 .source(s -> s.excludes(
                         "dss_creation_datetime",

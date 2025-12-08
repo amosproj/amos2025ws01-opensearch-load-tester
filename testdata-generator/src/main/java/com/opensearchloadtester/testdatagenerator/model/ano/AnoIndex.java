@@ -81,10 +81,10 @@ public final class AnoIndex implements Index {
         return new TypeMapping.Builder()
                 .dynamic(DynamicMapping.False)
                 .dynamicDateFormats(
-                        "8uuuu-MM-dd'T'HH:mm:ssXXX",
-                        "8uuuu-MM-dd'T'HH:mm:ss.SSSXXX",
-                        "8uuuu-MM-dd'Z'HH:mm:ss.SS",
-                        "8uuuu-MM-dd"
+                        "uuuu-MM-dd'T'HH:mm:ssXXX",
+                        "uuuu-MM-dd'T'HH:mm:ss.SSSXXX",
+                        "uuuu-MM-dd HH:mm:ss.SS",
+                        "uuuu-MM-dd"
                 )
                 .properties(buildProperties())
                 .build();
@@ -99,7 +99,7 @@ public final class AnoIndex implements Index {
 
         Map<String, Property> props = new HashMap<>();
 
-        props.put("customAll", Property.of(p -> p.text(t -> t
+        props.put("custom_all", Property.of(p -> p.text(t -> t
                 .analyzer("german")
                 .store(true)
         )));

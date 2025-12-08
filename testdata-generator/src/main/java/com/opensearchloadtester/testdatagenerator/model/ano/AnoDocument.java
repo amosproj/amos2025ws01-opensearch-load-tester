@@ -1,5 +1,6 @@
 package com.opensearchloadtester.testdatagenerator.model.ano;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.opensearchloadtester.testdatagenerator.model.AbstractDocument;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -21,13 +22,16 @@ public class AnoDocument extends AbstractDocument {
      * Attributes of an AnoDocument correspond to the data stored in an OpenSearch index.
      * Wrapper Classes are used for datatypes to ensure stability for null entries.
      */
-    private Long dssCreationDatetime;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssXXX", timezone = "Europe/Berlin")
+    private Date dssCreationDatetime;
     private PayrollInfo dssCustomMetadataPayrollInfo;
-    private Long dssDeleteRetentionMinRetention;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssXXX", timezone = "Europe/Berlin")
+    private Date dssDeleteRetentionMinRetention;
     private int dssDocumentOrientation;
     private String dssDocumentPath;
     private String dssDocumentSource;
-    private Long dssLastModifiedUserDatetime;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssXXX", timezone = "Europe/Berlin")
+    private Date dssLastModifiedUserDatetime;
     private String dssOriginalFilename;
     private Boolean dssRecyclebin;
 
@@ -36,11 +40,11 @@ public class AnoDocument extends AbstractDocument {
         AnoDocument anoDocument = fillCommonFieldsRandomly(new AnoDocument());
         // Fill with random values
         anoDocument.dssCustomMetadataPayrollInfo = PayrollInfo.random();
-        anoDocument.dssCreationDatetime = faker.timeAndDate().past(3650, TimeUnit.DAYS).toEpochMilli();
+        anoDocument.dssCreationDatetime = Date.from(faker.timeAndDate().past(3650, TimeUnit.DAYS));
         // All examples where null
         anoDocument.dssDeleteRetentionMinRetention = switch (RANDOM.nextInt(3)) {
-            case 0 -> faker.timeAndDate().past(90, TimeUnit.DAYS).toEpochMilli();
-            case 1 -> faker.timeAndDate().future(3650, TimeUnit.DAYS).toEpochMilli();
+            case 0 -> Date.from(faker.timeAndDate().past(90, TimeUnit.DAYS));
+            case 1 -> Date.from(faker.timeAndDate().future(3650, TimeUnit.DAYS));
             default -> null;
         };
         // All examples were 0
@@ -48,7 +52,7 @@ public class AnoDocument extends AbstractDocument {
         anoDocument.dssDocumentPath = "/" + anoDocument.dssDataspaceId
                 + "/documents/" + anoDocument.dssDocumentId + "/document";
         anoDocument.dssDocumentSource = faker.internet().url();
-        anoDocument.dssLastModifiedUserDatetime = faker.timeAndDate().past(90, TimeUnit.DAYS).toEpochMilli();
+        anoDocument.dssLastModifiedUserDatetime = Date.from(faker.timeAndDate().past(90, TimeUnit.DAYS));
         anoDocument.dssOriginalFilename = "Brutto-Netto-Abrechnung "
                 + translateMonthToName(anoDocument.dssCustomMetadataPayrollInfo.getAccountingMonth())
                 + " " + anoDocument.dssCustomMetadataPayrollInfo.getAccountingYear() + ".pdf";
@@ -91,17 +95,19 @@ public class AnoDocument extends AbstractDocument {
 
         private Integer accountingMonth;
         private Integer accountingYear;
-        private Long firstAccess;
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssXXX", timezone = "Europe/Berlin")
+        private Date firstAccess;
         private String language;
         private String payrollType;
-        private Long provisionDate;
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+        private Date provisionDate;
 
         // Method to create a random PayrollInfo object
         public static PayrollInfo random() {
             PayrollInfo payrollInfo = new PayrollInfo();
-            payrollInfo.provisionDate = faker.timeAndDate().past(3650, TimeUnit.DAYS).toEpochMilli();
+            payrollInfo.provisionDate = Date.from(faker.timeAndDate().past(3650, TimeUnit.DAYS));
             // Extract month and year from provisionDate
-            Instant provDate = new Date(payrollInfo.provisionDate).toInstant();
+            Instant provDate = payrollInfo.provisionDate.toInstant();
             java.time.ZonedDateTime zdt = provDate.atZone(java.time.ZoneId.systemDefault());
             payrollInfo.accountingMonth = zdt.getMonthValue();
             payrollInfo.accountingYear = zdt.getYear();
@@ -109,7 +115,7 @@ public class AnoDocument extends AbstractDocument {
             if (RANDOM.nextDouble() < 0.3) {
                 payrollInfo.firstAccess = null;
             } else {
-                payrollInfo.firstAccess = provDate.plus(RANDOM.nextInt(16), ChronoUnit.DAYS).toEpochMilli();
+                payrollInfo.firstAccess = Date.from(provDate.plus(RANDOM.nextInt(16), ChronoUnit.DAYS));
             }
 
             List<String> lang = List.of("German", "English", "Spanish", "French");

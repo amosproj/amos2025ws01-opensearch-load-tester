@@ -1,9 +1,11 @@
 package com.opensearchloadtester.testdatagenerator.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
 import lombok.Setter;
 import net.datafaker.Faker;
 
+import java.util.Date;
 import java.util.Locale;
 import java.util.Random;
 import java.util.UUID;
@@ -29,13 +31,15 @@ public abstract class AbstractDocument implements Document {
     protected String dssDataspaceId;
     protected String dssDocumentId;
     protected String dssDocumentName;
-    protected Long dssLastModifiedDatetime;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssXXX", timezone = "Europe/Berlin")
+    protected Date dssLastModifiedDatetime;
     protected String dssLastModifiedUserDisplayName;
     protected String dssLastModifiedUserIdKey;
     protected String dssProcessingFlagOwner;
     protected String dssVersion;
     protected String etag;
-    protected Long lastDocumentChange;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
+    protected Date lastDocumentChange;
 
     protected static final Random RANDOM = new Random();
     protected static final Faker faker = new Faker(Locale.GERMAN);
@@ -53,13 +57,13 @@ public abstract class AbstractDocument implements Document {
         document.dssDocumentId = document.id.substring(document.id.indexOf('_') + 1);
 
 
-        document.dssLastModifiedDatetime = faker.timeAndDate().past(365, TimeUnit.DAYS).toEpochMilli();
+        document.dssLastModifiedDatetime = Date.from(faker.timeAndDate().past(365, TimeUnit.DAYS));
         document.dssLastModifiedUserDisplayName = faker.name().fullName();
         document.dssLastModifiedUserIdKey = UUID.randomUUID().toString();
         document.dssProcessingFlagOwner = faker.name().nameWithMiddle();
         document.dssVersion = "1." + RANDOM.nextInt(9);
         document.etag = UUID.randomUUID().toString().replace("-", "");
-        document.lastDocumentChange = faker.timeAndDate().past(90, TimeUnit.DAYS).toEpochMilli();
+        document.lastDocumentChange = Date.from(faker.timeAndDate().past(90, TimeUnit.DAYS));
         return document;
     }
 }
