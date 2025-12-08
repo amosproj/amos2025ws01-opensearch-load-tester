@@ -3,6 +3,7 @@ package com.opensearchloadtester.loadgenerator.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opensearchloadtester.common.dto.MetricsDto;
+import com.opensearchloadtester.loadgenerator.model.QueryConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.opensearch.generic.*;
@@ -21,9 +22,9 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class QueryExecutionTask implements Runnable {
 
+    private final String loadGeneratorId;
     private final String index;
-    private final String queryTemplatePath;
-    private final Map<String, String> queryParams;
+    private final QueryConfig queryConfig;
     private final OpenSearchGenericClient openSearchClient;
     private final MetricsCollector metricsCollector;
 
@@ -34,10 +35,10 @@ public class QueryExecutionTask implements Runnable {
 
         try {
             // Load query template JSON
-            String queryTemplate = loadQueryTemplate(queryTemplatePath);
+            String queryTemplate = loadQueryTemplate(queryConfig.getType().getTemplatePath());
 
             // Substitute placeholders in query template with provided values
-            String query = applyQueryParams(queryTemplate, queryParams);
+            String query = applyQueryParams(queryTemplate, queryConfig.getParameters());
 
             // Send query to OpenSearch and measure end-to-end client-side round-trip time
             Request request = Requests.builder()
@@ -53,7 +54,15 @@ public class QueryExecutionTask implements Runnable {
             int status = response.getStatus();
 
             if (status >= 400) {
-                MetricsDto metricsDto = new MetricsDto(requestDurationMillis, null, null, status);
+                MetricsDto metricsDto = new MetricsDto(
+                        loadGeneratorId,
+                        queryConfig.getType().name(),
+                        requestDurationMillis,
+                        null,
+                        null,
+                        status
+                );
+
                 metricsCollector.appendMetrics(metricsDto);
 
                 log.debug("Query failed (status: {}, requestDurationMillis: {})",
@@ -71,7 +80,15 @@ public class QueryExecutionTask implements Runnable {
             int totalHits = responseBodyAsJsonNode.path("hits").path("total").path("value").asInt();
             long queryDurationMillis = responseBodyAsJsonNode.path("took").asLong(-1);
 
-            MetricsDto metricsDto = new MetricsDto(requestDurationMillis, queryDurationMillis, totalHits, status);
+            MetricsDto metricsDto = new MetricsDto(
+                    loadGeneratorId,
+                    queryConfig.getType().name(),
+                    requestDurationMillis,
+                    queryDurationMillis,
+                    totalHits,
+                    status
+            );
+
             metricsCollector.appendMetrics(metricsDto);
 
             log.debug(
