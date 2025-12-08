@@ -5,7 +5,7 @@ duration: PT10S
 queries_per_second: 25
 enable_warm_up: true
 query:
-  type: YEAR_RANGE
+  type: ANO_PAYROLL_RANGE
   parameters:
     from: 2010
     to: 2025

@@ -28,13 +28,10 @@ public class LoadRunner {
         log.info("Started '{}' execution (duration: {} sec)",
                 scenarioConfig.getName(), scenarioConfig.getDuration().getSeconds());
 
-        String queryTemplatePath = scenarioConfig.getQuery().getType().getTemplatePath();
-
         QueryExecutionTask query = new QueryExecutionTask(
                 scenarioConfig.getName(),
                 scenarioConfig.getDocumentType().getIndex(),
-                queryTemplatePath,
-                scenarioConfig.getQuery().getParameters(),
+                scenarioConfig.getQuery().getType().createInstance(),
                 openSearchClient,
                 metricsCollector
         );
