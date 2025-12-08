@@ -1,5 +1,6 @@
 package com.opensearchloadtester.loadgenerator.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,9 +20,7 @@ public class ScenarioConfig {
     private Duration duration;
     @Min(1)
     private int queriesPerSecond;
-    private boolean warmUpEnabled ;
-    private Duration warmUpDuration;
-    private Duration rampUpDuration;
-    private ConcurrencyConfig concurrency;
+    @JsonProperty("enable_warm_up")
+    private boolean warmUpEnabled;
     private QueryConfig query;
 }

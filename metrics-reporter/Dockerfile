@@ -1,26 +1,36 @@
-# Multi-stage build for Metric Reporter
+# Multi-stage build for Metrics Reporter (build common-core + metrics-reporter)
 FROM maven:3.9-eclipse-temurin-25 AS build
 
 WORKDIR /app
 
-# Copy pom.xml and download dependencies
-COPY pom.xml .
-RUN mvn dependency:go-offline -B
+# Copy poms first (dependency download layer)
+COPY common-core/pom.xml common-core/pom.xml
+COPY metrics-reporter/pom.xml metrics-reporter/pom.xml
 
-# Copy source code and build
-COPY src ./src
-RUN mvn clean package -DskipTests
+# Pre-fetch deps for common-core
+RUN mvn -f common-core/pom.xml dependency:go-offline -B
+
+# Copy shared DTO sources and build/install it locally
+COPY common-core/src common-core/src
+RUN mvn -f common-core/pom.xml clean install -DskipTests
+
+# Copy metrics-reporter sources and fetch deps (common-core now local)
+COPY metrics-reporter/src metrics-reporter/src
+RUN mvn -f metrics-reporter/pom.xml dependency:go-offline -B
+
+# Build metrics-reporter
+RUN mvn -f metrics-reporter/pom.xml clean package -DskipTests
 
 # Runtime stage
 FROM eclipse-temurin:25-jre-alpine
 
 WORKDIR /app
 RUN addgroup -S user \
- && adduser -S user -G  user
+ && adduser -S user -G user
 USER user
 
 # Copy the built JAR from build stage
-COPY --from=build /app/target/*.jar app.jar
+COPY --from=build /app/metrics-reporter/target/*.jar app.jar
 
 # Expose port
 EXPOSE 8080

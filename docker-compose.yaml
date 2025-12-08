@@ -30,8 +30,8 @@ services:
 
   load-generator:
     build:
-      context: ./load-generator
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: load-generator/Dockerfile
     deploy:
       replicas: ${LOAD_GENERATOR_REPLICAS:-1}
     volumes:
@@ -40,6 +40,7 @@ services:
       - SPRING_APPLICATION_NAME=load-generator
       - OPENSEARCH_URL=${OPENSEARCH_URL:-http://test-target-opensearch:9200}
       - METRICS_REPORTER_URL=${METRICS_REPORTER_URL:-http://metrics-reporter:8080/api/}
+      - LOAD_GENERATOR_REPLICAS=${LOAD_GENERATOR_REPLICAS:-1}
       - LOGGING_LEVEL_ROOT=${LOGGING_LVL_ROOT:-ERROR}
       - LOGGING_LEVEL_ORG_ELASTICSEARCH=${LOGGING_LVL_ELASTIC:-ERROR}
       - LOGGING_LEVEL_COM_OPENSEARCHLOADTESTER_LOADGENERATOR=${LOGGING_LVL_LOAD_GEN:-INFO}
@@ -62,8 +63,8 @@ services:
 
   metrics-reporter:
     build:
-      context: ./metrics-reporter
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: metrics-reporter/Dockerfile
     container_name: metrics-reporter
     environment:
       - SPRING_APPLICATION_NAME=metrics-reporter
