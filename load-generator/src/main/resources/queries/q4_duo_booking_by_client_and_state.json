@@ -5,25 +5,25 @@
       "must": [
         {
           "term": {
-            "dss_custom_metadata.duo.invoice_business_partner.raw": "{{client_name}}"
+            "dssCustomMetadataDuo.invoiceBusinessPartner.raw": "{{client_name}}"
           }
         },
         {
           "term": {
-            "dss_custom_metadata.duo.booking_state.raw": "{{booking_state}}"
+            "dssCustomMetadataDuo.bookingState.raw": "{{booking_state}}"
           }
         }
       ]
     }
   },
   "_source": [
-    "dss_document_name",
-    "dss_custom_metadata.duo.invoice_business_partner",
-    "dss_custom_metadata.duo.invoice_number",
-    "dss_custom_metadata.duo.invoice_date",
-    "dss_custom_metadata.duo.total_gross_amount",
-    "dss_custom_metadata.duo.booking_state",
-    "dss_custom_metadata.duo.location"
+    "dssDocumentName",
+    "dssCustomMetadataDuo.invoiceBusinessPartner",
+    "dssCustomMetadataDuo.invoiceNumber",
+    "dssCustomMetadataDuo.invoiceDate",
+    "dssCustomMetadataDuo.totalGrossAmount",
+    "dssCustomMetadataDuo.bookingState",
+    "dssCustomMetadataDuo.location"
   ]
 }
 

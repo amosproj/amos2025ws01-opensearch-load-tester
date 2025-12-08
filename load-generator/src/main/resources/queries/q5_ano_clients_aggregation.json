@@ -3,7 +3,7 @@
   "aggs": {
     "clients": {
       "terms": {
-        "field": "dss_creation_user_display_name.raw",
+        "field": "dssCreationUserDisplayName.raw",
         "size": 50
       }
     }
