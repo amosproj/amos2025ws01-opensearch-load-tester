@@ -32,11 +32,6 @@ public class DuoIndex implements Index {
         return INDEX_NAME;
     }
 
-    /**
-     * Builds correct settings for the Index
-     *
-     * @return correct IndexSettings
-     */
     @Override
     public IndexSettings getSettings() {
 
@@ -72,11 +67,6 @@ public class DuoIndex implements Index {
                 .build();
     }
 
-    /**
-     * Builds correct mapping for the Index
-     *
-     * @return correct Mapping
-     */
     @Override
     public TypeMapping getMapping() {
         return new TypeMapping.Builder()
@@ -107,11 +97,6 @@ public class DuoIndex implements Index {
                 .build();
     }
 
-    /**
-     * Builds all relevant properties
-     *
-     * @return Map with all properties
-     */
     private Map<String, Property> buildProperties() {
         Map<String, Property> props = new HashMap<>();
 
