@@ -31,11 +31,6 @@ public final class AnoIndex implements Index {
         return INDEX_NAME;
     }
 
-    /**
-     * Builds correct settings for the Index
-     *
-     * @return correct IndexSettings
-     */
     @Override
     public IndexSettings getSettings() {
 
@@ -71,35 +66,25 @@ public final class AnoIndex implements Index {
                 .build();
     }
 
-    /**
-     * Builds correct mapping for the Index
-     *
-     * @return correct Mapping
-     */
     @Override
     public TypeMapping getMapping() {
         return new TypeMapping.Builder()
                 .dynamic(DynamicMapping.False)
                 .dynamicDateFormats(
-                        "8uuuu-MM-dd'T'HH:mm:ssXXX",
-                        "8uuuu-MM-dd'T'HH:mm:ss.SSSXXX",
-                        "8uuuu-MM-dd'Z'HH:mm:ss.SS",
-                        "8uuuu-MM-dd"
+                        "uuuu-MM-dd'T'HH:mm:ssXXX",
+                        "uuuu-MM-dd'T'HH:mm:ss.SSSXXX",
+                        "uuuu-MM-dd HH:mm:ss.SS",
+                        "uuuu-MM-dd"
                 )
                 .properties(buildProperties())
                 .build();
     }
 
-    /**
-     * Builds all relevant properties
-     *
-     * @return Map with all properties
-     */
     private Map<String, Property> buildProperties() {
 
         Map<String, Property> props = new HashMap<>();
 
-        props.put("customAll", Property.of(p -> p.text(t -> t
+        props.put("custom_all", Property.of(p -> p.text(t -> t
                 .analyzer("german")
                 .store(true)
         )));
