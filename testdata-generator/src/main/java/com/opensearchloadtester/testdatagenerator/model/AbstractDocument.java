@@ -1,15 +1,13 @@
 package com.opensearchloadtester.testdatagenerator.model;
 
-import net.datafaker.Faker;
-
 import lombok.Getter;
 import lombok.Setter;
+import net.datafaker.Faker;
 
-import java.util.concurrent.TimeUnit;
-import java.time.Instant;
 import java.util.Locale;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Base class for OpenSearch document data.
@@ -31,13 +29,13 @@ public abstract class AbstractDocument implements Document {
     protected String dssDataspaceId;
     protected String dssDocumentId;
     protected String dssDocumentName;
-    protected Instant dssLastModifiedDatetime;
+    protected Long dssLastModifiedDatetime;
     protected String dssLastModifiedUserDisplayName;
     protected String dssLastModifiedUserIdKey;
     protected String dssProcessingFlagOwner;
     protected String dssVersion;
     protected String etag;
-    protected Instant lastDocumentChange;
+    protected Long lastDocumentChange;
 
     protected static final Random RANDOM = new Random();
     protected static final Faker faker = new Faker(Locale.GERMAN);
@@ -52,16 +50,16 @@ public abstract class AbstractDocument implements Document {
         // first part of id
         document.dssDataspaceId = document.id.substring(0, document.id.indexOf('_'));
         // last part of id
-        document.dssDocumentId =  document.id.substring(document.id.indexOf('_') + 1);
+        document.dssDocumentId = document.id.substring(document.id.indexOf('_') + 1);
 
 
-        document.dssLastModifiedDatetime = faker.timeAndDate().past(365, TimeUnit.DAYS);
+        document.dssLastModifiedDatetime = faker.timeAndDate().past(365, TimeUnit.DAYS).toEpochMilli();
         document.dssLastModifiedUserDisplayName = faker.name().fullName();
         document.dssLastModifiedUserIdKey = UUID.randomUUID().toString();
         document.dssProcessingFlagOwner = faker.name().nameWithMiddle();
         document.dssVersion = "1." + RANDOM.nextInt(9);
         document.etag = UUID.randomUUID().toString().replace("-", "");
-        document.lastDocumentChange = faker.timeAndDate().past(90, TimeUnit.DAYS);
+        document.lastDocumentChange = faker.timeAndDate().past(90, TimeUnit.DAYS).toEpochMilli();
         return document;
     }
 }
