@@ -52,13 +52,21 @@ jobs:
             mvn -f /app/load-generator/pom.xml test -DtrimStackTrace=false \
             && cp -r /app/load-generator/target/surefire-reports /out/
 
-      - name: Export Container Logs
+      - name: Export Container Logs - Make Directory
         if: always()
-        run: |
-          mkdir -p container-logs
-          docker compose -f docker-compose.yaml logs testdata-generator > container-logs/testdata-generator.log"
-          docker compose -f docker-compose.yaml logs  metrics-reporter > container-logs/metrics-reporter.log"
-          docker logs load-generator-test-runner > container-logs/load-generator-test-runner.log"
+        run: mkdir -p container-logs
+
+      - name: Export Container Logs - testdata-generator
+        if: always()
+        run: docker compose -f docker-compose.yaml logs testdata-generator > container-logs/testdata-generator.log 2>&1
+
+      - name: Export Container Logs - metrics-reporter
+        if: always()
+        run: docker compose -f docker-compose.yaml logs metrics-reporter > container-logs/metrics-reporter.log 2>&1
+
+      - name: Export Container Logs - test-runner
+        if: always()
+        run: docker logs load-generator-test-runner > container-logs/load-generator-test-runner.log 2>&1
 
       - name: Upload Container Logs Artifact
         if: always()
@@ -66,10 +74,3 @@ jobs:
         with:
           name: docker-container-logs
           path: container-logs/**
-
-      - name: Upload Test Reports
-        if: always()
-        uses: actions/upload-artifact@v5
-        with:
-          name: load-generator-test-reports
-          path: load-generator/target/surefire-reports/**

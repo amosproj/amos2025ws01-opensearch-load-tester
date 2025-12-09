@@ -70,7 +70,8 @@ stop:
 
 logs:
 	@echo "Container-Logs (Ctrl+C zum Beenden)..."
-	@docker-compose logs -f
+	@services="$(filter-out $@,$(MAKECMDGOALS))"; \
+	@docker-compose logs -f $$services  || docker-compose logs -f
 
 status:
 	@echo "Ressourcen-Nutzung:"
