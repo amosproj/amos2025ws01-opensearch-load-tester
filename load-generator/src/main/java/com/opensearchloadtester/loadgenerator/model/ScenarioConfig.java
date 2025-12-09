@@ -22,5 +22,5 @@ public class ScenarioConfig {
     private int queriesPerSecond;
     @JsonProperty("enable_warm_up")
     private boolean warmUpEnabled;
-    private QueryConfig query;
+    private QueryType queryType;
 }
