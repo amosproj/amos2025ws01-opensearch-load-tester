@@ -5,16 +5,16 @@
       "filter": [
         {
           "term": {
-            "dss_custom_metadata.duo.document_category.raw": "{{category}}"
+            "dssCustomMetadataDuo.documentCategory.raw": "{{category}}"
           }
         }
       ]
     }
   },
   "_source": [
-    "dss_document_name",
-    "dss_custom_metadata.duo.document_category",
-    "dss_custom_metadata.duo.invoice_date"
+    "dssDocumentName",
+    "dssCustomMetadataDuo.documentCategory",
+    "dssCustomMetadataDuo.invoiceDate"
   ]
 }
 

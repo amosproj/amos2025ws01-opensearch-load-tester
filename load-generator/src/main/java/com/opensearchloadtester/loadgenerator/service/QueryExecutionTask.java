@@ -2,17 +2,16 @@ package com.opensearchloadtester.loadgenerator.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.opensearchloadtester.loadgenerator.queries.Query;
+import lombok.Getter;
 import com.opensearchloadtester.common.dto.MetricsDto;
 import com.opensearchloadtester.loadgenerator.model.QueryConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.opensearch.generic.*;
-import org.springframework.core.io.ClassPathResource;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -24,7 +23,7 @@ public class QueryExecutionTask implements Runnable {
 
     private final String loadGeneratorId;
     private final String index;
-    private final QueryConfig queryConfig;
+    private final Query query;
     private final OpenSearchGenericClient openSearchClient;
     private final MetricsCollector metricsCollector;
 
@@ -32,19 +31,19 @@ public class QueryExecutionTask implements Runnable {
 
     @Override
     public void run() {
+        log.debug("[{}] Starting OpenSearch query '{}' in thread '{}'",
+                id, query.getQueryTemplatePath(), Thread.currentThread().getName());
+
+        String randomizedQuery = query.generateQuery();
+
+        log.debug("Generated query '{}': {}", query.getQueryTemplatePath(), randomizedQuery);
 
         try {
-            // Load query template JSON
-            String queryTemplate = loadQueryTemplate(queryConfig.getType().getTemplatePath());
-
-            // Substitute placeholders in query template with provided values
-            String query = applyQueryParams(queryTemplate, queryConfig.getParameters());
-
             // Send query to OpenSearch and measure end-to-end client-side round-trip time
             Request request = Requests.builder()
                     .endpoint("/" + index + "/_search")
                     .method("POST")
-                    .json(query)
+                    .json(randomizedQuery)
                     .build();
 
             long startTime = System.nanoTime();
@@ -97,26 +96,5 @@ public class QueryExecutionTask implements Runnable {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-    }
-
-    private String loadQueryTemplate(String path) {
-        ClassPathResource resource = new ClassPathResource(path);
-        if (!resource.exists()) {
-            throw new IllegalStateException(String.format("Query template '%s' not found", path));
-        }
-        try {
-            return resource.getContentAsString(StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            log.error("Failed to read query template '{}': {}", path, e.getMessage());
-            throw new UncheckedIOException(String.format("Failed to read query template '%s'", path), e);
-        }
-    }
-
-    private String applyQueryParams(String template, Map<String, String> params) {
-        String result = template;
-        for (Map.Entry<String, String> entry : params.entrySet()) {
-            result = result.replace("{{" + entry.getKey() + "}}", entry.getValue());
-        }
-        return result;
     }
 }
