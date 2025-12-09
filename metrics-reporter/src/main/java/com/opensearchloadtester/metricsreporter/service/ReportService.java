@@ -67,13 +67,9 @@ public class ReportService {
      * - updates aggregated statistics in memory
      */
     public synchronized void processMetrics(List<MetricsDto> metricsList) throws IOException {
-        if (metricsList == null || metricsList.isEmpty()) {
-            log.warn("processReport called with empty metrics list");
-            return;
-        }
+        // metricsList is already validated in the controller, so we can skip the validation here
 
         initializeReportFiles();
-
         appendToCsvReport(metricsList);
         appendToNdjsonReport(metricsList);
         stats.update(metricsList);

@@ -53,12 +53,23 @@ public class ReportController {
             return ResponseEntity.badRequest().body("Invalid metrics payload\n");
         }
 
-        // Validate params
-        if (loadGeneratorReport.getLoadGeneratorId() == null || loadGeneratorReport.getMetricsList() == null || loadGeneratorReport.getMetricsList().isEmpty()) {
-            log.error("Invalid request parameters - loadGeneratorId:{}, scenario:{}, queryType:{}, metricsCount:{}",
-                    loadGeneratorReport.getLoadGeneratorId(), loadGeneratorReport.getScenario(), loadGeneratorReport.getQueryType(),
-                    loadGeneratorReport.getMetricsList() == null ? null : loadGeneratorReport.getMetricsList().size());
-            return ResponseEntity.badRequest().body("Invalid loadGeneratorReport payload\n");
+        // Validate metrics entries
+        String payloadLoadGeneratorId = null;
+        for (int i = 0; i < metricsList.size(); i++) {
+            MetricsDto metrics = metricsList.get(i);
+            String validationError = validateMetrics(metrics);
+            if (validationError != null) {
+                log.error("Invalid metrics entry at index {}: {}", i, validationError);
+                return ResponseEntity.badRequest().body("Invalid metrics payload\n");
+            }
+            // Validate that all metrics entries have the same loadGeneratorId
+            if (payloadLoadGeneratorId == null) {
+                payloadLoadGeneratorId = metrics.getLoadGeneratorId();
+            } else if (!payloadLoadGeneratorId.equals(metrics.getLoadGeneratorId())) {
+                log.error("Mixed loadGeneratorId values in one payload (first: {}, current: {}, index: {})",
+                        payloadLoadGeneratorId, metrics.getLoadGeneratorId(), i);
+                return ResponseEntity.badRequest().body("Invalid metrics payload\n");
+            }
         }
 
         loadGeneratorIds.add(payloadLoadGeneratorId);
@@ -129,6 +140,30 @@ public class ReportController {
     @GetMapping("/health")
     public ResponseEntity<String> health() {
         return ResponseEntity.ok("Report Controller is running!\n");
+    }
+
+    // Validate a single metrics entry
+    // Returns a string with the validation error, or null if the metrics entry is valid
+    private String validateMetrics(MetricsDto metrics) {
+        if (metrics == null) {
+            return "metrics entry is null";
+        }
+        if (metrics.getLoadGeneratorId() == null || metrics.getLoadGeneratorId().isBlank()) {
+            return "loadGeneratorId is missing";
+        }
+        if (metrics.getQueryType() == null || metrics.getQueryType().isBlank()) {
+            return "queryType is missing";
+        }
+        if (metrics.getRequestDurationMillis() != null && metrics.getRequestDurationMillis() < 0) {
+            return "requestDurationMillis is negative";
+        }
+        if (metrics.getQueryDurationMillis() != null && metrics.getQueryDurationMillis() < 0) {
+            return "queryDurationMillis is negative";
+        }
+        if (metrics.getHttpStatusCode() < 100 || metrics.getHttpStatusCode() > 599) {
+            return "httpStatusCode is out of range";
+        }
+        return null;
     }
 
 }
