@@ -19,9 +19,7 @@ public class TestdataInitializer implements CommandLineRunner {
     public void run(String... args) {
 
         try {
-            log.info("Starting batch pre-loading of test data...");
             preloadService.preloadTestdata();
-            log.info("Batch pre-loading job finished.");
         } catch (Exception e) {
             log.error("Unexpected error during batch pre-loading", e);
             throw new RuntimeException("Failed to initialize test data", e);

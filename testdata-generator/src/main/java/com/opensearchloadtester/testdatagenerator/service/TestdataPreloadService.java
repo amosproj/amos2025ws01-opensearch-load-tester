@@ -23,9 +23,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TestdataPreloadService {
 
-    private static final int HTTP_TOO_MANY_REQUESTS = 429;
-    private static final int MAX_SPLIT_DEPTH = 4;
-
     private static final int MIN_BATCH_SIZE = 1_000;
     private static final int TARGET_BATCHES = 20;
 
@@ -39,20 +36,16 @@ public class TestdataPreloadService {
         } else if (totalCount <= 1_000_000) {
             return 15_000;        // mid-size
         } else {
-            return 25_000;        // bigger dataset
+            return 35_000;        // bigger dataset
         }
     }
 
     /**
      * Entry point for pre-loading test data into OpenSearch in batches.
-     * <p>
-     * This is called once at application startup by {@link TestdataInitializer}.
-     * The actual behavior depends on the configured mode:
-     * <ul>
-     *     <li>DYNAMIC – documents are generated freshly on each startup.</li>
-     *     <li>PERSISTENT – documents are generated once and stored on disk,
-     *     subsequent runs reuse the stored data.</li>
-     * </ul>
+     *
+     * DYNAMIC – documents are generated freshly on each startup.
+     * PERSISTENT – documents are generated once and stored on disk,
+     * subsequent runs reuse the stored data.
      */
     public void preloadTestdata() {
         switch (dataGenerationProperties.getMode()) {
@@ -62,12 +55,8 @@ public class TestdataPreloadService {
     }
 
     /**
-     * Resolves the effective batchSize:
-     * <ul>
-     *     <li>If a valid batchSize is configured (>0 and ≤ totalCount), it is used as-is.</li>
-     *     <li>Otherwise a value is computed based on totalCount and clamped between
-     *     MIN_BATCH_SIZE and MAX_BATCH_SIZE.</li>
-     * </ul>
+     * A value is computed based on totalCount and clamped between
+     * MIN_BATCH_SIZE and dynamicMaxBatchSize(totalCount).
      */
     private int resolveBatchSize(int totalCount) {
         if (totalCount <= 0) {
@@ -75,24 +64,21 @@ public class TestdataPreloadService {
         }
 
         int configured = dataGenerationProperties.getBatchSize();
+        int maxBatchSize = dynamicMaxBatchSize(totalCount);
 
-
-        int MAX_BATCH_SIZE = dynamicMaxBatchSize(dataGenerationProperties.getCount());
-
-        // 2) Auto-mode (no env): compute a reasonable batch size
-        //    so that we get roughly TARGET_BATCHES batches, clamped to [MIN, MAX].
+        // We get roughly TARGET_BATCHES batches, clamped to [MIN, MAX].
         int computed = (int) Math.ceil((double) totalCount / TARGET_BATCHES);
 
         if (computed < MIN_BATCH_SIZE) {
             // For small datasets, we don't want super tiny batches.
             computed = Math.min(MIN_BATCH_SIZE, totalCount);
         }
-        if (computed > MAX_BATCH_SIZE) {
-            computed = MAX_BATCH_SIZE;
+        if (computed > maxBatchSize) {
+            computed = maxBatchSize;
         }
 
         log.info(
-                "Auto-computed batchSize={} for totalCount={} (configured={}, env={})",
+                "Auto-computed batchSize={} for totalCount={} (configured={})",
                 computed,
                 totalCount,
                 configured
@@ -100,7 +86,6 @@ public class TestdataPreloadService {
 
         return computed;
     }
-
 
     /**
      * Dynamic mode: generates new random documents for each run and
@@ -114,13 +99,13 @@ public class TestdataPreloadService {
         };
 
         final int totalCount = dataGenerationProperties.getCount();
-        final int batchSize = resolveBatchSize(totalCount);
+        final int initialBatchSize = resolveBatchSize(totalCount);
 
         log.info(
                 "Starting DYNAMIC batch pre-loading. documentType={}, totalCount={}, batchSize={}",
                 dataGenerationProperties.getDocumentType(),
                 totalCount,
-                batchSize
+                initialBatchSize
         );
 
         // 2) Create index if needed
@@ -134,11 +119,28 @@ public class TestdataPreloadService {
         int generatedSoFar = 0;
 
         // 3) Generate and index in batches
+        int effectiveBatchSize = initialBatchSize;
+
         while (generatedSoFar < totalCount) {
             batchNumber++;
 
             int remaining = totalCount - generatedSoFar;
-            int currentBatchSize = Math.min(batchSize, remaining);
+
+            int dynamicLimit = openSearchDataService.getDynamicBatchLimit();
+            if (dynamicLimit < effectiveBatchSize) {
+                int adapted = Math.max(dynamicLimit, MIN_BATCH_SIZE);
+                if (adapted != effectiveBatchSize) {
+                    log.info(
+                            "Adapting dynamic batch size from {} to {} based on OpenSearch feedback (remaining={})",
+                            effectiveBatchSize,
+                            adapted,
+                            remaining
+                    );
+                    effectiveBatchSize = adapted;  // ⬅️ bleibt jetzt auch in nächsten Iterationen so
+                }
+            }
+
+            int currentBatchSize = Math.min(effectiveBatchSize, remaining);
 
             log.debug(
                     "Starting batch {} (DYNAMIC): generating {} documents (remaining={})",
@@ -181,10 +183,8 @@ public class TestdataPreloadService {
 
     /**
      * Persistent mode:
-     * <ul>
-     *     <li>First run: generates random documents, stores them to disk, then indexes them.</li>
-     *     <li>Subsequent runs: loads the existing documents from disk and re-indexes them.</li>
-     * </ul>
+     * First run: generates random documents, stores them to disk, then indexes them.
+     * Subsequent runs: loads the existing documents from disk and re-indexes them.
      */
     private void preloadPersistent() {
         final Index index = switch (dataGenerationProperties.getDocumentType()) {
@@ -193,13 +193,13 @@ public class TestdataPreloadService {
         };
 
         final int totalCount = dataGenerationProperties.getCount();
-        final int batchSize = resolveBatchSize(totalCount);
+        final int initialBatchSize = resolveBatchSize(totalCount);
 
         log.info(
                 "Starting PERSISTENT batch pre-loading. documentType={}, totalCount={}, batchSize={}",
                 dataGenerationProperties.getDocumentType(),
                 totalCount,
-                batchSize
+                initialBatchSize
         );
 
         // 1) Create index if needed
@@ -226,10 +226,31 @@ public class TestdataPreloadService {
         int batchNumber = 0;
         int indexedSoFar = 0;
 
-        // 3) In-memory batching
-        for (int i = 0; i < allDocuments.size(); i += batchSize) {
+        // 3) In-memory batching with dynamic adaptation (wie bei DYNAMIC)
+        int i = 0;
+        while (i < allDocuments.size()) {
             batchNumber++;
-            int end = Math.min(i + batchSize, allDocuments.size());
+
+            int remaining = allDocuments.size() - i;
+            int effectiveBatchSize = initialBatchSize;
+
+            int dynamicLimit = openSearchDataService.getDynamicBatchLimit();
+            if (dynamicLimit < effectiveBatchSize) {
+                int adapted = Math.max(dynamicLimit, MIN_BATCH_SIZE);
+                if (adapted != effectiveBatchSize) {
+                    log.info(
+                            "Adapting persistent batch size from {} to {} based on OpenSearch feedback (remaining={})",
+                            effectiveBatchSize,
+                            adapted,
+                            remaining
+                    );
+                    effectiveBatchSize = adapted;
+                }
+            }
+
+            int currentBatchSize = Math.min(effectiveBatchSize, remaining);
+            int end = i + currentBatchSize;
+
             List<Document> batch = allDocuments.subList(i, end);
 
             log.debug(
@@ -242,6 +263,7 @@ public class TestdataPreloadService {
 
             openSearchDataService.bulkIndexDocuments(index.getName(), batch);
             indexedSoFar += batch.size();
+            i = end;
         }
 
         // 4) Final refresh
