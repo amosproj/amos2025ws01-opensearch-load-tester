@@ -1,6 +1,6 @@
 package com.opensearchloadtester.metricsreporter.controller;
 
-import com.opensearchloadtester.common.dto.LoadGeneratorReportDto;
+import com.opensearchloadtester.common.dto.MetricsDto;
 import com.opensearchloadtester.metricsreporter.dto.LoadTestSummary;
 import com.opensearchloadtester.metricsreporter.service.ReportService;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -42,10 +44,13 @@ public class ReportController {
      * @return ResponseEntity with status message
      */
     @PostMapping("/metrics")
-    public synchronized ResponseEntity<String> addMetrics(@RequestBody LoadGeneratorReportDto loadGeneratorReport) {
-        if (loadGeneratorReport == null) {
-            log.error("Received empty loadGeneratorReport payload");
-            return ResponseEntity.badRequest().body("Invalid loadGeneratorReport payload\n");
+    public synchronized ResponseEntity<String> addMetrics(@RequestBody List<MetricsDto> metricsList) {
+        Set<String> loadGeneratorIds = new HashSet<>();
+
+        // Validate payload (empty payload is invalid)
+        if (metricsList == null || metricsList.isEmpty()) {
+            log.error("Received empty metrics payload");
+            return ResponseEntity.badRequest().body("Invalid metrics payload\n");
         }
 
         // Validate params
@@ -56,11 +61,12 @@ public class ReportController {
             return ResponseEntity.badRequest().body("Invalid loadGeneratorReport payload\n");
         }
 
-        log.info("Received metrics from load generator: {}", loadGeneratorReport.getLoadGeneratorId());
+        loadGeneratorIds.add(payloadLoadGeneratorId);
+        log.info("Received {} metrics entries from load generators: {}", metricsList.size(), loadGeneratorIds);
 
         // Immediately process and persist metrics to avoid unbounded in-memory growth
         try {
-            reportService.processReport(loadGeneratorReport);
+            reportService.processMetrics(metricsList);
         } catch (IOException e) {
             log.error("Failed to persist metrics", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -68,14 +74,14 @@ public class ReportController {
         }
 
         // Count unique reporting instances
-        reportedInstances.add(loadGeneratorReport.getLoadGeneratorId());
+        reportedInstances.addAll(loadGeneratorIds);
         int currentCount = reportedInstances.size();
 
         log.info("Stored metrics from {}. Received {}/{} replicas. Query count: {}",
-                loadGeneratorReport.getLoadGeneratorId(),
+                loadGeneratorIds,
                 currentCount,
                 expectedReplicas,
-                loadGeneratorReport.getMetricsList().size());
+                metricsList.size());
 
         // Check if all replicas have reported
         if (currentCount >= expectedReplicas) {

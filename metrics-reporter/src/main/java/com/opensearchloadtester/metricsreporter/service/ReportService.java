@@ -62,38 +62,21 @@ public class ReportService {
 
     /**
      * Processes incoming metrics in a streaming fashion:
-     * - flattens LoadGeneratorReportDto into entries
+     * - flattens the MetricsDto list into entries
      * - appends to CSV and NDJSON
      * - updates aggregated statistics in memory
      */
-    public synchronized void processReport(LoadGeneratorReportDto report) throws IOException {
-        initializeReportFiles();
-
-        List<ReportEntry> reportEntries = toReportEntries(report);
-
-        appendToCsvReport(reportEntries);
-        appendToNdjsonReport(reportEntries);
-        stats.update(reportEntries);
-    }
-
-    private List<ReportEntry> toReportEntries(LoadGeneratorReportDto report) {
-        List<ReportEntry> entries = new ArrayList<>();
-
-        //skipped null check for report because it is already checked in the (report)controller
-        for (MetricsDto queryMetrics : report.getMetricsList()) {
-
-            entries.add(new ReportEntry(
-                    report.getLoadGeneratorId(),
-                    report.getScenario(),
-                    report.getQueryType(),
-                    queryMetrics.getRequestDurationMillis(),
-                    queryMetrics.getQueryDurationMillis(),
-                    queryMetrics.getTotalHits(),
-                    queryMetrics.getHttpStatusCode()
-            ));
+    public synchronized void processMetrics(List<MetricsDto> metricsList) throws IOException {
+        if (metricsList == null || metricsList.isEmpty()) {
+            log.warn("processReport called with empty metrics list");
+            return;
         }
 
-        return entries;
+        initializeReportFiles();
+
+        appendToCsvReport(metricsList);
+        appendToNdjsonReport(metricsList);
+        stats.update(metricsList);
     }
 
     /**
@@ -117,7 +100,7 @@ public class ReportService {
 
         // Create CSV file with headers
         if (!Files.exists(csvPath)) {
-            String csvHeaders = "Load Generator ID,Scenario,Query Type,Request Duration (ms),Query Duration (ms),Total Hits,HTTP Status Code\n";
+            String csvHeaders = "Load Generator ID,Query Type,Request Duration (ms),Query Duration (ms),Total Hits,HTTP Status Code\n";
             Files.writeString(csvPath, csvHeaders);
             log.info("Created initial CSV report file: {}", csvPath.toAbsolutePath());
         }
@@ -132,7 +115,7 @@ public class ReportService {
     }
 
 
-    private void appendToCsvReport(List<ReportEntry> reportEntries) throws IOException {
+    private void appendToCsvReport(List<MetricsDto> metricsList) throws IOException {
         Path csvPath = Paths.get(outputDirectory, csvFilename);
 
         if (!Files.exists(csvPath)) {
@@ -142,25 +125,24 @@ public class ReportService {
         try (FileWriter fileWriter = new FileWriter(csvPath.toFile(), true);
              CSVPrinter csvPrinter = new CSVPrinter(fileWriter, CSVFormat.DEFAULT)) {
 
-            for (ReportEntry entry : reportEntries) {
+            for (MetricsDto metrics : metricsList) {
                 csvPrinter.printRecord(
-                        entry.loadGeneratorId(),
-                        entry.scenario(),
-                        entry.queryType(),
-                        entry.requestDurationMs(),
-                        entry.queryDurationMs(),
-                        entry.totalHits(),
-                        entry.httpStatusCode()
+                        metrics.getLoadGeneratorId(),
+                        metrics.getQueryType(),
+                        metrics.getRequestDurationMillis(),
+                        metrics.getQueryDurationMillis(),
+                        metrics.getTotalHits(),
+                        metrics.getHttpStatusCode()
                 );
             }
 
             csvPrinter.flush();
         }
 
-        log.info("Appended {} metrics entries to CSV report", reportEntries.size());
+        log.info("Appended {} metrics entries to CSV report", metricsList.size());
     }
 
-    private void appendToNdjsonReport(List<ReportEntry> reportEntries) throws IOException {
+    private void appendToNdjsonReport(List<MetricsDto> metricsList) throws IOException {
         Path ndjsonPath = Paths.get(outputDirectory, ndjsonFilename);
 
         if (!Files.exists(ndjsonPath)) {
@@ -168,14 +150,14 @@ public class ReportService {
         }
 
         try (FileWriter writer = new FileWriter(ndjsonPath.toFile(), true)) {
-            for (ReportEntry entry : reportEntries) {
-                writer.write(ndjsonWriter.writeValueAsString(entry.toObjectNode(objectMapper)));
+            for (MetricsDto metrics : metricsList) {
+                writer.write(ndjsonWriter.writeValueAsString(metrics));
                 writer.write("\n");
             }
             writer.flush();
         }
 
-        log.info("Appended {} metrics entries to NDJSON report", reportEntries.size());
+        log.info("Appended {} metrics entries to NDJSON report", metricsList.size());
     }
 
     /**
@@ -292,12 +274,12 @@ public class ReportService {
         private long queryDurationMin = Long.MAX_VALUE;
         private long queryDurationMax = Long.MIN_VALUE;
 
-        void update(List<ReportEntry> results) {
-            for (ReportEntry result : results) {
+        void update(List<MetricsDto> results) {
+            for (MetricsDto result : results) {
                 totalQueries++;
 
 
-                Long requestDurationMs = result.requestDurationMs();
+                Long requestDurationMs = result.getRequestDurationMillis();
                 if (requestDurationMs != null) {
                     requestDurationCount++;
                     requestDurationSum += requestDurationMs;
@@ -305,7 +287,7 @@ public class ReportService {
                     requestDurationMax = Math.max(requestDurationMax, requestDurationMs);
                 }
 
-                Long queryDurationMs = result.queryDurationMs();
+                Long queryDurationMs = result.getQueryDurationMillis();
                 if (queryDurationMs != null && queryDurationMs >= 0) {
                     queryDurationCount++;
                     queryDurationSum += queryDurationMs;
@@ -341,17 +323,6 @@ public class ReportService {
             return new LoadTestSummary.Statistics(requestDuration, queryDuration);
         }
     }
-
-    private record ReportEntry(
-            String loadGeneratorId,
-            String scenario,
-            String queryType,
-            Long requestDurationMs,
-            Long queryDurationMs,
-            Integer totalHits,
-            int httpStatusCode
-    ) {
-
         ObjectNode toObjectNode(ObjectMapper mapper) {
             ObjectNode node = mapper.createObjectNode();
             node.put("load_generator_id", loadGeneratorId);
@@ -369,5 +340,4 @@ public class ReportService {
             node.put("http_status_code", httpStatusCode);
             return node;
         }
-    }
 }
