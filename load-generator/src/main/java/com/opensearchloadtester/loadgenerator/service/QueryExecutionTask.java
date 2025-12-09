@@ -2,10 +2,9 @@ package com.opensearchloadtester.loadgenerator.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.opensearchloadtester.loadgenerator.queries.Query;
-import lombok.Getter;
+import com.opensearchloadtester.loadgenerator.model.QueryType;
 import com.opensearchloadtester.common.dto.MetricsDto;
-import com.opensearchloadtester.loadgenerator.model.QueryConfig;
+import com.opensearchloadtester.loadgenerator.queries.Query;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.opensearch.generic.*;
@@ -23,7 +22,7 @@ public class QueryExecutionTask implements Runnable {
 
     private final String loadGeneratorId;
     private final String index;
-    private final Query query;
+    private final QueryType queryType;
     private final OpenSearchGenericClient openSearchClient;
     private final MetricsCollector metricsCollector;
 
@@ -31,12 +30,12 @@ public class QueryExecutionTask implements Runnable {
 
     @Override
     public void run() {
-        log.debug("[{}] Starting OpenSearch query '{}' in thread '{}'",
-                id, query.getQueryTemplatePath(), Thread.currentThread().getName());
+        log.debug("Executing query in thread '{}'", Thread.currentThread().getName());
 
+        Query query = queryType.createInstance();
         String randomizedQuery = query.generateQuery();
 
-        log.debug("Generated query '{}': {}", query.getQueryTemplatePath(), randomizedQuery);
+        log.debug("Generated query of type '{}': {}", queryType.name(), randomizedQuery);
 
         try {
             // Send query to OpenSearch and measure end-to-end client-side round-trip time
@@ -55,7 +54,7 @@ public class QueryExecutionTask implements Runnable {
             if (status >= 400) {
                 MetricsDto metricsDto = new MetricsDto(
                         loadGeneratorId,
-                        queryConfig.getType().name(),
+                        queryType.name(),
                         requestDurationMillis,
                         null,
                         null,
@@ -64,7 +63,7 @@ public class QueryExecutionTask implements Runnable {
 
                 metricsCollector.appendMetrics(metricsDto);
 
-                log.debug("Query failed (status: {}, requestDurationMillis: {})",
+                log.debug("Query execution failed (status: {}, requestDurationMillis: {})",
                         status, requestDurationMillis);
 
                 return;
@@ -81,7 +80,7 @@ public class QueryExecutionTask implements Runnable {
 
             MetricsDto metricsDto = new MetricsDto(
                     loadGeneratorId,
-                    queryConfig.getType().name(),
+                    queryType.name(),
                     requestDurationMillis,
                     queryDurationMillis,
                     totalHits,
@@ -91,7 +90,7 @@ public class QueryExecutionTask implements Runnable {
             metricsCollector.appendMetrics(metricsDto);
 
             log.debug(
-                    "Query executed (status: {}, requestDurationMillis: {}, queryDurationMillis: {}, totalHits: {})",
+                    "Executed query (status: {}, requestDurationMillis: {}, queryDurationMillis: {}, totalHits: {})",
                     status, requestDurationMillis, queryDurationMillis, totalHits);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
