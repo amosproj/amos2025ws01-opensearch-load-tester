@@ -162,7 +162,7 @@ public class ReportService {
      * @return Path to JSON statistics report file
      */
     public Path getStatisticsReportPath() {
-        return Paths.get(outputDirectory, statsFilename).toAbsolutePath();
+        return resolveReportPath(statsFilename);
     }
 
     /**
@@ -171,21 +171,25 @@ public class ReportService {
      * @return Path to CSV report file
      */
     public Path getCsvReportPath() {
-        return Paths.get(outputDirectory, csvFilename).toAbsolutePath();
+        return resolveReportPath(csvFilename);
     }
 
     /**
      * Returns the absolute path to the NDJSON report file.
      */
     public Path getNdjsonReportPath() {
-        return Paths.get(outputDirectory, ndjsonFilename).toAbsolutePath();
+        return resolveReportPath(ndjsonFilename);
     }
 
     /**
      * Returns the absolute path to the full JSON report file containing all query results.
      */
     public Path getFullJsonReportPath() {
-        return Paths.get(outputDirectory, fullJsonFilename).toAbsolutePath();
+        return resolveReportPath(fullJsonFilename);
+    }
+
+    private Path resolveReportPath(String fileName) {
+        return Paths.get(outputDirectory, fileName).toAbsolutePath();
     }
 
     /**
