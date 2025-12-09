@@ -214,6 +214,7 @@ public class ReportService {
         Path ndjsonPath = Paths.get(outputDirectory, ndjsonFilename);
         Path fullJsonPath = Paths.get(outputDirectory, fullJsonFilename);
         writeFullJsonReport(ndjsonPath, fullJsonPath);
+        deleteNdjsonFile(ndjsonPath);
 
         log.info("Summary written: queries={}, errors={}, instances={}", report.getTotalQueries(), report.getTotalErrors(), report.getLoadGeneratorInstances().size());
         log.info("Request duration stats: avg={}ms min={}ms max={}ms | Query duration stats: avg={}ms min={}ms max={}ms",
@@ -255,6 +256,16 @@ public class ReportService {
             generator.writeEndArray();
             generator.flush();
             log.info("Full JSON report written to {} with {} metrics entries", fullJsonPath.toAbsolutePath(), count);
+        }
+    }
+
+    private void deleteNdjsonFile(Path ndjsonPath) {
+        try {
+            if (Files.deleteIfExists(ndjsonPath)) {
+                log.info("Deleted temporary NDJSON file {}", ndjsonPath.toAbsolutePath());
+            }
+        } catch (IOException e) {
+            log.warn("Failed to delete temporary NDJSON file {}: {}", ndjsonPath.toAbsolutePath(), e.getMessage());
         }
     }
 
