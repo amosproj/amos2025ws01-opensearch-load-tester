@@ -88,7 +88,7 @@ public class MetricsReporterClient {
                     }
                 }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("Error while creating or closing HTTP client for Metrics Reporter: {}", e.getMessage());
             throw new MetricsReporterAccessException(
                     "Error while creating or closing HTTP client for Metrics Reporter", e);
