@@ -1,26 +1,39 @@
 package com.opensearchloadtester.loadgenerator;
 
+import com.opensearchloadtester.common.dto.MetricsDto;
 import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
 import com.opensearchloadtester.loadgenerator.service.LoadRunner;
 import com.opensearchloadtester.loadgenerator.service.MetricsCollector;
 import com.opensearchloadtester.loadgenerator.service.QueryExecutionTask;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.opensearch.generic.OpenSearchGenericClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class TestScenarioInitializer implements CommandLineRunner {
 
     private static final int WARMUP_REQUEST_COUNT = 40;
     private static final long MIN_WARMUP_DURATION_MS = 10_000L;
 
+    private final String loadGeneratorId;
     private final ScenarioConfig scenarioConfig;
     private final LoadRunner loadRunner;
     private final OpenSearchGenericClient openSearchClient;
+
+    public TestScenarioInitializer(
+            @Value("${HOSTNAME}") String loadGeneratorId,
+            ScenarioConfig scenarioConfig,
+            LoadRunner loadRunner,
+            OpenSearchGenericClient openSearchClient
+    ) {
+        this.loadGeneratorId = loadGeneratorId;
+        this.scenarioConfig = scenarioConfig;
+        this.loadRunner = loadRunner;
+        this.openSearchClient = openSearchClient;
+    }
 
     @Override
     public void run(String... args) {
@@ -51,13 +64,10 @@ public class TestScenarioInitializer implements CommandLineRunner {
 
         long warmupStart = System.currentTimeMillis();
 
-        String queryTemplatePath = scenarioConfig.getQuery().getType().getTemplatePath();
-
         QueryExecutionTask warmupTask = new QueryExecutionTask(
-                scenarioConfig.getName() + "-warmup",
+                loadGeneratorId,
                 scenarioConfig.getDocumentType().getIndex(),
-                queryTemplatePath,
-                scenarioConfig.getQuery().getParameters(),
+                scenarioConfig.getQueryType(),
                 openSearchClient,
                 new NoOpMetricsCollector() // warm-up metrics are ignored
         );
@@ -105,7 +115,7 @@ public class TestScenarioInitializer implements CommandLineRunner {
      */
     static class NoOpMetricsCollector extends MetricsCollector {
         @Override
-        public void appendMetrics(String requestType, long roundtripMilSec, String jsonResponse) {
+        public synchronized void appendMetrics(MetricsDto metricsDto) {
             // Intentionally left blank: no metrics are collected during warm-up.
         }
     }

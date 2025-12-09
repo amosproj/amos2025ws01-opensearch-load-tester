@@ -2,9 +2,9 @@ package com.opensearchloadtester.loadgenerator.service;
 
 import com.opensearchloadtester.loadgenerator.client.MetricsReporterClient;
 import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.opensearch.generic.OpenSearchGenericClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.*;
@@ -12,12 +12,24 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class LoadRunner {
 
+    private final String loadGeneratorId;
     private final OpenSearchGenericClient openSearchClient;
     private final MetricsReporterClient metricsReporterClient;
     private final MetricsCollector metricsCollector;
+
+    public LoadRunner(
+            @Value("${HOSTNAME}") String loadGeneratorId,
+            OpenSearchGenericClient openSearchClient,
+            MetricsReporterClient metricsReporterClient,
+            MetricsCollector metricsCollector
+    ) {
+        this.loadGeneratorId = loadGeneratorId;
+        this.openSearchClient = openSearchClient;
+        this.metricsReporterClient = metricsReporterClient;
+        this.metricsCollector = metricsCollector;
+    }
 
     /**
      * Executes queries according to the ScenarioConfig
@@ -29,9 +41,9 @@ public class LoadRunner {
                 scenarioConfig.getName(), scenarioConfig.getDuration().getSeconds());
 
         QueryExecutionTask query = new QueryExecutionTask(
-                scenarioConfig.getName(),
+                loadGeneratorId,
                 scenarioConfig.getDocumentType().getIndex(),
-                scenarioConfig.getQueryType().createInstance(),
+                scenarioConfig.getQueryType(),
                 openSearchClient,
                 metricsCollector
         );
@@ -82,10 +94,9 @@ public class LoadRunner {
             long actualDurationMs = testEndTime - testStartTime;
             double actualDurationSeconds = actualDurationMs / 1000.0;
 
-
             if (completed) {
                 log.info("Calling MetricsReporterClient");
-                metricsReporterClient.reportMetrics(metricsCollector.getMetrics());
+                metricsReporterClient.reportMetrics(metricsCollector.getMetricsList());
                 log.info("Scenario '{}' completed successfully. All threads finished.", scenarioConfig.getName());
                 log.info("Test duration - Expected: {} ({}s), Actual: {}s",
                         scenarioConfig.getDuration(),
@@ -100,7 +111,6 @@ public class LoadRunner {
         } catch (Exception e) {
             log.error("Error executing queries:", e);
         } finally {
-            // Shutdown executor service
             shutdownExecutorService(executorService);
         }
     }
