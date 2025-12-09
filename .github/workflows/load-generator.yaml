@@ -18,6 +18,9 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Change permissions for report folder
+        run: chmod -R 777 ./reports
+
       - name: Start opensearch container
         run: docker compose -f docker-compose.yaml up --wait -d test-target-opensearch
 
