@@ -17,17 +17,11 @@ public class TestdataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (!dataGenerationProperties.isPreloadOnStartup()) {
-            log.debug("Preload on startup is disabled. Skipping batch pre-loading job.");
-            return;
-        }
-        log.debug("Preload on startup is enabled. Running batch pre-loading job at startup.");
 
         try {
+            log.info("Starting batch pre-loading of test data...");
             preloadService.preloadTestdata();
-            log.info("Batch pre-loading job finished. Application will now terminate.");
-            System.exit(0);// because service_completed_successfully in yaml and Spring Scheduling is still enabled even if schedule is false
-
+            log.info("Batch pre-loading job finished.");
         } catch (Exception e) {
             log.error("Unexpected error during batch pre-loading", e);
             throw new RuntimeException("Failed to initialize test data", e);
