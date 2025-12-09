@@ -3,10 +3,9 @@ package com.opensearchloadtester.metricsreporter.service;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.opensearchloadtester.common.dto.LoadGeneratorReportDto;
 import com.opensearchloadtester.common.dto.MetricsDto;
 import com.opensearchloadtester.metricsreporter.dto.LoadTestSummary;
 import lombok.extern.slf4j.Slf4j;
@@ -57,6 +56,7 @@ public class ReportService {
         this.objectMapper.registerModule(new JavaTimeModule());
         this.objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
         this.objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        this.objectMapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
         this.ndjsonWriter = this.objectMapper.writer().without(SerializationFeature.INDENT_OUTPUT);
     }
 
@@ -319,21 +319,4 @@ public class ReportService {
             return new LoadTestSummary.Statistics(requestDuration, queryDuration);
         }
     }
-        ObjectNode toObjectNode(ObjectMapper mapper) {
-            ObjectNode node = mapper.createObjectNode();
-            node.put("load_generator_id", loadGeneratorId);
-            node.put("scenario", scenario);
-            node.put("query_type", queryType);
-            if (requestDurationMs != null) {
-                node.put("request_duration_ms", requestDurationMs);
-            }
-            if (queryDurationMs != null) {
-                node.put("query_duration_ms", queryDurationMs);
-            }
-            if (totalHits != null) {
-                node.put("total_hits", totalHits);
-            }
-            node.put("http_status_code", httpStatusCode);
-            return node;
-        }
 }
