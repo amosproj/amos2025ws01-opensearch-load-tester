@@ -61,6 +61,7 @@ jobs:
             -e LOAD_GENERATOR_REPLICAS \
             -v ./load-generator/scenarios:/app/load-generator/scenarios:ro \
             -v "$(pwd)/load-generator-test-reports":/out \
+            -v "${{ github.workspace }}":/app:rw \
             load-generator-build \
             mvn -f load-generator/pom.xml clean test
 
