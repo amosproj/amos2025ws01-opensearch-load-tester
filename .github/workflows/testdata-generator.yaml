@@ -11,7 +11,7 @@ on:
       data_mode:
         description: 'DATA_GENERATION_MODE'
         required: false
-        default: 'DYNAMIC'
+        default: 'PERSISTENT'
       data_count:
         description: 'DATA_GENERATION_COUNT'
         required: false
@@ -20,6 +20,10 @@ on:
         description: 'DATA_GENERATION_DOCUMENT_TYPE'
         required: false
         default: 'ANO'
+      logging_level:
+        description: 'LOGGING_LEVEL_TESTADATA_GENERATOR'
+        required: false
+        default: 'INFO'
 
 jobs:
   testdata-generator:
@@ -31,12 +35,19 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Change permissions for report folder
+        run: chmod -R 777 ./reports
+
       - name: start opensearch container
         run: |
           docker compose -f docker-compose.yaml up --wait -d test-target-opensearch
+      
+      - name: Build testdata-generator image from Build Stage
+        run: docker build --target build -t testdata-generator-build -f testdata-generator/Dockerfile .
 
-      - name: Run unit tests inside Maven/Temurin container
+      - name: Run unit tests inside Build container
         env:
+          LOGGING_LEVEL_COM_OPENSEARCHLOADTESTER_TESTDATAGENERATOR: ${{ github.event.inputs.logging_level || 'INFO' }}
           DATA_GENERATION_DOCUMENT_TYPE: ${{ github.event.inputs.data_type || 'ANO' }}
           DATA_GENERATION_MODE: ${{ github.event.inputs.data_mode || 'DYNAMIC' }}
           DATA_GENERATION_COUNT: ${{ github.event.inputs.data_count || '10' }}
@@ -45,19 +56,45 @@ jobs:
         run: |
           NETWORK=$(docker inspect --format='{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}' test-target-opensearch)
           echo "Using network: $NETWORK"
-          docker run --rm \
+          docker run \
+            --name testdata-generator-test-runner \
             --network "$NETWORK" \
             -v "${{ github.workspace }}/testdata-generator":/app:rw \
+            -v "${{ github.workspace }}/reports":/app/data:rw \
             -w /app \
+            -e LOGGING_LEVEL_COM_OPENSEARCHLOADTESTER_TESTDATAGENERATOR \
             -e DATA_GENERATION_DOCUMENT_TYPE \
-            -e DATA_GENERATION_MODE \
             -e DATA_GENERATION_OUTPUT_PATH \
             -e DATA_GENERATION_COUNT \
+            -e DATA_GENERATION_MODE \
             -e OPENSEARCH_URL \
-            maven:3.9-eclipse-temurin-25 \
-            sh -c "mvn dependency:go-offline -B && mvn -B test"
+            testdata-generator-build \
+            mvn -f pom.xml clean test
 
-      - name: Upload Test Reports
+      - name: Export Container Logs - Make Directory
+        if: always()
+        run: mkdir -p container-logs
+
+      - name: Export Container Logs - testdata-generator
+        if: always()
+        run: docker logs testdata-generator-test-runner > container-logs/testdata-generator.log 2>&1
+
+      - name: Upload Container Logs Artifact
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: docker-container-logs
+          path: container-logs/**
+
+      - name: Upload generated test data
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: generated-test-data.json
+          path: reports/testdata.json
+
+      - name: Upload Unit Test Reports
+        if: always()
         uses: actions/upload-artifact@v5
         with:
           name: testdata-generator-test-reports
