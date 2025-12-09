@@ -44,7 +44,7 @@ public class ReportController {
      * @return ResponseEntity with status message
      */
     @PostMapping("/metrics")
-    public synchronized ResponseEntity<String> addMetrics(@RequestBody List<MetricsDto> metricsList) {
+    public synchronized ResponseEntity<String> submitMetrics(@RequestBody List<MetricsDto> metricsList) {
         Set<String> loadGeneratorIds = new HashSet<>();
 
         // Validate payload (empty payload is invalid)
