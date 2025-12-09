@@ -15,14 +15,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class TestScenarioInitializer implements CommandLineRunner {
 
-    /**
-     * Number of warm-up requests to send before the real load test.
-     */
     private static final int WARMUP_REQUEST_COUNT = 40;
-
-    /**
-     * Minimum warm-up duration in milliseconds.
-     */
     private static final long MIN_WARMUP_DURATION_MS = 10_000L;
 
     private final ScenarioConfig scenarioConfig;
@@ -46,16 +39,14 @@ public class TestScenarioInitializer implements CommandLineRunner {
             loadRunner.executeScenario(scenarioConfig);
             log.info("Finished load test successfully");
         } catch (Exception e) {
-            log.error("Unexpected error while executing load test: {}", e.getMessage(), e);
+            // Only one log line with stacktrace – no duplicate
+            log.error("Unexpected error while executing load test", e);
             throw new RuntimeException("Failed to execute load test", e);
         }
     }
 
-    /**
-     * Executes a warm-up phase before the actual load test.
-     */
     private void runWarmUp() {
-        log.info("Warm-up: running at least {} requests (minimum duration: {} ms)",
+        log.info("Warm-up: running until at least {} requests AND at least {} ms",
                 WARMUP_REQUEST_COUNT, MIN_WARMUP_DURATION_MS);
 
         long warmupStart = System.currentTimeMillis();
@@ -104,8 +95,8 @@ public class TestScenarioInitializer implements CommandLineRunner {
                     "Warm-up failed: no successful OpenSearch queries during warm-up");
         }
 
-        log.info("Warm-up finished: {} successful, {} failed ({} total) in {} ms",
-                successCount, failureCount, totalRequests, elapsedMs);
+        log.info("Warm-up completed in {} ms: {} successful, {} failed ({} total)",
+                elapsedMs, successCount, failureCount, totalRequests);
     }
 
     /**
