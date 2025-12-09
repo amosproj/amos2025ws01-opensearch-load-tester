@@ -83,8 +83,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v5
         with:
-          name: generated-test-data.json
-          path: reports/testdata.json
+          name: reports
+          path: reports/**
 
       - name: Upload Unit Test Reports
         if: always()
