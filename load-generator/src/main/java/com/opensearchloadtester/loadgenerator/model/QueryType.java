@@ -1,22 +1,29 @@
 package com.opensearchloadtester.loadgenerator.model;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import com.opensearchloadtester.loadgenerator.queries.*;
 
-@Getter
-@RequiredArgsConstructor
+import java.util.function.Supplier;
+
 public enum QueryType {
-    YEAR_RANGE("queries/q1_ano_payroll_range.json"),
-    CATEGORY("queries/q2_duo_invoice_category.json"),
-    STATE_LOCATION("queries/q3_duo_state_location.json"),
-    BOOKING_CLIENT_STATE("queries/q4_duo_booking_by_client_and_state.json"),
-    AGGREGATION("queries/q5_ano_clients_aggregation.json"),
-    CLIENT_YEAR("queries/q6_ano_client_by_year.json"),
-    CLIENT_CUSTOMER_NO("queries/q7_duo_client_by_customer_number.json"),
-    CLIENT_NAME_STATE("queries/q8_duo_client_by_name_and_state.json"),
-    PAYROLL_TYPE_LANGUAGE("queries/q9_ano_payroll_type_language.json"),
-    BOOKING_COSTCENTER_DATE("queries/q10_duo_booking_by_costcenter_and_date.json"),
-    BOOKING_AMOUNT_RANGE("queries/q11_duo_booking_by_amount_range.json");
+    ANO_PAYROLL_RANGE(AnoPayrollRangeQuery::new),
+    DUO_INVOICE_CATEGORY(DuoInvoiceCategoryQuery::new),
+    DUO_STATE_LOCATION(DuoStateLocationQuery::new),
+    DUO_BOOKING_BY_CLIENT_AND_STATE(DuoBookingByClientAndStateQuery::new),
+    ANO_CLIENTS_AGGREGATION(AnoClientsAggregationQuery::new),
+    ANO_CLIENT_BY_YEAR(AnoClientByYearQuery::new),
+    DUO_CLIENT_BY_CUSTOMER_NUMBER(DuoClientByCustomerNumberQuery::new),
+    DUO_CLIENT_BY_NAME_AND_STATE(DuoClientByNameAndStateQuery::new),
+    ANO_PAYROLL_TYPE_LANGUAGE(AnoPayrollTypeLanguageQuery::new),
+    DUO_BOOKING_BY_COSTCENTER_AND_DATE(DuoBookingByCostcenterAndDateQuery::new),
+    DUO_BOOKING_BY_AMOUNT_RANGE(DuoBookingByAmountRangeQuery::new);
 
-    private final String templatePath;
+    private final Supplier<Query> constructor;
+
+    QueryType(Supplier<Query> constructor) {
+        this.constructor = constructor;
+    }
+
+    public Query createInstance() {
+        return constructor.get();
+    }
 }

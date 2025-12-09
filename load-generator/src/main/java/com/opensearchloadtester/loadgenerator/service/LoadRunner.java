@@ -2,9 +2,9 @@ package com.opensearchloadtester.loadgenerator.service;
 
 import com.opensearchloadtester.loadgenerator.client.MetricsReporterClient;
 import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.opensearch.generic.OpenSearchGenericClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.*;
@@ -12,12 +12,24 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class LoadRunner {
 
+    private final String loadGeneratorId;
     private final OpenSearchGenericClient openSearchClient;
     private final MetricsReporterClient metricsReporterClient;
     private final MetricsCollector metricsCollector;
+
+    public LoadRunner(
+            @Value("${HOSTNAME}") String loadGeneratorId,
+            OpenSearchGenericClient openSearchClient,
+            MetricsReporterClient metricsReporterClient,
+            MetricsCollector metricsCollector
+    ) {
+        this.loadGeneratorId = loadGeneratorId;
+        this.openSearchClient = openSearchClient;
+        this.metricsReporterClient = metricsReporterClient;
+        this.metricsCollector = metricsCollector;
+    }
 
     /**
      * Executes queries according to the ScenarioConfig
@@ -28,12 +40,10 @@ public class LoadRunner {
         log.info("Started '{}' execution (duration: {} sec)",
                 scenarioConfig.getName(), scenarioConfig.getDuration().getSeconds());
 
-        String queryTemplatePath = scenarioConfig.getQuery().getType().getTemplatePath();
-
         QueryExecutionTask query = new QueryExecutionTask(
+                loadGeneratorId,
                 scenarioConfig.getDocumentType().getIndex(),
-                queryTemplatePath,
-                scenarioConfig.getQuery().getParameters(),
+                scenarioConfig.getQueryType(),
                 openSearchClient,
                 metricsCollector
         );
@@ -86,7 +96,7 @@ public class LoadRunner {
 
             if (completed) {
                 log.info("Calling MetricsReporterClient");
-                metricsReporterClient.reportMetrics(metricsCollector.getReport());
+                metricsReporterClient.reportMetrics(metricsCollector.getMetricsList());
                 log.info("Scenario '{}' completed successfully. All threads finished.", scenarioConfig.getName());
                 log.info("Test duration - Expected: {} ({}s), Actual: {}s",
                         scenarioConfig.getDuration(),

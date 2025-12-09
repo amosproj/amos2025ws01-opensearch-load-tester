@@ -11,6 +11,8 @@ import lombok.Setter;
 @AllArgsConstructor
 public class MetricsDto {
 
+    private String loadGeneratorId;
+    private String queryType;
     private Long requestDurationMillis;
     private Long queryDurationMillis;
     private Integer totalHits;
