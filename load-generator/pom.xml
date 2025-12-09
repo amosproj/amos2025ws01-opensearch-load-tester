@@ -81,6 +81,12 @@
         </dependency>
 
         <dependency>
+            <groupId>net.datafaker</groupId>
+            <artifactId>datafaker</artifactId>
+            <version>2.5.3</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.apache.httpcomponents.core5</groupId>
             <artifactId>httpcore5</artifactId>
             <version>5.2.1</version>
@@ -98,7 +104,7 @@
             <version>5.2.0</version>
             <scope>test</scope>
         </dependency>
-    </dependencies>
+	</dependencies>
 
     <build>
         <plugins>
