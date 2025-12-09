@@ -289,6 +289,9 @@ public class ReportService {
             for (MetricsDto result : results) {
                 totalQueries++;
 
+                if (result.getHttpStatusCode() >= 400) {
+                    totalErrors++;
+                }
 
                 Long requestDurationMs = result.getRequestDurationMillis();
                 if (requestDurationMs != null) {
