@@ -5,7 +5,7 @@
       "filter": [
         {
           "range": {
-            "dss_custom_metadata.duo.total_gross_amount": {
+            "dssCustomMetadataDuo.totalGrossAmount": {
               "gte": "{{amount_min}}",
               "lte": "{{amount_max}}"
             }
@@ -15,13 +15,13 @@
     }
   },
   "_source": [
-    "dss_document_name",
-    "dss_custom_metadata.duo.invoice_business_partner",
-    "dss_custom_metadata.duo.invoice_number",
-    "dss_custom_metadata.duo.invoice_date",
-    "dss_custom_metadata.duo.total_gross_amount",
-    "dss_custom_metadata.duo.document_approval_state",
-    "dss_custom_metadata.duo.paid_status"
+    "dssDocumentName",
+    "dssCustomMetadataDuo.invoiceBusinessPartner",
+    "dssCustomMetadataDuo.invoiceNumber",
+    "dssCustomMetadataDuo.invoiceDate",
+    "dssCustomMetadataDuo.totalGrossAmount",
+    "dssCustomMetadataDuo.documentApprovalState",
+    "dssCustomMetadataDuo.paidStatus"
   ]
 }
 

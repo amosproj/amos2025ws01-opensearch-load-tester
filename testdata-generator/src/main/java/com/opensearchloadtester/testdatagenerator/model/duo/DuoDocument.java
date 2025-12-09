@@ -1,21 +1,19 @@
 package com.opensearchloadtester.testdatagenerator.model.duo;
 
-import net.datafaker.Faker;
-
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.opensearchloadtester.testdatagenerator.model.AbstractDocument;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.format.DateTimeFormatter;
-import java.util.concurrent.TimeUnit;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.time.LocalDate;
-import java.time.Instant;
-import java.util.Locale;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Getter
 @Setter
@@ -55,11 +53,13 @@ public class DuoDocument extends AbstractDocument {
     public static class DuoMetadata {
 
         private String bookingState;
-        private Instant bookingStateChangedAt;
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssXXX", timezone = "Europe/Berlin")
+        private Date bookingStateChangedAt;
         private Long companyId;
         private String currency;
         private String customerNumber;
-        private Instant deletedAt;
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssXXX", timezone = "Europe/Berlin")
+        private Date deletedAt;
         private Integer documentType;
         private String documentCategory;
         private String documentInvoiceType;
@@ -67,17 +67,21 @@ public class DuoDocument extends AbstractDocument {
         private Boolean hasPositionCorrection;
         private String invoiceBusinessPartner;
         private Integer invoiceBusinessPartnerId;
-        private Instant invoiceDate;
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+        private Date invoiceDate;
         private String invoiceNumber;
-        private Instant lastModifiedDatetime;
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
+        private Date lastModifiedDatetime;
         private String lastModifiedUserIdKey;
         private String location;
-        private Instant paidAt;
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
+        private Date paidAt;
         private String paidStatus;
         private List<Position> positions;
         private Double totalGrossAmount;
         private String uploaderScId;
-        private Instant timeOfUpload;
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
+        private Date timeOfUpload;
         private String documentApprovalState;
         private String transactionIds;
 
@@ -94,7 +98,7 @@ public class DuoDocument extends AbstractDocument {
                     ? faker.number().numberBetween(1000, 1000000)
                     : null);
             duoMetadata.deletedAt = null;
-            duoMetadata.documentType = RANDOM.nextInt(-4,4000);
+            duoMetadata.documentType = RANDOM.nextInt(-4, 4000);
             List<String> documentCategoryTypes = List.of("SUPPLIER_INVOICE", "OTHER", "SALES_INVOICE");
             duoMetadata.documentCategory = documentCategoryTypes.get(RANDOM.nextInt(documentCategoryTypes.size()));
             List<String> invTypes = List.of("null", "E_INVOICE", "OTHER");
@@ -105,7 +109,7 @@ public class DuoDocument extends AbstractDocument {
                     ? faker.number().numberBetween(1000, 1000000)
                     : null;
             duoMetadata.invoiceBusinessPartner = faker.company().name();
-            duoMetadata.invoiceDate = faker.timeAndDate().past(3650, TimeUnit.DAYS);
+            duoMetadata.invoiceDate = Date.from(faker.timeAndDate().past(3650, TimeUnit.DAYS));
             duoMetadata.invoiceNumber = RANDOM.nextInt(99999) + "/" + RANDOM.nextInt(9999);
 
             if ("E_INVOICE".equals(duoMetadata.documentInvoiceType)) {
@@ -138,14 +142,13 @@ public class DuoDocument extends AbstractDocument {
             } else {
                 duoMetadata.einvoiceFulltext = null;
             }
-            duoMetadata.lastModifiedDatetime = faker.timeAndDate().past(90, TimeUnit.DAYS);
+            duoMetadata.lastModifiedDatetime = Date.from(faker.timeAndDate().past(90, TimeUnit.DAYS));
 
             int variant = faker.random().nextInt(3);
             switch (variant) {
                 case 0 -> duoMetadata.lastModifiedUserIdKey = "rzId-not-set";
                 case 1 -> duoMetadata.lastModifiedUserIdKey = java.util.UUID.randomUUID().toString();
-                default ->
-                        duoMetadata.lastModifiedUserIdKey = faker.number().numberBetween(0, 1000) + "@sca.dt3v.de";
+                default -> duoMetadata.lastModifiedUserIdKey = faker.number().numberBetween(0, 1000) + "@sca.dt3v.de";
             }
 
             List<String> loc = List.of("BELEGE", "BELEGFREIGABE");
@@ -153,19 +156,19 @@ public class DuoDocument extends AbstractDocument {
             List<String> states = List.of("NOT_PAID", "FULLY_PAID");
             duoMetadata.paidStatus = states.get(RANDOM.nextInt(states.size()));
             duoMetadata.paidAt = "FULLY_PAID".equals(duoMetadata.paidStatus)
-                    ? faker.timeAndDate().past(180, TimeUnit.DAYS)
+                    ? Date.from(faker.timeAndDate().past(180, TimeUnit.DAYS))
                     : null;
 
             List<Position> pos = new ArrayList<>();
             // From examples always 0 positions
-            int numPos = RANDOM.nextInt(0,1);
+            int numPos = RANDOM.nextInt(0, 1);
             for (int i = 0; i < numPos; i++) {
                 pos.add(Position.random());
             }
             duoMetadata.positions = pos;
             duoMetadata.totalGrossAmount = RANDOM.nextDouble(10000000);
             duoMetadata.uploaderScId = RANDOM.nextInt(1000) + "@sca.dt3v.de";
-            duoMetadata.timeOfUpload =  faker.timeAndDate().past(3560, TimeUnit.DAYS);
+            duoMetadata.timeOfUpload = Date.from(faker.timeAndDate().past(3560, TimeUnit.DAYS));
             List<String> appStates = List.of("APPROVED", "NOT_RELEVANT", "UNDISPATCHED");
             duoMetadata.documentApprovalState = appStates.get(RANDOM.nextInt(appStates.size()));
             // From examples
@@ -184,7 +187,8 @@ public class DuoDocument extends AbstractDocument {
         private String note;
         private String costCenter1;
         private String costCenter2;
-        private Instant serviceDate;
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+        private Date serviceDate;
 
         // Method to generate a random Position object
         public static Position random() {
@@ -194,7 +198,7 @@ public class DuoDocument extends AbstractDocument {
             position.note = "This is a sample note " + RANDOM.nextInt(10000);
             position.costCenter1 = "cc-" + RANDOM.nextInt(10000);
             position.costCenter2 = "cc-" + RANDOM.nextInt(10000);
-            position.serviceDate = faker.timeAndDate().past(365, TimeUnit.DAYS);
+            position.serviceDate = Date.from(faker.timeAndDate().past(365, TimeUnit.DAYS));
             return position;
         }
     }
@@ -246,10 +250,12 @@ public class DuoDocument extends AbstractDocument {
             switch (introVariant) {
                 case 0 -> intro = "Für die Lieferung/Leistung berechnen wir Ihnen:";
                 case 1 -> intro = "Gemäß Auftrag stellen wir folgende Positionen in Rechnung:";
-                case 2 -> intro = "Vielen Dank für Ihr Vertrauen. Hiermit stellen wir Ihnen folgende Leistungen in Rechnung:";
+                case 2 ->
+                        intro = "Vielen Dank für Ihr Vertrauen. Hiermit stellen wir Ihnen folgende Leistungen in Rechnung:";
                 case 3 -> intro = "Für die Lieferung vom " + date.format(dtf) + " berechnen wir:";
                 case 4 -> intro = "Geliefert wurden am " + date.format(dtf) + ":";
-                case 5 -> intro = "Verbindungsnachweis für den Zeitraum " + date.getMonthValue() + "/" + date.getYear() + ":";
+                case 5 ->
+                        intro = "Verbindungsnachweis für den Zeitraum " + date.getMonthValue() + "/" + date.getYear() + ":";
                 default -> intro = "Rechnungspositionen:";
             }
             sb.append(intro).append(" ");
