@@ -36,30 +36,16 @@ public class OpenSearchDataService {
     @Getter
     private volatile int dynamicBatchLimit = Integer.MAX_VALUE;
 
-    /**
-     * Smallest sub-batch size we are willing to send when we start splitting
-     * a rejected bulk request. We never split below this size.
-     */
-    private static final int MIN_SUB_BATCH_SIZE = 1_000;
 
-    /**
-     * Hard guard to avoid infinite recursion in case of bugs or unexpected
-     * behaviour. Even if the math would allow more splits, we stop at this depth.
-     */
+    private static final int MIN_SUB_BATCH_SIZE = 1_000;
     private static final int ABSOLUTE_MAX_SPLIT_DEPTH = 8;
 
     private final OpenSearchClient openSearchClient;
 
-    // =========================
     //  INDEX CREATION, GET, ETC
-    // =========================
 
-    /**
-     * Creates an index if it does not exist yet.
-     *
-     * If {@code indexSettings} or {@code indexMapping} is {@code null},
-     * OpenSearch defaults are used for that part.
-     */
+    //Creates an index if it does not exist yet.
+
     public void createIndex(String indexName,
                             @Nullable IndexSettings indexSettings,
                             @Nullable TypeMapping indexMapping) {
@@ -92,9 +78,8 @@ public class OpenSearchDataService {
         }
     }
 
-    /**
-     * Indexes a single document in the given index.
-     */
+    //Indexes a single document in the given index.
+
     public <T> String indexDocument(String indexName, T document) {
         validateIndexName(indexName);
         Objects.requireNonNull(document, "document must not be null");
@@ -117,13 +102,9 @@ public class OpenSearchDataService {
         }
     }
 
-    // =========================
     //  BULK INDEXING WITH AUTO-SPLIT ON 429
-    // =========================
 
     /**
-     * Public bulk API used by TestdataPreloadService.
-     * <p>
      * It calculates a dynamic maxSplitDepth based on the initial batch size
      * and delegates to the recursive variant. If OpenSearch responds with 429
      * (Too Many Requests), the batch is split into smaller sub-batches
@@ -145,9 +126,6 @@ public class OpenSearchDataService {
     /**
      * Computes how deep we are allowed to split the initial batch without
      * going below MIN_SUB_BATCH_SIZE and without exceeding ABSOLUTE_MAX_SPLIT_DEPTH.
-     * <p>
-     * Example: 50k docs → 25k → 12.5k → 6.25k → ... until we would go under
-     * MIN_SUB_BATCH_SIZE or hit ABSOLUTE_MAX_SPLIT_DEPTH.
      */
     private int computeMaxSplitDepth(int initialSize) {
         int depth = 0;
@@ -162,12 +140,6 @@ public class OpenSearchDataService {
         return depth;
     }
 
-    /**
-       OpenSearch returns 429 and we are still allowed to split
-       For any other error (or if we cannot split further), we wrap
-     *       the exception in {@link OpenSearchDataAccessException} and fail.
-     *
-     */
     private <T> void bulkIndexDocuments(String indexName, List<T> documents, int depth, int maxSplitDepth) {
         if (documents == null || documents.isEmpty()) {
             return;
@@ -286,9 +258,7 @@ public class OpenSearchDataService {
         }
     }
 
-    // =========================
     //  OTHER METHODS (search, delete, refresh...)
-    // =========================
 
     public <T> Optional<T> getDocument(String indexName, String id, Class<T> documentClass) {
         validateIndexName(indexName);

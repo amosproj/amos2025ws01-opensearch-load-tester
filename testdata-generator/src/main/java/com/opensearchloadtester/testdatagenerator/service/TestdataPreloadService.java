@@ -14,7 +14,6 @@ import java.util.List;
 
 /**
  * Batch pre-loading job for ANO / DUO test data.
- * <p>
  * This service is responsible for generating test data (either dynamically or
  * from a persistent data set) and indexing it into OpenSearch in batches.
  */
@@ -40,13 +39,6 @@ public class TestdataPreloadService {
         }
     }
 
-    /**
-     * Entry point for pre-loading test data into OpenSearch in batches.
-     *
-     * DYNAMIC – documents are generated freshly on each startup.
-     * PERSISTENT – documents are generated once and stored on disk,
-     * subsequent runs reuse the stored data.
-     */
     public void preloadTestdata() {
         switch (dataGenerationProperties.getMode()) {
             case DYNAMIC -> preloadDynamic();
@@ -54,10 +46,8 @@ public class TestdataPreloadService {
         }
     }
 
-    /**
-     * A value is computed based on totalCount and clamped between
-     * MIN_BATCH_SIZE and dynamicMaxBatchSize(totalCount).
-     */
+    //A value is computed based on totalCount and clamped between MIN_BATCH_SIZE and dynamicMaxBatchSize(totalCount).
+
     private int resolveBatchSize(int totalCount) {
         if (totalCount <= 0) {
             throw new IllegalArgumentException("totalCount must be > 0, but was " + totalCount);
@@ -87,10 +77,6 @@ public class TestdataPreloadService {
         return computed;
     }
 
-    /**
-     * Dynamic mode: generates new random documents for each run and
-     * indexes them into OpenSearch in batches.
-     */
     private void preloadDynamic() {
         // 1) Select ANO / DUO index
         final Index index = switch (dataGenerationProperties.getDocumentType()) {
@@ -181,11 +167,6 @@ public class TestdataPreloadService {
         log.info("Finished DYNAMIC batch pre-loading successfully for index='{}'", index.getName());
     }
 
-    /**
-     * Persistent mode:
-     * First run: generates random documents, stores them to disk, then indexes them.
-     * Subsequent runs: loads the existing documents from disk and re-indexes them.
-     */
     private void preloadPersistent() {
         final Index index = switch (dataGenerationProperties.getDocumentType()) {
             case ANO -> AnoIndex.getInstance();
