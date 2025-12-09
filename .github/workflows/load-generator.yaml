@@ -90,5 +90,5 @@ jobs:
       - name: Upload Test Reports
         uses: actions/upload-artifact@v5
         with:
-          name: testdata-generator-test-reports
-          path: testdata-generator/target/surefire-reports
+          name: load-generator-test-reports
+          path: load-generator/target/surefire-reports
