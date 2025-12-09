@@ -2,8 +2,8 @@
 services:
   testdata-generator:
     build:
-      context: ./testdata-generator
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: testdata-generator/Dockerfile
     container_name: testdata-generator
     environment:
       - SPRING_APPLICATION_NAME=testdata-generator
