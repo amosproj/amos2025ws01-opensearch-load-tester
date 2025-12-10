@@ -6,9 +6,9 @@
       "must": [
         {
           "multi_match": {
-            "query": "Rechnung Zahlung Holz Lieferung",
+            "query": "{{search_terms}}",
             "fields": [
-              "custom_all"
+              "customAll"
             ],
             "type": "most_fields",
             "operator": "and",
@@ -18,9 +18,9 @@
         },
         {
           "range": {
-            "dss_custom_metadata.duo.invoice_date": {
-              "gte": "2016-01-01",
-              "lte": "now"
+            "dssCustomMetadataDuo.invoiceDate": {
+              "gte": "{{invoice_date_from}}",
+              "lte": "{{invoice_date_to}}"
             }
           }
         }
@@ -28,15 +28,15 @@
       "filter": [
         {
           "wildcard": {
-            "dss_custom_metadata.duo.invoice_business_partner.raw": "*holz*"
+            "dssCustomMetadataDuo.invoiceBusinessPartner.raw": "{{business_partner_wildcard}}"
           }
         },
         {
           "terms": {
-            "dss_custom_metadata.duo.document_category.raw": [
-              "SALES_INVOICE",
-              "SUPPLIER_INVOICE",
-              "OTHER"
+            "dssCustomMetadataDuo.documentCategory.raw": [
+              "{{category_1}}",
+              "{{category_2}}",
+              "{{category_3}}"
             ]
           }
         }
@@ -45,7 +45,7 @@
   },
   "highlight": {
     "fields": {
-      "custom_all": {
+      "customAll": {
         "type": "fvh",
         "fragment_size": 180,
         "number_of_fragments": 5,
@@ -56,31 +56,31 @@
   "aggs": {
     "by_dataspace": {
       "terms": {
-        "field": "dss_dataspace_id.raw",
+        "field": "dssDataspaceId.raw",
         "size": 5000
       },
       "aggs": {
         "by_partner": {
           "terms": {
-            "field": "dss_custom_metadata.duo.invoice_business_partner.raw",
+            "field": "dssCustomMetadataDuo.invoiceBusinessPartner.raw",
             "size": 5000
           },
           "aggs": {
             "by_month": {
               "date_histogram": {
-                "field": "dss_custom_metadata.duo.invoice_date",
+                "field": "dssCustomMetadataDuo.invoiceDate",
                 "calendar_interval": "month"
               },
               "aggs": {
                 "paid_state": {
                   "terms": {
-                    "field": "dss_custom_metadata.duo.paid_status.raw",
+                    "field": "dssCustomMetadataDuo.paidStatus.raw",
                     "size": 10
                   }
                 },
                 "gross_percentiles": {
                   "percentiles": {
-                    "field": "dss_custom_metadata.duo.total_gross_amount",
+                    "field": "dssCustomMetadataDuo.totalGrossAmount",
                     "percents": [
                       50,
                       90,
@@ -90,17 +90,17 @@
                 },
                 "invoice_cardinality": {
                   "cardinality": {
-                    "field": "dss_custom_metadata.duo.invoice_number.raw"
+                    "field": "dssCustomMetadataDuo.invoiceNumber.raw"
                   }
                 },
                 "top_docs": {
                   "top_hits": {
                     "size": 3,
                     "_source": [
-                      "dss_document_name",
-                      "dss_dataspace_id",
-                      "dss_custom_metadata.duo.*",
-                      "content_length"
+                      "dssDocumentName",
+                      "dssDataspaceId",
+                      "dssCustomMetadataDuo.*",
+                      "contentLength"
                     ]
                   }
                 }
