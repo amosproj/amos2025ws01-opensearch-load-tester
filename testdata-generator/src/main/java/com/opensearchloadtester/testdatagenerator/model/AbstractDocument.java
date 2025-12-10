@@ -1,10 +1,15 @@
 package com.opensearchloadtester.testdatagenerator.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
 import lombok.Setter;
+import net.datafaker.Faker;
 
-import java.time.Instant;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Random;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Base class for OpenSearch document data.
@@ -26,35 +31,39 @@ public abstract class AbstractDocument implements Document {
     protected String dssDataspaceId;
     protected String dssDocumentId;
     protected String dssDocumentName;
-    protected Instant dssLastModifiedDatetime;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssXXX", timezone = "Europe/Berlin")
+    protected Date dssLastModifiedDatetime;
     protected String dssLastModifiedUserDisplayName;
     protected String dssLastModifiedUserIdKey;
     protected String dssProcessingFlagOwner;
     protected String dssVersion;
     protected String etag;
-    protected Instant lastDocumentChange;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
+    protected Date lastDocumentChange;
 
     protected static final Random RANDOM = new Random();
-
+    protected static final Faker faker = new Faker(Locale.GERMAN);
 
     protected static <T extends AbstractDocument> T fillCommonFieldsRandomly(T document) {
-        // Fill with random values without purpose
-        document.id = "id-" + RANDOM.nextInt(100000);
-        document.customAll = "This is customAll from " + document.id;
-        document.contentLength = RANDOM.nextLong(10000);
-        document.contentType = "Document";
-        document.dssCreationUserDisplayName = "RandomGenerator";
-        document.dssCreationUserIdKey = "user-random";
-        document.dssDataspaceId = "dataspace-" + RANDOM.nextInt(1001);
-        document.dssDocumentId = "document-" + RANDOM.nextInt(10000);
-        document.dssDocumentName = "Payroll-" + document.dssDocumentId + "-random";
-        document.dssLastModifiedDatetime = Instant.now();
-        document.dssLastModifiedUserDisplayName = "RandomGenerator";
-        document.dssLastModifiedUserIdKey = "user-random";
-        document.dssProcessingFlagOwner = "owner-random";
-        document.dssVersion = "1.0";
-        document.etag = "etag-" + RANDOM.nextInt(100000000);
-        document.lastDocumentChange = Instant.now();
+        // Fill with random values
+        document.id = UUID.randomUUID().toString() + "_" + UUID.randomUUID().toString();
+        document.contentLength = RANDOM.nextLong(20000, 30000);
+        document.contentType = "application/pdf";
+        document.dssCreationUserDisplayName = faker.name().fullName();
+        document.dssCreationUserIdKey = UUID.randomUUID().toString();
+        // first part of id
+        document.dssDataspaceId = document.id.substring(0, document.id.indexOf('_'));
+        // last part of id
+        document.dssDocumentId = document.id.substring(document.id.indexOf('_') + 1);
+
+
+        document.dssLastModifiedDatetime = Date.from(faker.timeAndDate().past(365, TimeUnit.DAYS));
+        document.dssLastModifiedUserDisplayName = faker.name().fullName();
+        document.dssLastModifiedUserIdKey = UUID.randomUUID().toString();
+        document.dssProcessingFlagOwner = faker.name().nameWithMiddle();
+        document.dssVersion = "1." + RANDOM.nextInt(9);
+        document.etag = UUID.randomUUID().toString().replace("-", "");
+        document.lastDocumentChange = Date.from(faker.timeAndDate().past(90, TimeUnit.DAYS));
         return document;
     }
 }

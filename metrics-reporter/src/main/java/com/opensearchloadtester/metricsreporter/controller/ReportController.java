@@ -1,7 +1,7 @@
 package com.opensearchloadtester.metricsreporter.controller;
 
-import com.opensearchloadtester.common.dto.Metrics;
-import com.opensearchloadtester.metricsreporter.dto.TestRunReport;
+import com.opensearchloadtester.common.dto.MetricsDto;
+import com.opensearchloadtester.metricsreporter.dto.LoadTestSummary;
 import com.opensearchloadtester.metricsreporter.service.ReportService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,31 +11,28 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @RestController
 @RequestMapping("/api")
 public class ReportController {
 
-    // Thread-safe storage for metrics from different load generator instances
-    private final ConcurrentHashMap<String, Metrics> metricsMap = new ConcurrentHashMap<>();
-    
-    // Counter for received reports
-    private final AtomicInteger receivedReports = new AtomicInteger(0);
-    
+    // Track unique reporting instances without keeping full metrics in memory
+    private final Set<String> reportedInstances = ConcurrentHashMap.newKeySet();
+
     @Value("${load.generator.replicas:1}")
     private int expectedReplicas;
-    
+
     @Value("${report.export.json.enabled:true}")
     private boolean jsonExportEnabled;
-    
+
     @Value("${report.export.csv.enabled:true}")
     private boolean csvExportEnabled;
-    
+
     @Autowired
     private ReportService reportService;
 
@@ -46,111 +43,95 @@ public class ReportController {
      * @param metrics DTO for metrics data
      * @return ResponseEntity with status message
      */
-    @PostMapping("/addMetrics")
-    public synchronized ResponseEntity<String> addMetrics(@RequestBody Metrics metrics) {
-        log.info("Received metrics from load generator: {}", metrics.getLoadGeneratorInstance());
+    @PostMapping("/metrics")
+    public synchronized ResponseEntity<String> submitMetrics(@RequestBody List<MetricsDto> metricsList) {
+        Set<String> loadGeneratorIds = new HashSet<>();
 
-        // Validate params
-        if (metrics.getRequestType() == null || metrics.getRoundtripMilSec() == null || 
-            metrics.getJsonResponse() == null || metrics.getLoadGeneratorInstance() == null) {
-            log.error("Invalid request parameters - requestType:{}, roundtripMilSec:{}, jsonResponse:{}, instance:{}", 
-                    metrics.getRequestType(), metrics.getRoundtripMilSec(), 
-                    metrics.getJsonResponse(), metrics.getLoadGeneratorInstance());
-            return ResponseEntity.badRequest().body("Invalid metrics data\n");
+        // Validate payload (empty payload is invalid)
+        if (metricsList == null || metricsList.isEmpty()) {
+            log.error("Received empty metrics payload");
+            return ResponseEntity.badRequest().body("Invalid metrics payload\n");
         }
 
-        // Store metrics in thread-safe map
-        metricsMap.put(metrics.getLoadGeneratorInstance(), metrics);
-        int currentCount = receivedReports.incrementAndGet();
-        
-        log.info("Stored metrics from {}. Received {}/{} replicas. Query count: {}", 
-                metrics.getLoadGeneratorInstance(), 
-                currentCount, 
+        // Validate metrics entries
+        String payloadLoadGeneratorId = null;
+        for (int i = 0; i < metricsList.size(); i++) {
+            MetricsDto metrics = metricsList.get(i);
+            String validationError = validateMetrics(metrics);
+            if (validationError != null) {
+                log.error("Invalid metrics entry at index {}: {}", i, validationError);
+                return ResponseEntity.badRequest().body("Invalid metrics payload\n");
+            }
+            // Validate that all metrics entries have the same loadGeneratorId
+            if (payloadLoadGeneratorId == null) {
+                payloadLoadGeneratorId = metrics.getLoadGeneratorId();
+            } else if (!payloadLoadGeneratorId.equals(metrics.getLoadGeneratorId())) {
+                log.error("Mixed loadGeneratorId values in one payload (first: {}, current: {}, index: {})",
+                        payloadLoadGeneratorId, metrics.getLoadGeneratorId(), i);
+                return ResponseEntity.badRequest().body("Invalid metrics payload\n");
+            }
+        }
+
+        loadGeneratorIds.add(payloadLoadGeneratorId);
+        log.info("Received {} metrics entries from load generators: {}", metricsList.size(), loadGeneratorIds);
+
+        // Immediately process and persist metrics to avoid unbounded in-memory growth
+        try {
+            reportService.processMetrics(metricsList);
+        } catch (IOException e) {
+            log.error("Failed to persist metrics", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to persist metrics: " + e.getMessage() + "\n");
+        }
+
+        // Count unique reporting instances
+        reportedInstances.addAll(loadGeneratorIds);
+        int currentCount = reportedInstances.size();
+
+        log.info("Stored metrics from {}. Received {}/{} replicas. Query count: {}",
+                loadGeneratorIds,
+                currentCount,
                 expectedReplicas,
-                metrics.getRequestType().size());
+                metricsList.size());
 
         // Check if all replicas have reported
         if (currentCount >= expectedReplicas) {
             log.info("All {} replicas have reported. Generating reports...", expectedReplicas);
-            
+
             try {
-                generateReports();
-                
-                String message = String.format(
-                    "All metrics received (%d/%d replicas). Reports generated successfully!\n" +
-                    "Total load generators: %d\n" +
-                    "Total queries: %d\n",
-                    currentCount, expectedReplicas, 
-                    metricsMap.size(),
-                    metricsMap.values().stream().mapToInt(m -> m.getRequestType().size()).sum()
-                );
-                
+                LoadTestSummary summary = reportService.finalizeReports(reportedInstances);
+
+                StringBuilder message = new StringBuilder(String.format(
+                        "All metrics received (%d/%d replicas). Reports generated successfully!\n" +
+                                "Total load generators: %d\n" +
+                                "Total queries: %d\n",
+                        currentCount, expectedReplicas,
+                        summary.getLoadGeneratorInstances().size(),
+                        summary.getTotalQueries()
+                ));
+
                 if (jsonExportEnabled) {
-                    message += "JSON report: " + reportService.getJsonReportPath() + "\n";
+                    message.append("Full JSON report: ").append(reportService.getFullJsonReportPath()).append("\n");
+                    message.append("Statistics JSON: ").append(reportService.getStatisticsReportPath()).append("\n");
                 }
                 if (csvExportEnabled) {
-                    message += "CSV report: " + reportService.getCsvReportPath() + "\n";
+                    message.append("CSV report: ").append(reportService.getCsvReportPath()).append("\n");
                 }
-                
-                return ResponseEntity.ok(message);
-                
+
+                return ResponseEntity.ok(message.toString());
+
             } catch (IOException e) {
                 log.error("Failed to generate reports", e);
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Metrics received but failed to generate reports: " + e.getMessage() + "\n");
+                        .body("Metrics received but failed to generate reports: " + e.getMessage() + "\n");
             }
         } else {
             // Not all replicas reported yet
             return ResponseEntity.ok(
-                String.format("Metrics stored successfully. Waiting for remaining replicas (%d/%d)\n",
-                    currentCount, expectedReplicas)
+                    String.format("Metrics stored successfully. Waiting for remaining replicas (%d/%d)\n",
+                            currentCount, expectedReplicas)
             );
         }
-    }
-    
-    /**
-     * Generates reports from all collected metrics.
-     * Called when all expected replicas have reported.
-     *
-     * @throws IOException if report generation fails
-     */
-    private void generateReports() throws IOException {
-        List<Metrics> allMetrics = new ArrayList<>(metricsMap.values());
-        
-        log.info("Generating reports from {} load generator instances", allMetrics.size());
-        
-        if (jsonExportEnabled) {
-            log.info("Generating JSON report...");
-            for (Metrics metrics : allMetrics) {
-                reportService.appendToJsonReport(metrics);
-            }
-            log.info("JSON report generated at: {}", reportService.getJsonReportPath());
-        }
-        
-        if (csvExportEnabled) {
-            log.info("Generating CSV report...");
-            for (Metrics metrics : allMetrics) {
-                reportService.appendToCsvReport(metrics);
-            }
-            log.info("CSV report generated at: {}", reportService.getCsvReportPath());
-        }
-        
-        // Log aggregated statistics
-        TestRunReport report = reportService.createReport(allMetrics);
-        log.info("Report Summary - Total Queries: {}, Total Errors: {}, Load Generator Instances: {}", 
-                report.getTotalQueries(), 
-                report.getTotalErrors(), 
-                report.getLoadGeneratorInstances().size());
-    }
-
-    /**
-     * Returns all collected metrics as a list.
-     * Thread-safe getter for metrics.
-     *
-     * @return List of all metrics
-     */
-    public List<Metrics> getMetrics() {
-        return new ArrayList<>(metricsMap.values());
     }
 
     /**
@@ -159,6 +140,30 @@ public class ReportController {
     @GetMapping("/health")
     public ResponseEntity<String> health() {
         return ResponseEntity.ok("Report Controller is running!\n");
+    }
+
+    // Validate a single metrics entry
+    // Returns a string with the validation error, or null if the metrics entry is valid
+    private String validateMetrics(MetricsDto metrics) {
+        if (metrics == null) {
+            return "metrics entry is null";
+        }
+        if (metrics.getLoadGeneratorId() == null || metrics.getLoadGeneratorId().isBlank()) {
+            return "loadGeneratorId is missing";
+        }
+        if (metrics.getQueryType() == null || metrics.getQueryType().isBlank()) {
+            return "queryType is missing";
+        }
+        if (metrics.getRequestDurationMillis() != null && metrics.getRequestDurationMillis() < 0) {
+            return "requestDurationMillis is negative";
+        }
+        if (metrics.getQueryDurationMillis() != null && metrics.getQueryDurationMillis() < 0) {
+            return "queryDurationMillis is negative";
+        }
+        if (metrics.getHttpStatusCode() < 100 || metrics.getHttpStatusCode() > 599) {
+            return "httpStatusCode is out of range";
+        }
+        return null;
     }
 
 }
