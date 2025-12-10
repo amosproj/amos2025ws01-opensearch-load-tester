@@ -16,9 +16,14 @@ public class DuoComplexQuery extends AbstractQuery {
     public String generateQuery() {
         String queryTemplate = loadQueryTemplate(QUERY_TEMPLATE_PATH);
 
-        String invoiceBusinessPartner = FAKER.company().name();
-        String searchTerms = invoiceBusinessPartner + " Rechnung";
-        String businessPartnerWildcard = "*" + invoiceBusinessPartner + "*";
+        // String invoiceBusinessPartner = FAKER.company().name();
+        // String searchTerms = invoiceBusinessPartner + " Rechnung";
+        // String businessPartnerWildcard = "*" + invoiceBusinessPartner + "*";
+        // Use broad patterns to increase hit probability on generated data
+        String searchTerms = "Rechnung";
+        // Broad wildcard to avoid filtering out generated partners (keeps leading wildcard cost)
+        String businessPartnerWildcard = "*GmbH*";
+        String invoiceNumberFragment = String.valueOf(FAKER.number().numberBetween(1, 99999));
 
         LocalDate startDate = LocalDate.now().minusDays(FAKER.number().numberBetween(365, 3650));
         LocalDate endDate = startDate.plusDays(FAKER.number().numberBetween(30, 365));
@@ -34,6 +39,7 @@ public class DuoComplexQuery extends AbstractQuery {
                 "invoice_date_from", startDate.format(DATE_FORMATTER),
                 "invoice_date_to", endDate.format(DATE_FORMATTER),
                 "business_partner_wildcard", businessPartnerWildcard,
+                "invoice_number_fragment", invoiceNumberFragment,
                 "category_1", categories.get(0),
                 "category_2", categories.get(1),
                 "category_3", categories.get(2)

@@ -13,7 +13,8 @@
             "type": "most_fields",
             "operator": "and",
             "fuzziness": "AUTO",
-            "slop": 3
+            "slop": 3,
+            "minimum_should_match": "80%"
           }
         },
         {
@@ -40,7 +41,23 @@
             ]
           }
         }
-      ]
+      ],
+      "should": [
+        {
+          "wildcard": {
+            "dssCustomMetadataDuo.invoiceNumber.raw": "*{{invoice_number_fragment}}*"
+          }
+        },
+        {
+          "match_phrase": {
+            "customAll": {
+              "query": "{{search_terms}}",
+              "slop": 2
+            }
+          }
+        }
+      ],
+      "minimum_should_match": 1
     }
   },
   "highlight": {
@@ -57,13 +74,15 @@
     "by_dataspace": {
       "terms": {
         "field": "dssDataspaceId.raw",
-        "size": 5000
+        "size": 200,
+        "shard_size": 1000
       },
       "aggs": {
         "by_partner": {
           "terms": {
             "field": "dssCustomMetadataDuo.invoiceBusinessPartner.raw",
-            "size": 5000
+            "size": 200,
+            "shard_size": 1000
           },
           "aggs": {
             "by_month": {
@@ -75,7 +94,7 @@
                 "paid_state": {
                   "terms": {
                     "field": "dssCustomMetadataDuo.paidStatus.raw",
-                    "size": 10
+                    "size": 5
                   }
                 },
                 "gross_percentiles": {
