@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.opensearchloadtester.common.dto.MetricsDto;
-import com.opensearchloadtester.metricsreporter.dto.LoadTestSummary;
+import com.opensearchloadtester.metricsreporter.dto.LoadTestSummaryDto;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -195,12 +195,12 @@ public class ReportService {
     /**
      * Finalizes reports by writing a summary JSON without loading all query results into memory.
      */
-    public synchronized LoadTestSummary finalizeReports(Set<String> loadGeneratorInstances) throws IOException {
+    public synchronized LoadTestSummaryDto finalizeReports(Set<String> loadGeneratorInstances) throws IOException {
         initializeReportFiles();
 
-        LoadTestSummary.Statistics statistics = stats.toStatistics();
+        LoadTestSummaryDto.Statistics statistics = stats.toStatistics();
 
-        LoadTestSummary report = new LoadTestSummary(
+        LoadTestSummaryDto report = new LoadTestSummaryDto(
                 statistics,
                 LocalDateTime.now(),
                 stats.getTotalQueries(),
@@ -311,8 +311,8 @@ public class ReportService {
             }
         }
 
-        LoadTestSummary.Statistics toStatistics() {
-            LoadTestSummary.DurationStats requestDuration = new LoadTestSummary.DurationStats();
+        LoadTestSummaryDto.Statistics toStatistics() {
+            LoadTestSummaryDto.DurationStats requestDuration = new LoadTestSummaryDto.DurationStats();
             if (requestDurationCount > 0) {
                 requestDuration.setAverage(requestDurationSum / (double) requestDurationCount);
                 requestDuration.setMin(requestDurationMin);
@@ -323,7 +323,7 @@ public class ReportService {
                 requestDuration.setMax(0L);
             }
 
-            LoadTestSummary.DurationStats queryDuration = new LoadTestSummary.DurationStats();
+            LoadTestSummaryDto.DurationStats queryDuration = new LoadTestSummaryDto.DurationStats();
             if (queryDurationCount > 0) {
                 queryDuration.setAverage(queryDurationSum / (double) queryDurationCount);
                 queryDuration.setMin(queryDurationMin);
@@ -334,7 +334,7 @@ public class ReportService {
                 queryDuration.setMax(0L);
             }
 
-            return new LoadTestSummary.Statistics(requestDuration, queryDuration);
+            return new LoadTestSummaryDto.Statistics(requestDuration, queryDuration);
         }
     }
 }

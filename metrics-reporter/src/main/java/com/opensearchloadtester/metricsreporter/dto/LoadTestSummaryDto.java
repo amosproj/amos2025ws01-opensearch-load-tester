@@ -25,7 +25,7 @@ import java.util.List;
         "query_results",
         "load_generator_instances"
 })
-public class LoadTestSummary {
+public class LoadTestSummaryDto {
 
     @JsonProperty("statistics")
     private Statistics statistics;

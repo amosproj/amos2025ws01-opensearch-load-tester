@@ -1,7 +1,7 @@
 package com.opensearchloadtester.metricsreporter.controller;
 
 import com.opensearchloadtester.common.dto.MetricsDto;
-import com.opensearchloadtester.metricsreporter.dto.LoadTestSummary;
+import com.opensearchloadtester.metricsreporter.dto.LoadTestSummaryDto;
 import com.opensearchloadtester.metricsreporter.service.ReportService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -99,7 +99,7 @@ public class ReportController {
             log.info("All {} replicas have reported. Generating reports...", expectedReplicas);
 
             try {
-                LoadTestSummary summary = reportService.finalizeReports(reportedInstances);
+                LoadTestSummaryDto summary = reportService.finalizeReports(reportedInstances);
 
                 StringBuilder message = new StringBuilder(String.format(
                         "All metrics received (%d/%d replicas). Reports generated successfully!\n" +
