@@ -1,0 +1,227 @@
+{
+  "settings": {
+    "analysis": {
+      "char_filter": {
+        "eszett": {
+          "type": "mapping",
+          "mappings": [
+            "ß => ss"
+          ]
+        },
+        "hyphens": {
+          "type": "pattern_replace",
+          "pattern": "(\\S+)-(\\S+)",
+          "replacement": "$1$2"
+        }
+      },
+      "normalizer": {
+        "german_sorting_din_5007_1": {
+          "type": "custom",
+          "filter": [
+            "lowercase",
+            "asciifolding"
+          ],
+          "char_filter": [
+            "eszett",
+            "hyphens"
+          ]
+        }
+      }
+    },
+    "index": {
+      "query": {
+        "default_field": "custom_all"
+      },
+      "number_of_shards": 5,
+      "number_of_replicas": 1,
+      "search": {
+        "slowlog": {
+          "threshold": {
+            "query": {
+              "warn": "4s"
+            },
+            "fetch": {
+              "warn": "1s"
+            }
+          },
+          "level": "warn"
+        }
+      },
+      "indexing": {
+        "slowlog": {
+          "threshold": {
+            "index": {
+              "warn": "1s"
+            }
+          },
+          "level": "warn",
+          "source": "10000",
+          "reformat": false
+        }
+      }
+    }
+  },
+  "mappings": {
+    "dynamic": false,
+    "dynamic_date_formats": [
+      "8uuuu-MM-dd'T'HH:mm:ssXXX",
+      "8uuuu-MM-dd'T'HH:mm:ss.SSSXXX",
+      "8uuuu-MM-dd'Z'HH:mm:ss.SS",
+      "8uuuu-MM-dd"
+    ],
+    "properties": {
+      "custom_all": {
+        "type": "text",
+        "analyzer": "german",
+        "store": true
+      },
+      "content_length": {
+        "type": "long"
+      },
+      "content_type": {
+        "type": "keyword"
+      },
+      "dss_creation_datetime": {
+        "type": "date"
+      },
+      "dss_creation_user_display_name": {
+        "type": "text",
+        "index": false,
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          },
+          "sort": {
+            "type": "keyword",
+            "normalizer": "german_sorting_din_5007_1"
+          }
+        }
+      },
+      "dss_creation_user_id_key": {
+        "type": "text",
+        "index": false,
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          },
+          "sort": {
+            "type": "keyword",
+            "normalizer": "german_sorting_din_5007_1"
+          }
+        }
+      },
+      "dss_custom_metadata.payrollinfo.accounting_month": {
+        "type": "integer"
+      },
+      "dss_custom_metadata.payrollinfo.accounting_year": {
+        "type": "integer"
+      },
+      "dss_custom_metadata.payrollinfo.first_access": {
+        "type": "date"
+      },
+      "dss_custom_metadata.payrollinfo.language": {
+        "type": "keyword"
+      },
+      "dss_custom_metadata.payrollinfo.payroll_type": {
+        "type": "keyword"
+      },
+      "dss_custom_metadata.payrollinfo.provision_date": {
+        "type": "date"
+      },
+      "dss_dataspace_id": {
+        "type": "keyword"
+      },
+      "dss_delete_retention_min_retention": {
+        "type": "date"
+      },
+      "dss_document_id": {
+        "type": "keyword"
+      },
+      "dss_document_name": {
+        "type": "text",
+        "index": false,
+        "copy_to": [
+          "custom_all"
+        ],
+        "fields": {
+          "sort": {
+            "type": "keyword",
+            "normalizer": "german_sorting_din_5007_1"
+          }
+        }
+      },
+      "dss_document_orientation": {
+        "type": "long"
+      },
+      "dss_document_path": {
+        "type": "keyword"
+      },
+      "dss_document_source": {
+        "type": "keyword"
+      },
+      "dss_last_modified_datetime": {
+        "type": "date"
+      },
+      "dss_last_modified_user_datetime": {
+        "type": "date"
+      },
+      "dss_last_modified_user_display_name": {
+        "type": "text",
+        "index": false,
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          },
+          "sort": {
+            "type": "keyword",
+            "normalizer": "german_sorting_din_5007_1"
+          }
+        }
+      },
+      "dss_last_modified_user_id_key": {
+        "type": "text",
+        "index": false,
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          },
+          "sort": {
+            "type": "keyword",
+            "normalizer": "german_sorting_din_5007_1"
+          }
+        }
+      },
+      "dss_original_filename": {
+        "type": "text",
+        "index": false,
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          },
+          "sort": {
+            "type": "keyword",
+            "normalizer": "german_sorting_din_5007_1"
+          }
+        }
+      },
+      "dss_processing_flag.owner": {
+        "type": "keyword"
+      },
+      "dss_recyclebin": {
+        "type": "boolean"
+      },
+      "dss_version": {
+        "type": "keyword"
+      },
+      "etag": {
+        "type": "keyword"
+      },
+      "id": {
+        "type": "keyword"
+      },
+      "last_document_change": {
+        "type": "date"
+      }
+    }
+  }
+}

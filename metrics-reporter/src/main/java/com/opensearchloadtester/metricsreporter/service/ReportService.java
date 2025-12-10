@@ -36,7 +36,7 @@ public class ReportService {
     private final ObjectMapper objectMapper;
     private final ObjectWriter ndjsonWriter;
 
-    @Value("${report.output.directory:./reports}")
+    @Value("${report.output.directory:../reports}")
     private String outputDirectory;
 
     @Value("${report.stats.filename:statistics.json}")

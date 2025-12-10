@@ -1,0 +1,313 @@
+{
+  "took": 4,
+  "timed_out": false,
+  "_shards": {
+    "total": 3,
+    "successful": 3,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 7,
+      "relation": "eq"
+    },
+    "max_score": 0,
+    "hits": [
+      {
+        "_index": "ano_payroll_reports_20250213",
+        "_id": "9c89a8b9-fe67-4a82-ae97-23567880adee_54dd0788-5056-4024-a956-ffd4e3a11f4b",
+        "_score": 0,
+        "_source": {
+          "dss_creation_datetime": "2025-10-01T12:00:06+02:00",
+          "dss_creation_user_id_key": "2a5eeefe8e66c3ad304dd14c46e70bc6",
+          "dss_last_modified_user_id_key": "20d37f7be1683a513006e8add42999e1",
+          "dss_last_modified_datetime": "2025-10-01T12:00:21+02:00",
+          "dss_last_modified_user_display_name": "",
+          "dss_document_source": null,
+          "dss_document_name": "Brutto-Netto-Abrechnung September 2025.pdf",
+          "dss_version": "1.2",
+          "dss_document_orientation": 0,
+          "content_type": "application/pdf",
+          "dss_creation_user_display_name": "",
+          "dss_document_id": "54dd0788-5056-4024-a956-ffd4e3a11f4b",
+          "dss_custom_metadata": {
+            "payrollinfo": {
+              "last_access": null,
+              "included_reaccountings": [],
+              "accounting_month": 9,
+              "payroll_type": "LOBN",
+              "first_access": "2025-10-01T12:00:21+02:00",
+              "provision_date": "2025-09-25",
+              "accounting_year": 2025,
+              "language": "DE"
+            }
+          },
+          "id": "9c89a8b9-fe67-4a82-ae97-23567880adee_54dd0788-5056-4024-a956-ffd4e3a11f4b",
+          "content_length": 27447,
+          "dss_change_source": null,
+          "dss_dataspace_id": "9c89a8b9-fe67-4a82-ae97-23567880adee",
+          "last_document_change": "2025-10-01T10:00:22.051Z",
+          "dss_document_path": "/9c89a8b9-fe67-4a82-ae97-23567880adee/documents/54dd0788-5056-4024-a956-ffd4e3a11f4b/document",
+          "dss_last_modified_user_datetime": "2025-10-01T12:00:21+02:00",
+          "dss_delete_retention_min_retention": null,
+          "dss_recyclebin": false,
+          "etag": "919dc992b072e9f6d77bf06b033aaa01",
+          "dss_original_filename": "Brutto-Netto-Abrechnung September 2025.pdf"
+        }
+      },
+      {
+        "_index": "ano_payroll_reports_20250213",
+        "_id": "9c89a8b9-fe67-4a82-ae97-23567880adee_98212b88-c38a-4891-80dc-1bd053746231",
+        "_score": 0,
+        "_source": {
+          "dss_creation_datetime": "2025-10-01T12:00:32+02:00",
+          "dss_creation_user_id_key": "2a5eeefe8e66c3ad304dd14c46e70bc6",
+          "dss_last_modified_user_id_key": "20d37f7be1683a513006e8add42999e1",
+          "dss_last_modified_datetime": "2025-10-01T12:00:44+02:00",
+          "dss_last_modified_user_display_name": "",
+          "dss_document_source": null,
+          "dss_document_name": "Brutto-Netto-Abrechnung Juli 2025.pdf",
+          "dss_version": "1.2",
+          "dss_document_orientation": 0,
+          "content_type": "application/pdf",
+          "dss_creation_user_display_name": "",
+          "dss_document_id": "98212b88-c38a-4891-80dc-1bd053746231",
+          "dss_custom_metadata": {
+            "payrollinfo": {
+              "last_access": null,
+              "included_reaccountings": [],
+              "accounting_month": 7,
+              "payroll_type": "LOBN",
+              "first_access": "2025-10-01T12:00:44+02:00",
+              "provision_date": "2025-07-25",
+              "accounting_year": 2025,
+              "language": "DE"
+            }
+          },
+          "id": "9c89a8b9-fe67-4a82-ae97-23567880adee_98212b88-c38a-4891-80dc-1bd053746231",
+          "content_length": 27447,
+          "dss_change_source": null,
+          "dss_dataspace_id": "9c89a8b9-fe67-4a82-ae97-23567880adee",
+          "last_document_change": "2025-10-01T10:00:44.161Z",
+          "dss_document_path": "/9c89a8b9-fe67-4a82-ae97-23567880adee/documents/98212b88-c38a-4891-80dc-1bd053746231/document",
+          "dss_last_modified_user_datetime": "2025-10-01T12:00:44+02:00",
+          "dss_delete_retention_min_retention": null,
+          "dss_recyclebin": false,
+          "etag": "da63ddf76e9c06c0e590598bf667a8f8",
+          "dss_original_filename": "Brutto-Netto-Abrechnung Juli 2025.pdf"
+        }
+      },
+      {
+        "_index": "ano_payroll_reports_20250213",
+        "_id": "9c89a8b9-fe67-4a82-ae97-23567880adee_0db415f4-9be5-4f85-b9ed-e1ad2a0e93ef",
+        "_score": 0,
+        "_source": {
+          "dss_creation_datetime": "2025-10-01T16:12:09+02:00",
+          "dss_creation_user_id_key": "2a5eeefe8e66c3ad304dd14c46e70bc6",
+          "dss_last_modified_user_id_key": "2a5eeefe8e66c3ad304dd14c46e70bc6",
+          "dss_last_modified_datetime": "2025-10-01T16:12:09+02:00",
+          "dss_last_modified_user_display_name": "",
+          "dss_document_source": null,
+          "dss_document_name": "Brutto-Netto-Abrechnung Juni 2025.pdf",
+          "dss_version": "1.1",
+          "dss_document_orientation": 0,
+          "content_type": "application/pdf",
+          "dss_creation_user_display_name": "",
+          "dss_document_id": "0db415f4-9be5-4f85-b9ed-e1ad2a0e93ef",
+          "dss_custom_metadata": {
+            "payrollinfo": {
+              "last_access": null,
+              "included_reaccountings": [],
+              "accounting_month": 6,
+              "payroll_type": "LOBN",
+              "first_access": null,
+              "provision_date": "2025-06-25",
+              "accounting_year": 2025,
+              "language": "DE"
+            }
+          },
+          "id": "9c89a8b9-fe67-4a82-ae97-23567880adee_0db415f4-9be5-4f85-b9ed-e1ad2a0e93ef",
+          "content_length": 27448,
+          "dss_change_source": null,
+          "dss_dataspace_id": "9c89a8b9-fe67-4a82-ae97-23567880adee",
+          "last_document_change": "2025-10-01T14:12:09.930Z",
+          "dss_document_path": "/9c89a8b9-fe67-4a82-ae97-23567880adee/documents/0db415f4-9be5-4f85-b9ed-e1ad2a0e93ef/document",
+          "dss_last_modified_user_datetime": "2025-10-01T16:12:09+02:00",
+          "dss_delete_retention_min_retention": null,
+          "dss_recyclebin": false,
+          "etag": "d2071a47584e21c2b110c45cd97a69c1",
+          "dss_original_filename": "Brutto-Netto-Abrechnung Juni 2025.pdf"
+        }
+      },
+      {
+        "_index": "ano_payroll_reports_20250213",
+        "_id": "76fd4d35-1906-4f99-b436-e425225d241e_2298b6ff-8bdc-4af2-81dc-65569e8868dd",
+        "_score": 0,
+        "_source": {
+          "dss_creation_datetime": "2025-09-09T09:16:23+02:00",
+          "dss_creation_user_id_key": "2a5eeefe8e66c3ad304dd14c46e70bc6",
+          "dss_last_modified_user_id_key": "20d37f7be1683a513006e8add42999e1",
+          "dss_last_modified_datetime": "2025-10-08T11:50:10+02:00",
+          "dss_last_modified_user_display_name": "",
+          "dss_document_source": null,
+          "dss_document_name": "Brutto-Netto-Abrechnung Oktober 2025.pdf",
+          "dss_version": "1.2",
+          "dss_document_orientation": 0,
+          "content_type": "application/pdf",
+          "dss_creation_user_display_name": "",
+          "dss_document_id": "2298b6ff-8bdc-4af2-81dc-65569e8868dd",
+          "dss_custom_metadata": {
+            "payrollinfo": {
+              "last_access": null,
+              "included_reaccountings": [],
+              "accounting_month": 10,
+              "payroll_type": "LOBN",
+              "first_access": "2025-10-08T11:50:10+02:00",
+              "provision_date": "2024-01-01",
+              "accounting_year": 2025,
+              "language": "DE"
+            }
+          },
+          "id": "76fd4d35-1906-4f99-b436-e425225d241e_2298b6ff-8bdc-4af2-81dc-65569e8868dd",
+          "content_length": 27446,
+          "dss_change_source": null,
+          "dss_dataspace_id": "76fd4d35-1906-4f99-b436-e425225d241e",
+          "last_document_change": "2025-10-08T09:50:10.673Z",
+          "dss_document_path": "/76fd4d35-1906-4f99-b436-e425225d241e/documents/2298b6ff-8bdc-4af2-81dc-65569e8868dd/document",
+          "dss_last_modified_user_datetime": "2025-10-08T11:50:10+02:00",
+          "dss_delete_retention_min_retention": null,
+          "dss_recyclebin": false,
+          "etag": "41796647a9021fa18a326f4bd9135116",
+          "dss_original_filename": "Brutto-Netto-Abrechnung Oktober 2025.pdf"
+        }
+      },
+      {
+        "_index": "ano_payroll_reports_20250213",
+        "_id": "9c89a8b9-fe67-4a82-ae97-23567880adee_5a66ee28-b6b7-40f7-bfd8-53a3c8c0ed5d",
+        "_score": 0,
+        "_source": {
+          "dss_creation_datetime": "2025-10-01T16:12:30+02:00",
+          "dss_creation_user_id_key": "2a5eeefe8e66c3ad304dd14c46e70bc6",
+          "dss_last_modified_user_id_key": "2a5eeefe8e66c3ad304dd14c46e70bc6",
+          "dss_last_modified_datetime": "2025-10-01T16:12:30+02:00",
+          "dss_last_modified_user_display_name": "",
+          "dss_document_source": null,
+          "dss_document_name": "Brutto-Netto-Abrechnung Mai 2025.pdf",
+          "dss_version": "1.1",
+          "dss_document_orientation": 0,
+          "content_type": "application/pdf",
+          "dss_creation_user_display_name": "",
+          "dss_document_id": "5a66ee28-b6b7-40f7-bfd8-53a3c8c0ed5d",
+          "dss_custom_metadata": {
+            "payrollinfo": {
+              "last_access": null,
+              "included_reaccountings": [],
+              "accounting_month": 5,
+              "payroll_type": "LOBN",
+              "first_access": null,
+              "provision_date": "2025-05-25",
+              "accounting_year": 2025,
+              "language": "DE"
+            }
+          },
+          "id": "9c89a8b9-fe67-4a82-ae97-23567880adee_5a66ee28-b6b7-40f7-bfd8-53a3c8c0ed5d",
+          "content_length": 27448,
+          "dss_change_source": null,
+          "dss_dataspace_id": "9c89a8b9-fe67-4a82-ae97-23567880adee",
+          "last_document_change": "2025-10-01T14:12:30.364Z",
+          "dss_document_path": "/9c89a8b9-fe67-4a82-ae97-23567880adee/documents/5a66ee28-b6b7-40f7-bfd8-53a3c8c0ed5d/document",
+          "dss_last_modified_user_datetime": "2025-10-01T16:12:30+02:00",
+          "dss_delete_retention_min_retention": null,
+          "dss_recyclebin": false,
+          "etag": "531eced09bfedd150df623271c2d79dc",
+          "dss_original_filename": "Brutto-Netto-Abrechnung Mai 2025.pdf"
+        }
+      },
+      {
+        "_index": "ano_payroll_reports_20250213",
+        "_id": "9c89a8b9-fe67-4a82-ae97-23567880adee_585af3a6-c429-4edf-892d-199c7f78ed32",
+        "_score": 0,
+        "_source": {
+          "dss_creation_datetime": "2025-10-01T16:12:33+02:00",
+          "dss_creation_user_id_key": "2a5eeefe8e66c3ad304dd14c46e70bc6",
+          "dss_last_modified_user_id_key": "2a5eeefe8e66c3ad304dd14c46e70bc6",
+          "dss_last_modified_datetime": "2025-10-01T16:12:33+02:00",
+          "dss_last_modified_user_display_name": "",
+          "dss_document_source": null,
+          "dss_document_name": "Brutto-Netto-Abrechnung April 2025.pdf",
+          "dss_version": "1.1",
+          "dss_document_orientation": 0,
+          "content_type": "application/pdf",
+          "dss_creation_user_display_name": "",
+          "dss_document_id": "585af3a6-c429-4edf-892d-199c7f78ed32",
+          "dss_custom_metadata": {
+            "payrollinfo": {
+              "last_access": null,
+              "included_reaccountings": [],
+              "accounting_month": 4,
+              "payroll_type": "LOBN",
+              "first_access": null,
+              "provision_date": "2025-04-25",
+              "accounting_year": 2025,
+              "language": "DE"
+            }
+          },
+          "id": "9c89a8b9-fe67-4a82-ae97-23567880adee_585af3a6-c429-4edf-892d-199c7f78ed32",
+          "content_length": 27449,
+          "dss_change_source": null,
+          "dss_dataspace_id": "9c89a8b9-fe67-4a82-ae97-23567880adee",
+          "last_document_change": "2025-10-01T14:12:33.850Z",
+          "dss_document_path": "/9c89a8b9-fe67-4a82-ae97-23567880adee/documents/585af3a6-c429-4edf-892d-199c7f78ed32/document",
+          "dss_last_modified_user_datetime": "2025-10-01T16:12:33+02:00",
+          "dss_delete_retention_min_retention": null,
+          "dss_recyclebin": false,
+          "etag": "319f8a24569d793f4671e94832855e1f",
+          "dss_original_filename": "Brutto-Netto-Abrechnung April 2025.pdf"
+        }
+      },
+      {
+        "_index": "ano_payroll_reports_20250213",
+        "_id": "9c89a8b9-fe67-4a82-ae97-23567880adee_15b8a107-3e7d-4610-ad4b-e03cbf411af1",
+        "_score": 0,
+        "_source": {
+          "dss_creation_datetime": "2025-10-01T12:00:29+02:00",
+          "dss_creation_user_id_key": "2a5eeefe8e66c3ad304dd14c46e70bc6",
+          "dss_last_modified_user_id_key": "20d37f7be1683a513006e8add42999e1",
+          "dss_last_modified_datetime": "2025-10-08T11:26:30+02:00",
+          "dss_last_modified_user_display_name": "",
+          "dss_document_source": null,
+          "dss_document_name": "Brutto-Netto-Abrechnung August 2025.pdf",
+          "dss_version": "1.2",
+          "dss_document_orientation": 0,
+          "content_type": "application/pdf",
+          "dss_creation_user_display_name": "",
+          "dss_document_id": "15b8a107-3e7d-4610-ad4b-e03cbf411af1",
+          "dss_custom_metadata": {
+            "payrollinfo": {
+              "last_access": null,
+              "included_reaccountings": [],
+              "accounting_month": 8,
+              "payroll_type": "LOBN",
+              "first_access": "2025-10-08T11:26:30+02:00",
+              "provision_date": "2025-08-25",
+              "accounting_year": 2025,
+              "language": "DE"
+            }
+          },
+          "id": "9c89a8b9-fe67-4a82-ae97-23567880adee_15b8a107-3e7d-4610-ad4b-e03cbf411af1",
+          "content_length": 27449,
+          "dss_change_source": null,
+          "dss_dataspace_id": "9c89a8b9-fe67-4a82-ae97-23567880adee",
+          "last_document_change": "2025-10-08T09:26:30.401Z",
+          "dss_document_path": "/9c89a8b9-fe67-4a82-ae97-23567880adee/documents/15b8a107-3e7d-4610-ad4b-e03cbf411af1/document",
+          "dss_last_modified_user_datetime": "2025-10-08T11:26:30+02:00",
+          "dss_delete_retention_min_retention": null,
+          "dss_recyclebin": false,
+          "etag": "8ee469920e10f6ad04f7feb80a10dbc8",
+          "dss_original_filename": "Brutto-Netto-Abrechnung August 2025.pdf"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,404 @@
+{
+  "settings": {
+    "analysis": {
+      "char_filter": {
+        "eszett": {
+          "type": "mapping",
+          "mappings": [
+            "ß => ss"
+          ]
+        },
+        "hyphens": {
+          "type": "pattern_replace",
+          "pattern": "(\\S+)-(\\S+)",
+          "replacement": "$1$2"
+        }
+      },
+      "normalizer": {
+        "german_sorting_din_5007_1": {
+          "type": "custom",
+          "filter": [
+            "lowercase",
+            "asciifolding"
+          ],
+          "char_filter": [
+            "eszett",
+            "hyphens"
+          ]
+        }
+      }
+    },
+    "index": {
+      "query": {
+        "default_field": "custom_all"
+      },
+      "number_of_shards": 5,
+      "number_of_replicas": 1,
+      "search": {
+        "slowlog": {
+          "threshold": {
+            "query": {
+              "warn": "4s"
+            },
+            "fetch": {
+              "warn": "1s"
+            }
+          },
+          "level": "warn"
+        }
+      },
+      "indexing": {
+        "slowlog": {
+          "threshold": {
+            "index": {
+              "warn": "1s"
+            }
+          },
+          "level": "warn",
+          "source": "10000",
+          "reformat": false
+        }
+      }
+    }
+  },
+  "mappings": {
+    "dynamic": false,
+    "dynamic_date_formats": [
+      "8uuuu-MM-dd'T'HH:mm:ssXXX",
+      "8uuuu-MM-dd'T'HH:mm:ss",
+      "8uuuu-MM-dd'T'HH:mm:ss.SSSXXX",
+      "8uuuu-MM-dd"
+    ],
+    "_source": {
+      "excludes": [
+        "dss_creation_datetime",
+        "EINGANGSDATUM",
+        "dss_document_source",
+        "classification_labels",
+        "dss_document_orientation",
+        "COMPANYID",
+        "FILEREF",
+        "dss_change_source",
+        "DATEINAME",
+        "dss_document_path",
+        "dss_last_modified_user_datetime",
+        "dss_delete_retention_min_retention",
+        "dss_recyclebin",
+        "dss_original_filename"
+      ]
+    },
+    "properties": {
+      "id": {
+        "type": "keyword"
+      },
+      "custom_all": {
+        "type": "text",
+        "analyzer": "german",
+        "index_options": "offsets",
+        "store": true
+      },
+      "last_document_change": {
+        "type": "date"
+      },
+      "dss_dataspace_id": {
+        "type": "text",
+        "index": false,
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          }
+        }
+      },
+      "dss_document_id": {
+        "type": "text",
+        "index": false,
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          }
+        }
+      },
+      "dss_document_name": {
+        "type": "text",
+        "index": false,
+        "copy_to": ["custom_all"],
+        "fields": {
+          "sort": {
+            "type": "keyword",
+            "normalizer": "german_sorting_din_5007_1"
+          }
+        }
+      },
+      "content_length": {
+        "type": "long"
+      },
+      "ocr_fulltext": {
+        "type": "text",
+        "index": false,
+        "copy_to": ["custom_all"]
+      },
+      "content_type": {
+        "type": "text",
+        "index": false,
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          }
+        }
+      },
+      "etag": {
+        "type": "text",
+        "index": false,
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          }
+        }
+      },
+      "dss_version": {
+        "type": "text",
+        "index": false,
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          }
+        }
+      },
+      "dss_last_modified_user_id_key": {
+        "type": "text",
+        "index": false,
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          }
+        }
+      },
+      "dss_last_modified_datetime": {
+        "type": "date"
+      },
+      "dss_custom_metadata.duo.booking_state": {
+        "type": "text",
+        "index": false,
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          }
+        }
+      },
+      "dss_custom_metadata.duo.booking_state_changed_at": {
+        "type": "date"
+      },
+      "dss_custom_metadata.duo.company_id": {
+        "type": "long"
+      },
+      "dss_custom_metadata.duo.currency": {
+        "type": "text",
+        "index": false,
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          }
+        }
+      },
+      "dss_custom_metadata.duo.customer_number": {
+        "type": "text",
+        "index": false,
+        "copy_to": ["custom_all"],
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          }
+        }
+      },
+      "dss_custom_metadata.duo.deleted_at": {
+        "type": "date"
+      },
+      "dss_custom_metadata.duo.document_type": {
+        "type": "integer"
+      },
+      "dss_custom_metadata.duo.document_category": {
+        "type": "text",
+        "index": false,
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          }
+        }
+      },
+      "dss_custom_metadata.duo.document_invoice_type": {
+        "type": "keyword"
+      },
+      "dss_custom_metadata.duo.einvoice_fulltext": {
+        "type": "text",
+        "index": false,
+        "copy_to": ["custom_all"]
+      },
+      "dss_custom_metadata.duo.has_position_correction": {
+        "type": "boolean"
+      },
+      "dss_custom_metadata.duo.invoice_business_partner": {
+        "type": "text",
+        "index": false,
+        "copy_to": ["custom_all"],
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          }
+        }
+      },
+      "dss_custom_metadata.duo.invoice_business_partner_id": {
+        "type": "long"
+      },
+      "dss_custom_metadata.duo.invoice_date": {
+        "type": "date"
+      },
+      "dss_custom_metadata.duo.invoice_number": {
+        "type": "text",
+        "index": false,
+        "copy_to": ["custom_all"],
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          }
+        }
+      },
+      "dss_custom_metadata.duo.last_modified_datetime": {
+        "type": "date"
+      },
+      "dss_custom_metadata.duo.last_modified_user_id_key": {
+        "type": "text",
+        "index": false,
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          }
+        }
+      },
+      "dss_custom_metadata.duo.location": {
+        "type": "text",
+        "index": false,
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          }
+        }
+      },
+      "dss_custom_metadata.duo.paid_at": {
+        "type": "date"
+      },
+      "dss_custom_metadata.duo.paid_status": {
+        "type": "text",
+        "index": false,
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          }
+        }
+      },
+      "dss_custom_metadata.duo.positions.note": {
+        "type": "text",
+        "index": false,
+        "copy_to": ["custom_all"]
+      },
+      "dss_custom_metadata.duo.positions.cost_center_1": {
+        "type": "text",
+        "index": false,
+        "copy_to": ["custom_all"],
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          }
+        }
+      },
+      "dss_custom_metadata.duo.positions.cost_center_2": {
+        "type": "text",
+        "index": false,
+        "copy_to": ["custom_all"],
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          }
+        }
+      },
+      "dss_custom_metadata.duo.positions.service_date": {
+        "type": "date"
+      },
+      "dss_custom_metadata.duo.total_gross_amount": {
+        "type": "double",
+        "copy_to": ["custom_all"]
+      },
+      "dss_custom_metadata.duo.uploader_sc_id": {
+        "type": "text",
+        "index": false,
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          }
+        }
+      },
+      "dss_custom_metadata.duo.time_of_upload": {
+        "type": "date"
+      },
+      "dss_custom_metadata.duo.document_approval_state": {
+        "type": "text",
+        "index": false,
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          }
+        }
+      },
+      "dss_custom_metadata.duo.transaction_ids": {
+        "type": "text",
+        "index": false,
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          }
+        }
+      },
+      "dss_creation_user_display_name": {
+        "type": "text",
+        "index": false,
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          },
+          "sort": {
+            "type": "keyword",
+            "normalizer": "german_sorting_din_5007_1"
+          }
+        }
+      },
+      "dss_last_modified_user_display_name": {
+        "type": "text",
+        "index": false,
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          },
+          "sort": {
+            "type": "keyword",
+            "normalizer": "german_sorting_din_5007_1"
+          }
+        }
+      },
+      "dss_creation_user_id_key": {
+        "type": "text",
+        "index": false,
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          },
+          "sort": {
+            "type": "keyword",
+            "normalizer": "german_sorting_din_5007_1"
+          }
+        }
+      },
+      "dss_processing_flag.owner": {
+        "type": "keyword"
+      }
+    }
+  }
+}

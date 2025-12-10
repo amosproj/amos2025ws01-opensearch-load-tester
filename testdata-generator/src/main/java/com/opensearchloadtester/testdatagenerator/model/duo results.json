@@ -1,0 +1,597 @@
+{
+  "took": 11,
+  "timed_out": false,
+  "_shards": {
+    "total": 3,
+    "successful": 3,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 7657,
+      "relation": "eq"
+    },
+    "max_score": 0,
+    "hits": [
+      {
+        "_index": "duo_belege_20251002",
+        "_id": "20085178_b4b581aa-4a64-4bc6-8ba6-0233c0dbd708",
+        "_score": 0,
+        "_source": {
+          "dss_creation_user_id_key": "WSDNFI1@fkt.datev.de",
+          "dss_last_modified_user_id_key": "00000000023167592@sca.datev.de",
+          "dss_last_modified_datetime": "2025-10-02T11:48:48+02:00",
+          "dss_last_modified_user_display_name": "",
+          "ocr_fulltext": "Farben-TIritze6eispier F Farben-Fritzebeispiel | Dammbeispielweg 9 | 90409 Nürnberg Firma Muster zu Testzwecken GmbH Musterhobelweg 5 90451 Nürnberg RECHNUNG vom 20.01.2025 Geliefert wurden am 20.01.2025: Dammbeispielweg 9 90409 Nürnberg Rechnung Nr. 1104 Artikel Preis Menge Betrag Holzschutzlasur, Palisander 22,45 €/l 10 l 224,50 € Holzschutzlasur, Teak 22,45 €/l 10 l 224,50 € Holzschutzlasur, Eiche 18,50 €/l 10 l 185,00 € Dauerschutz -Holzfarbe Classic braun 15,10 €/l 20 l 302,00 € Dauerschutz -Holzfarbe Classic weiß 14,10 €/l 5 l 70,50 € Farbtube Classic braun 15,19 €/St 2 St 30,37 € Warenwert (netto) 1.036,87 € zzgl. 19 % MwSt 197,01 € Rechnungswert (brutto) 1.233,88 € Zahlbar innerhalb von 30 Tagen ohne Abzug. Name der Bank: Aareal Bank BIC: AARBDE5W100 IBAN: DE70100104240005847312 Steuernummer: 238/815/50725 USt-IdNr.: DE 799875869",
+          "dss_document_name": "25_01_007_ER_Farben.pdf",
+          "dss_version": "1.4",
+          "dss_dataspace_id": "20085178",
+          "last_document_change": "2025-10-02T12:58:56.337Z",
+          "content_type": "application/pdf",
+          "dss_creation_user_display_name": "",
+          "dss_document_id": "b4b581aa-4a64-4bc6-8ba6-0233c0dbd708",
+          "dss_custom_metadata": {
+            "duo": {
+              "invoice_business_partner": "Farben-Fritzebeispiel",
+              "has_position_correction": false,
+              "time_of_upload": "2025-05-23T07:33:19.893326Z",
+              "customer_number": null,
+              "document_approval_state": "APPROVED",
+              "document_category": "SUPPLIER_INVOICE",
+              "booking_state": "TO_BOOK",
+              "uploader_sc_id": "00000000023347356@sca.datev.de",
+              "invoice_date": "2025-01-20",
+              "last_modified_user_id_key": "00000000023167592@sca.datev.de",
+              "currency": "EUR",
+              "transaction_ids": [],
+              "invoice_number": "1104",
+              "document_type": 3261,
+              "paid_status": "NOT_PAID",
+              "company_id": 38616,
+              "total_gross_amount": 1233.88,
+              "booking_state_changed_at": null,
+              "document_invoice_type": "OTHER",
+              "positions": [
+                {
+                  "note": null,
+                  "cost_center_1": null,
+                  "cost_center_2": null,
+                  "service_date": null
+                }
+              ],
+              "deleted_at": null,
+              "paid_at": null,
+              "location": "BELEGE",
+              "last_modified_datetime": "2025-10-02T09:48:47.761711Z",
+              "invoice_business_partner_id": 10871507
+            }
+          },
+          "etag": "8cdf76fb9aaa38e9f6c2bc952a9cef04",
+          "id": "20085178_b4b581aa-4a64-4bc6-8ba6-0233c0dbd708",
+          "content_length": 14726
+        }
+      },
+      {
+        "_index": "duo_belege_20251002",
+        "_id": "900023001_5c3b3d81-f8f0-48bb-852d-cf4c3cce1929",
+        "_score": 0,
+        "_source": {
+          "dss_creation_user_id_key": "WSDNFI1@fkt.datev.de",
+          "dss_last_modified_user_id_key": "d9524246-154d-4dbb-acc8-39116162b40c",
+          "dss_last_modified_datetime": "2025-10-01T11:07:19+02:00",
+          "dss_last_modified_user_display_name": "",
+          "ocr_fulltext": "Holzhandel Spanexempel Steuernummer: 4411228895 USt-IdNr.: DE 815000921 Holzhandel Spanexempel Waldthestraße 115 90852 Nürnberg Firma Muster zu Testzwecken GmbH Musterhobelweg 5 90451 Nürnberg Für die Lieferung vom 01.11.2024 berechnen wir: Rechnungsnummer: 0815 Auftragsnummer: 271 Rechnungsdatum: 17.12.2024 Position Preis/Einheit Menge Gesamtpreis Pressholzplatte quadratisch 16,41 € 10,00 164,10 € Latten 2,50 € 20,00 50,00 € Eichenbretter 2m 56,31 € 5,00 281,55 € Nettosumme 495,65 € 19% MwSt 94,17 € Gesamtsumme 3229,0 € Zahlbar innerhalb von 14 Tagen ohne Abzug Areal Bank BIC AARBDE5W700 IBAN DE17100105001074000006",
+          "dss_document_name": "ER_Span.pdf",
+          "dss_version": "1.9",
+          "dss_dataspace_id": "900023001",
+          "last_document_change": "2025-10-02T07:54:19.051Z",
+          "content_type": "application/pdf",
+          "dss_creation_user_display_name": "",
+          "dss_document_id": "5c3b3d81-f8f0-48bb-852d-cf4c3cce1929",
+          "dss_custom_metadata": {
+            "duo": {
+              "invoice_business_partner": null,
+              "has_position_correction": false,
+              "paid_status": "FULLY_PAID",
+              "company_id": 39272,
+              "time_of_upload": "2025-02-28T11:00:32.828695Z",
+              "customer_number": null,
+              "document_approval_state": "NOT_RELEVANT",
+              "document_category": "OTHER",
+              "total_gross_amount": null,
+              "booking_state_changed_at": null,
+              "positions": [
+                {
+                  "note": null,
+                  "cost_center_1": null,
+                  "cost_center_2": null,
+                  "service_date": "2024-11-01"
+                }
+              ],
+              "deleted_at": null,
+              "booking_state": "TO_BOOK",
+              "uploader_sc_id": "00000000032189100@sca.datev.de",
+              "invoice_date": "2024-12-17",
+              "paid_at": "2025-01-24T23:00:00Z",
+              "last_modified_user_id_key": "d9524246-154d-4dbb-acc8-39116162b40c",
+              "location": "BELEGE",
+              "currency": "EUR",
+              "transaction_ids": [],
+              "last_modified_datetime": "2025-03-21T14:22:41.135Z",
+              "invoice_business_partner_id": null,
+              "invoice_number": "0815",
+              "document_type": -4
+            }
+          },
+          "etag": "8c0ce398cf80913efb1f556df32045bb",
+          "id": "900023001_5c3b3d81-f8f0-48bb-852d-cf4c3cce1929",
+          "content_length": 95694
+        }
+      },
+      {
+        "_index": "duo_belege_20251002",
+        "_id": "410046176_f61b489c-643d-4b9f-93df-1bbb4fbd3289",
+        "_score": 0,
+        "_source": {
+          "dss_creation_user_id_key": "WSDNFI1@fkt.datev.de",
+          "dss_last_modified_user_id_key": "rzId-not-set",
+          "dss_last_modified_datetime": "2025-10-09T07:43:02+02:00",
+          "dss_last_modified_user_display_name": "",
+          "ocr_fulltext": "Datenvisualisierung Rechnung Dieses Dokument wurde auf Basis strukturierter Daten generiert. Weitere Informationen zur Datenvisualisierung finden Sie unter: https://datev.de/hilfe/1038182 Übersicht Verkäufer: Adresse: Eva AG Kolpinggasse 22 90402 Nürnberg Deutschland USt-ID: Steuernummer: DE123456719 241/123/45678 Ansprechpartner: Eva Hartwich +4991115478 eva.hartwich@datev.de r Käufer: Adresse: Haus Targaryen Drachsteinstraße 4 90403 Nürnberg Deutschland Rechnungsdaten: Rechnungsnummer: Rechnungsdatum: Rechnungstyp: RE -2025-16-1 16.01.2025 Rechnung (380) Bemerkungen zur Rechnung: Ggf. auf Folgeseiten vollständig dargestellt. F Positionen: Pos Bezeichnung Menge Einheit Preis (netto) Ust. , Total (netto) 1 2 Holzofenbrot Dinkel Vollkorn 15 Stück 13,90 EUR 25 Stück 3,95 EUR 19,00 % 19,00 % 208,50 EUR 98,75 EUR Zwischensumme netto Gesamtsumme netto 2 Positionen mit 19,00 % USt. auf 307,25 EUR Gesamtsumme brutto 307,25 EUR 307,25 EUR 58,38 EUR 365,63 EUR Fälliger Betrag 365,63 EUR Zahlungsbedingungen: Fällig am: 16.01.2025 i Zahlungsart - Überweisung: Zahlungsmittel: IBAN: Kontoinhaber: SEPA-Überweisung (58) DE09500105175828379863 Hartwich • Seite 1/3 Datenvisualisierung Rechnung Dieses Dokument wurde auf Basis strukturierter Daten generiert. Weitere Informationen zur Datenvisualisierung finden Sie unter: https://datev.de/hilfe/1038182 Vollständige Rechnungsinformationen Informationen zum Verkäufer: Adresse: Firmenname: Adresszeile 1: Eva AG Kolpinggasse 22 PLZ: 90402 Ort: Nürnberg Ländercode: Deutschland USt-ID: DE123456719 Steuernummer: 241/123/45678 Elektronische Adresse: eva.hartwich@datev.de Schema der elektronischen EM Adresse: Ansprechpartner: Name: Eva Hartwich Telefon: +4991115478 E-Mail: eva.hartwich@datev.de Informationen zum Käufer: Adresse: Name: Adresszeile 1: PLZ: Ort: Ländercode: Elektronische Adresse: Schema der elektronischen Adresse: Haus Targaryen Drachsteinstraße 4 90403 Nürnberg Deutschland 7d59aff4-a287-4bd6-adb0- a0359488c78d@qs.b4portal.net EM r Gesamtbeträge der Rechnung: Summe aller Positionen (netto) : 307,25 EUR Gesamtsumme (netto) : 307,25 EUR Summe Umsatzsteuer: 58,38 EUR Gesamtsumme (brutto) : 365,63 EUR Fälliger Betrag (brutto) : 365,63 EUR Rechnungswährung: EUR Weitere Rechnungsdaten: Aufschlüsselung der Umsatzsteuer auf Ebene der Rechnung: Umsatzsteuerkategorie: Normalsatz (S) Gesamtsumme (netto) : Umsatzsteuersatz: 307,25 EUR 19,00 % Umsatzsteuerbetrag: 58,38 EUR Zahlungsdaten: Seite 2/3 Datenvisualisierung Rechnung Dieses Dokument wurde auf Basis strukturierter Daten generiert. Weitere Informationen zur Datenvisualisierung finden Sie unter: https://datev.de/hilfe/1038182 Fälligkeitsdatum: Zahlungsmittel: 16.01.2025 SEPA-Überweisung (58) Positionen: Pos Bezeichnung Menge Einheit Listenpreis (netto) Preis (netto) 1 Holzofenbrot 15 Stück 13,90 EUR 13,90 EUR Freitext: Roggenmehl (Type 997, Type 1370), hauseigener Sauerteig (Roggenmehl Type 1370, Wasser), Wasser, Weizenmehl (Type 550, Type 1050), Salz, fermentiertes Weizenmehl, Hefe, Weizenmalzmehl, Traubenzucker, Verdickungsmittel Guarkernmehl Umsatzsteuer: Normalsatz (S) Umsatzsteuersatz: 19,00 % Gesamtpreis netto 208,50 EUR Pos Bezeichnung Menge Einheit Listenpreis (netto) Preis (netto) 2 Dinkel Vollkorn 25 Stück 3,95 EUR 3,95 EUR Freitext: Wasser, DINKELVOLLKORNMEHL, DINKEL, Sonnenblummenkerne, DINKELFLOCKEN, Salz, Hefe, Zuckerrübensirup, Flohsamenschalen, Rapsöl, DINKEMEHL, DINKELvollkornsauerteig, Reismehl Umsatzsteuer: Normalsatz (S) Umsatzsteuersatz: 19,00 % Gesamtpreis netto 98,75 EUR Informationen zum Vertrag: Spezifikationskennung: urn:cen.eu:en16931:2017#conformant#urn:datev.de:1p2:dcii • Rechnungsbegründende Unterlagen: Kennung: Beschreibung: 51907 Sichtkomponente_efc8bf2e-94c1-42bc- a181-684f33eacba4.pdf Verweis (z.B. Internetadresse): #ef=Sichtkomponente_efc8bf2e-94c1-42bc- a181-684f33eacba4.pdf Kennung: Beschreibung: 53764861 Sichtkomponente_efc8bf2e-94c1-42bc- a181-684f33eacba4.pdf Verweis (z.B. Internetadresse): #ef=Sichtkomponente_efc8bf2e-94c1-42bc- a181-684f33eacba4.pdf Seite 3/3urn:cen.eu:en16931:2017 RE-2025-16-1 380 20250116 1 Roggenmehl (Type 997, Type 1370), hauseigener Sauerteig (Roggenmehl Type 1370, Wasser), Wasser, Weizenmehl (Type 550, Type 1050), Salz, fermentiertes Weizenmehl, Hefe, Weizenmalzmehl, Traubenzucker, Verdickungsmittel Guarkernmehl Holzofenbrot 13.9000 13.9000 15.0000 VAT S 19.00 208.50 2 Wasser, DINKELVOLLKORNMEHL, DINKEL, Sonnenblummenkerne, DINKELFLOCKEN, Salz, Hefe, Zuckerrübensirup, Flohsamenschalen, Rapsöl, DINKEMEHL, DINKELvollkornsauerteig, Reismehl Dinkel Vollkorn 3.9500 3.9500 25.0000 VAT S 19.00 98.75 Eva AG Eva Hartwich +4991115478 eva.hartwich@datev.de 90402 Kolpinggasse 22 Nürnberg DE eva.hartwich@datev.de DE123456719 241/123/45678 Haus Targaryen 90403 Drachsteinstraße 4 Nürnberg DE 7d59aff4-a287-4bd6-adb0-a0359488c78d@qs.b4portal.net 51907 #ef=Sichtkomponente_efc8bf2e-94c1-42bc-a181-684f33eacba4.pdf 916 Sichtkomponente_efc8bf2e-94c1-42bc-a181-684f33eacba4.pdf 53764861 #ef=Sichtkomponente_efc8bf2e-94c1-42bc-a181-684f33eacba4.pdf 916 Sichtkomponente_efc8bf2e-94c1-42bc-a181-684f33eacba4.pdf 52274 #ef=Sichtkomponente_efc8bf2e-94c1-42bc-a181-684f33eacba4.pdf 916 Sichtkomponente_efc8bf2e-94c1-42bc-a181-684f33eacba4.pdf 52275 #ef=Sichtkomponente_eeae5a5d-c077-4e39-bd5d-728bf2626a85.pdf 916 Sichtkomponente_eeae5a5d-c077-4e39-bd5d-728bf2626a85.pdf EUR 58 DE09500105175828379863 Hartwich 58.38 VAT 307.25 S 19.00 20250116 307.25 307.25 58.38 365.63 365.63 ",
+          "dss_document_name": "RE_RE-2025-16-1.pdf",
+          "dss_version": "1.2",
+          "dss_dataspace_id": "410046176",
+          "last_document_change": "2025-10-09T05:43:02.493Z",
+          "content_type": "application/pdf",
+          "dss_creation_user_display_name": "",
+          "dss_document_id": "f61b489c-643d-4b9f-93df-1bbb4fbd3289",
+          "dss_custom_metadata": {
+            "duo": {
+              "invoice_business_partner": null,
+              "has_position_correction": false,
+              "time_of_upload": "2025-09-30T12:50:40.076353Z",
+              "customer_number": null,
+              "document_approval_state": "UNDISPATCHED",
+              "document_category": "SALES_INVOICE",
+              "booking_state": "TO_BOOK",
+              "uploader_sc_id": "DATEV E-Rechnungsplattform",
+              "invoice_date": "2025-01-16",
+              "last_modified_user_id_key": null,
+              "currency": "EUR",
+              "transaction_ids": [],
+              "invoice_number": "RE-2025-16-1",
+              "document_type": 3065,
+              "paid_status": "NOT_PAID",
+              "company_id": 38364,
+              "total_gross_amount": 365.63,
+              "document_invoice_type": "E_INVOICE",
+              "booking_state_changed_at": null,
+              "positions": [
+                {
+                  "note": null,
+                  "cost_center_1": null,
+                  "cost_center_2": null,
+                  "service_date": null
+                }
+              ],
+              "deleted_at": null,
+              "paid_at": null,
+              "location": "BELEGFREIGABE",
+              "last_modified_datetime": "2025-10-09T05:42:05.99875Z",
+              "invoice_business_partner_id": null
+            }
+          },
+          "etag": "e2716a9180ef6682367ddd3522c10443",
+          "id": "410046176_f61b489c-643d-4b9f-93df-1bbb4fbd3289",
+          "content_length": 219438
+        }
+      },
+      {
+        "_index": "duo_belege_20251002",
+        "_id": "900009806_ce2d5083-1643-40ba-8299-e797d705b942",
+        "_score": 0,
+        "_source": {
+          "dss_creation_user_id_key": "WSDNFI1@fkt.datev.de",
+          "dss_last_modified_user_id_key": "rzId-not-set",
+          "dss_last_modified_datetime": "2025-10-09T07:43:02+02:00",
+          "dss_last_modified_user_display_name": "",
+          "ocr_fulltext": "Voodoof one Testing Company GmbH Musterhobelweg 5 90451 Nürnberg Rechnung Nr. 13122/0322 Vogtsbergweg 13 79235 Vogtsburg USt.-ID: DE 187474286 Steuernummer: 102/161/29429 02.03.2022 Verbindungsnachweis 03/22 Min. Preis Gesamt Flatrate 120,00 € 120,00 € netto 120,00 € 19% MwSt. 22,80 € zu zahlen 142,80 € 142,80 € werden in den nächsten Tagen von Ihrem Konto eingezogen. Unsere Bankverbindung VR-Bank Nürnberg BIC: GENODEF1N02 IBAN: DE82760606181162094282",
+          "dss_document_name": "01_ER_Vodafone_0322.pdf",
+          "dss_version": "1.2",
+          "dss_dataspace_id": "900009806",
+          "last_document_change": "2025-10-09T05:43:02.595Z",
+          "content_type": "application/pdf",
+          "dss_creation_user_display_name": "",
+          "dss_document_id": "ce2d5083-1643-40ba-8299-e797d705b942",
+          "dss_custom_metadata": {
+            "duo": {
+              "invoice_business_partner": null,
+              "has_position_correction": false,
+              "time_of_upload": "2025-09-30T13:48:13.93378Z",
+              "customer_number": null,
+              "document_approval_state": "NOT_RELEVANT",
+              "document_category": "SUPPLIER_INVOICE",
+              "booking_state": "TO_BOOK",
+              "uploader_sc_id": "00000000026036382@sca.datev.de",
+              "invoice_date": "2022-03-02",
+              "last_modified_user_id_key": null,
+              "currency": "EUR",
+              "transaction_ids": [],
+              "invoice_number": "13122/0322",
+              "document_type": -2,
+              "paid_status": "NOT_PAID",
+              "company_id": 38925,
+              "total_gross_amount": 142.8,
+              "document_invoice_type": "OTHER",
+              "booking_state_changed_at": null,
+              "positions": [
+                {
+                  "note": null,
+                  "cost_center_1": null,
+                  "cost_center_2": null,
+                  "service_date": null
+                }
+              ],
+              "deleted_at": null,
+              "paid_at": null,
+              "location": "BELEGE",
+              "last_modified_datetime": "2025-10-09T05:42:06.219108Z",
+              "invoice_business_partner_id": 3000006436
+            }
+          },
+          "etag": "b4f59abafda7140b093ba11f83a9a279",
+          "id": "900009806_ce2d5083-1643-40ba-8299-e797d705b942",
+          "content_length": 69800
+        }
+      },
+      {
+        "_index": "duo_belege_20251002",
+        "_id": "410046176_db5e52fa-c17e-4396-b777-c9c395b8a84a",
+        "_score": 0,
+        "_source": {
+          "dss_creation_user_id_key": "WSDNFI1@fkt.datev.de",
+          "dss_last_modified_user_id_key": "rzId-not-set",
+          "dss_last_modified_datetime": "2025-10-09T07:43:02+02:00",
+          "dss_last_modified_user_display_name": "",
+          "ocr_fulltext": "Datenvisualisierung Rechnung Dieses Dokument wurde auf Basis strukturierter Daten generiert. Weitere Informationen zur Datenvisualisierung finden Sie unter: https://datev.de/hilfe/1038182 Übersicht Verkäufer: Adresse: Eva AG Kolpinggasse 22 90402 Nürnberg Deutschland USt-ID: Steuernummer: DE123456719 241/123/45678 Ansprechpartner: Eva Hartwich +4991115478 eva.hartwich@datev.de r Käufer: Adresse: Haus Targaryen Drachsteinstraße 4 90403 Nürnberg Deutschland Rechnungsdaten: Rechnungsnummer: Rechnungsdatum: Rechnungstyp: RE -2025-16-1 16.01.2025 Rechnung (380) Bemerkungen zur Rechnung: Ggf. auf Folgeseiten vollständig dargestellt. F Positionen: Pos Bezeichnung Menge Einheit Preis (netto) Ust. , Total (netto) 1 2 Holzofenbrot Dinkel Vollkorn 15 Stück 13,90 EUR 25 Stück 3,95 EUR 19,00 % 19,00 % 208,50 EUR 98,75 EUR Zwischensumme netto Gesamtsumme netto 2 Positionen mit 19,00 % USt. auf 307,25 EUR Gesamtsumme brutto 307,25 EUR 307,25 EUR 58,38 EUR 365,63 EUR Fälliger Betrag 365,63 EUR Zahlungsbedingungen: Fällig am: 16.01.2025 i Zahlungsart - Überweisung: Zahlungsmittel: IBAN: Kontoinhaber: SEPA-Überweisung (58) DE09500105175828379863 Hartwich • Seite 1/3 Datenvisualisierung Rechnung Dieses Dokument wurde auf Basis strukturierter Daten generiert. Weitere Informationen zur Datenvisualisierung finden Sie unter: https://datev.de/hilfe/1038182 Vollständige Rechnungsinformationen Informationen zum Verkäufer: Adresse: Firmenname: Adresszeile 1: Eva AG Kolpinggasse 22 PLZ: 90402 Ort: Nürnberg Ländercode: Deutschland USt-ID: DE123456719 Steuernummer: 241/123/45678 Elektronische Adresse: eva.hartwich@datev.de Schema der elektronischen EM Adresse: Ansprechpartner: Name: Eva Hartwich Telefon: +4991115478 E-Mail: eva.hartwich@datev.de Informationen zum Käufer: Adresse: Name: Adresszeile 1: PLZ: Ort: Ländercode: Elektronische Adresse: Schema der elektronischen Adresse: Haus Targaryen Drachsteinstraße 4 90403 Nürnberg Deutschland 7d59aff4-a287-4bd6-adb0- a0359488c78d@qs.b4portal.net EM r Gesamtbeträge der Rechnung: Summe aller Positionen (netto) : 307,25 EUR Gesamtsumme (netto) : 307,25 EUR Summe Umsatzsteuer: 58,38 EUR Gesamtsumme (brutto) : 365,63 EUR Fälliger Betrag (brutto) : 365,63 EUR Rechnungswährung: EUR Weitere Rechnungsdaten: Aufschlüsselung der Umsatzsteuer auf Ebene der Rechnung: Umsatzsteuerkategorie: Normalsatz (S) Gesamtsumme (netto) : Umsatzsteuersatz: 307,25 EUR 19,00 % Umsatzsteuerbetrag: 58,38 EUR Zahlungsdaten: Seite 2/3 Datenvisualisierung Rechnung Dieses Dokument wurde auf Basis strukturierter Daten generiert. Weitere Informationen zur Datenvisualisierung finden Sie unter: https://datev.de/hilfe/1038182 Fälligkeitsdatum: Zahlungsmittel: 16.01.2025 SEPA-Überweisung (58) Positionen: Pos Bezeichnung Menge Einheit Listenpreis (netto) Preis (netto) 1 Holzofenbrot 15 Stück 13,90 EUR 13,90 EUR Freitext: Roggenmehl (Type 997, Type 1370), hauseigener Sauerteig (Roggenmehl Type 1370, Wasser), Wasser, Weizenmehl (Type 550, Type 1050), Salz, fermentiertes Weizenmehl, Hefe, Weizenmalzmehl, Traubenzucker, Verdickungsmittel Guarkernmehl Umsatzsteuer: Normalsatz (S) Umsatzsteuersatz: 19,00 % Gesamtpreis netto 208,50 EUR Pos Bezeichnung Menge Einheit Listenpreis (netto) Preis (netto) 2 Dinkel Vollkorn 25 Stück 3,95 EUR 3,95 EUR Freitext: Wasser, DINKELVOLLKORNMEHL, DINKEL, Sonnenblummenkerne, DINKELFLOCKEN, Salz, Hefe, Zuckerrübensirup, Flohsamenschalen, Rapsöl, DINKEMEHL, DINKELvollkornsauerteig, Reismehl Umsatzsteuer: Normalsatz (S) Umsatzsteuersatz: 19,00 % Gesamtpreis netto 98,75 EUR Informationen zum Vertrag: Spezifikationskennung: urn:cen.eu:en16931:2017#conformant#urn:datev.de:1p2:dcii • Rechnungsbegründende Unterlagen: Kennung: Beschreibung: 51907 Sichtkomponente_efc8bf2e-94c1-42bc- a181-684f33eacba4.pdf Verweis (z.B. Internetadresse): #ef=Sichtkomponente_efc8bf2e-94c1-42bc- a181-684f33eacba4.pdf Kennung: Beschreibung: 53764861 Sichtkomponente_efc8bf2e-94c1-42bc- a181-684f33eacba4.pdf Verweis (z.B. Internetadresse): #ef=Sichtkomponente_efc8bf2e-94c1-42bc- a181-684f33eacba4.pdf Seite 3/3urn:cen.eu:en16931:2017 RE-2025-16-1 380 20250116 1 Roggenmehl (Type 997, Type 1370), hauseigener Sauerteig (Roggenmehl Type 1370, Wasser), Wasser, Weizenmehl (Type 550, Type 1050), Salz, fermentiertes Weizenmehl, Hefe, Weizenmalzmehl, Traubenzucker, Verdickungsmittel Guarkernmehl Holzofenbrot 13.9000 13.9000 15.0000 VAT S 19.00 208.50 2 Wasser, DINKELVOLLKORNMEHL, DINKEL, Sonnenblummenkerne, DINKELFLOCKEN, Salz, Hefe, Zuckerrübensirup, Flohsamenschalen, Rapsöl, DINKEMEHL, DINKELvollkornsauerteig, Reismehl Dinkel Vollkorn 3.9500 3.9500 25.0000 VAT S 19.00 98.75 Eva AG Eva Hartwich +4991115478 eva.hartwich@datev.de 90402 Kolpinggasse 22 Nürnberg DE eva.hartwich@datev.de DE123456719 241/123/45678 Haus Targaryen 90403 Drachsteinstraße 4 Nürnberg DE 7d59aff4-a287-4bd6-adb0-a0359488c78d@qs.b4portal.net 51907 #ef=Sichtkomponente_efc8bf2e-94c1-42bc-a181-684f33eacba4.pdf 916 Sichtkomponente_efc8bf2e-94c1-42bc-a181-684f33eacba4.pdf 53764861 #ef=Sichtkomponente_efc8bf2e-94c1-42bc-a181-684f33eacba4.pdf 916 Sichtkomponente_efc8bf2e-94c1-42bc-a181-684f33eacba4.pdf 52267 #ef=Sichtkomponente_efc8bf2e-94c1-42bc-a181-684f33eacba4.pdf 916 Sichtkomponente_efc8bf2e-94c1-42bc-a181-684f33eacba4.pdf 52268 #ef=Sichtkomponente_2904b528-fc51-407a-ba8c-a925d90f6e2f.pdf 916 Sichtkomponente_2904b528-fc51-407a-ba8c-a925d90f6e2f.pdf EUR 58 DE09500105175828379863 Hartwich 58.38 VAT 307.25 S 19.00 20250116 307.25 307.25 58.38 365.63 365.63 ",
+          "dss_document_name": "RE_RE-2025-16-1.pdf",
+          "dss_version": "1.2",
+          "dss_dataspace_id": "410046176",
+          "last_document_change": "2025-10-09T05:43:02.818Z",
+          "content_type": "application/pdf",
+          "dss_creation_user_display_name": "",
+          "dss_document_id": "db5e52fa-c17e-4396-b777-c9c395b8a84a",
+          "dss_custom_metadata": {
+            "duo": {
+              "invoice_business_partner": null,
+              "has_position_correction": false,
+              "time_of_upload": "2025-09-30T12:42:54.622683Z",
+              "customer_number": null,
+              "document_approval_state": "UNDISPATCHED",
+              "document_category": "SALES_INVOICE",
+              "booking_state": "TO_BOOK",
+              "uploader_sc_id": "DATEV E-Rechnungsplattform",
+              "invoice_date": "2025-01-16",
+              "last_modified_user_id_key": null,
+              "currency": "EUR",
+              "transaction_ids": [],
+              "invoice_number": "RE-2025-16-1",
+              "document_type": 3065,
+              "paid_status": "NOT_PAID",
+              "company_id": 38364,
+              "total_gross_amount": 365.63,
+              "document_invoice_type": "E_INVOICE",
+              "booking_state_changed_at": null,
+              "positions": [
+                {
+                  "note": null,
+                  "cost_center_1": null,
+                  "cost_center_2": null,
+                  "service_date": null
+                }
+              ],
+              "deleted_at": null,
+              "paid_at": null,
+              "location": "BELEGFREIGABE",
+              "last_modified_datetime": "2025-10-09T05:42:38.401368Z",
+              "invoice_business_partner_id": null
+            }
+          },
+          "etag": "fb4a3ec0c25293e42ac0efba7aed6d15",
+          "id": "410046176_db5e52fa-c17e-4396-b777-c9c395b8a84a",
+          "content_length": 219447
+        }
+      },
+      {
+        "_index": "duo_belege_20251002",
+        "_id": "900022807_6b32273d-9fb6-4dfe-be2b-a1176d52aa8a",
+        "_score": 0,
+        "_source": {
+          "dss_creation_user_id_key": "WSDNFI1@fkt.datev.de",
+          "dss_last_modified_user_id_key": "6e7f4633-2f49-402e-8b10-39116162b833",
+          "dss_last_modified_datetime": "2025-10-09T07:41:56+02:00",
+          "dss_last_modified_user_display_name": "",
+          "ocr_fulltext": "Muster zu Testzwecken GmbH Musterhobelweg 5 Muster zu Testzwecken GmbH 90451 Nürnberg Herrn Karl Musterhansen Beispielmühlweg 1 91301 Forchheim Rechnung Für die Lieferung am 31.01.2024 berechnen wir Ihnen: Tel.-Nr: 0911/276 9999 Rechnungsdatum 31.01.2024 Rechnung-Nr. 20JJ03055 Kunden-Nr. 21 Artikel-Nr. Menge Artikelbeschreibung Einzelpreis Gesamtpreis MB300 1 Zweihand -Mischbatterie 123,53 € 123,53 € Nettosumme 19% MwSt 123,53 € 23,47 € Gesamtsumme 147,00 € Es gelten die vereinbarten Zahlungsbedingungen lt. Auftragseingang (10 Tage 2 % Skonto, 30 Tage netto ab Rechnungsdatum). Geschäftsführer Thorsten Muster Deutsche Bank Nürnberg Steuer-Nr.: 24112345678 BIC DEUTDEMM760; IBAN DE40 7607 0012 0320 9707 49 USt-IdNr.: DE 815000010",
+          "dss_document_name": "24_01_010_AR_Musterhansen.pdf",
+          "dss_version": "1.185",
+          "dss_dataspace_id": "900022807",
+          "last_document_change": "2025-10-09T05:41:56.751Z",
+          "content_type": "application/pdf",
+          "dss_creation_user_display_name": "",
+          "dss_document_id": "6b32273d-9fb6-4dfe-be2b-a1176d52aa8a",
+          "dss_custom_metadata": {
+            "duo": {
+              "invoice_business_partner": "Karl Musterhansen",
+              "has_position_correction": false,
+              "paid_status": "FULLY_PAID",
+              "company_id": 39283,
+              "time_of_upload": "2025-03-11T07:56:11.700596Z",
+              "customer_number": null,
+              "document_approval_state": "NOT_RELEVANT",
+              "document_category": "SUPPLIER_INVOICE",
+              "total_gross_amount": 147,
+              "booking_state_changed_at": null,
+              "positions": [
+                {
+                  "note": null,
+                  "cost_center_1": null,
+                  "cost_center_2": null,
+                  "service_date": "2024-01-31"
+                }
+              ],
+              "deleted_at": null,
+              "booking_state": "TO_BOOK",
+              "uploader_sc_id": "99000000000002057@sca.datev.de",
+              "invoice_date": "2024-01-31",
+              "paid_at": "2024-02-27T00:00:00Z",
+              "last_modified_user_id_key": "6e7f4633-2f49-402e-8b10-39116162b833",
+              "location": "BELEGE",
+              "currency": "EUR",
+              "transaction_ids": [],
+              "last_modified_datetime": "2025-10-09T05:41:55.318426Z",
+              "invoice_business_partner_id": 3000004551,
+              "invoice_number": "20JJ03055",
+              "document_type": -2
+            }
+          },
+          "etag": "5c8804269d4672e6b60f043bafdf5dfb",
+          "id": "900022807_6b32273d-9fb6-4dfe-be2b-a1176d52aa8a",
+          "content_length": 20379
+        }
+      },
+      {
+        "_index": "duo_belege_20251002",
+        "_id": "120084053_8b78805b-fa16-4ac4-8f39-d2a080624325",
+        "_score": 0,
+        "_source": {
+          "dss_creation_user_id_key": "WSDNFI1@fkt.datev.de",
+          "dss_last_modified_user_id_key": "99000000000001001@sca.datev.de",
+          "dss_last_modified_datetime": "2025-10-09T07:42:42+02:00",
+          "dss_last_modified_user_display_name": "",
+          "ocr_fulltext": "Musterfirma GmbH – Musterstraße 12 – 12345 Musterstadt Max Mustermann Musterweg 3 11111 Musterhausen Deutschland Rechnungsdatum: 11.05.2017 Lieferdatum/Leistungsdatum: 11.05.2017 Ihre Ansprechperson: Erika Mustermann E-Mail: erika.mustermann@example.com Telefon: 030 1234 5678 12 Rechnung Rechnungsnummer: RE -2017 -MAI -11-0003 Kundennummer: 12345 Datum: 11.05.2021 Sehr geehrter Herr Mustermann, vielen Dank für Ihr Vertrauen in die Musterfirma GmbH. Hiermit stellen wir Ihnen folgende Leistungen in Rechnung: Pos. Bezeichnung 1. I Furnier Palisander 200 cm Länge 2. I Rückgabe Furnier Palisander 200 cm Länge 3. I Furnier Palisander 100 cm Länge 4. I Prospekt Furniere 2022 *GRATIS* 5. Prospekt Furniere 2022 *GRATIS* 6. Prospekt Furniere 2022 *GRATIS* 7. Prospekt Furniere 2022 *GRATIS* 8. I Prospekt Furniere 2022 *GRATIS* 9. Prospekt Furniere 2022 *GRATIS* 10. Prospekt Furniere 2022 *GRATIS* 11. I Prospekt Furniere 2022 *GRATIS* 12. I Prospekt Furniere 2022 *GRATIS* 13. I Prospekt Furniere 2022 *GRATIS* Menge F Einheit F Einzelpreis Gesamtpreis 1262,30 € Stück I -1262,30 € I -1262,30 € 1 95 Stück 1262,30 € Stück 105,76 € 10047,20 € Stück 0,00 € 0,00 € Stück 0,00 € 0,00 € Stück 0,00 € 0,00 € Stück 0,00 € 0,00 € Stück 0,00 € 0,00 € Stück 0,00 € 0,00 € Stück 0,00 € 0,00 € Stück 0,00 € 0,00 € Stück 0,00 € 0,00 € Stück 0,00 € 0,00 € 14. I Prospekt Furniere 2022 *GRATIS* 15. I Prospekt Furniere 2022 *GRATIS* Stück 0,00 € 0,00 € Stück I 0,00 € 0,00 € Nettobetrag zzgl. Umsatzsteuer 19% Rechnungsbetrag 10047,20 € 1,908,97 € 11956,17 € Der Gesamtbetrag ist bis zum 25.05.2017 mit dem Verwendungszweck „RE -2017 -MAI -11- 0003“ auf unser unten genanntes Konto zu zahlen. Mit freundlichen Grüßen Musterfirma GmbH",
+          "dss_document_name": "TestRechnung_selbstErstellt002Seiten.pdf",
+          "dss_version": "1.2",
+          "dss_dataspace_id": "120084053",
+          "last_document_change": "2025-10-09T05:42:43.031Z",
+          "content_type": "application/pdf",
+          "dss_creation_user_display_name": "",
+          "dss_document_id": "8b78805b-fa16-4ac4-8f39-d2a080624325",
+          "dss_custom_metadata": {
+            "duo": {
+              "invoice_business_partner": null,
+              "has_position_correction": false,
+              "time_of_upload": "2025-10-02T16:45:41.389486Z",
+              "customer_number": null,
+              "document_approval_state": "NOT_RELEVANT",
+              "document_category": "SUPPLIER_INVOICE",
+              "booking_state": "TO_BOOK",
+              "uploader_sc_id": "99000000000001001@sca.datev.de",
+              "invoice_date": null,
+              "last_modified_user_id_key": "99000000000001001@sca.datev.de",
+              "currency": "EUR",
+              "transaction_ids": [],
+              "invoice_number": null,
+              "document_type": -2,
+              "paid_status": "NOT_PAID",
+              "company_id": null,
+              "total_gross_amount": null,
+              "document_invoice_type": null,
+              "booking_state_changed_at": null,
+              "positions": [
+                {
+                  "note": null,
+                  "cost_center_1": null,
+                  "cost_center_2": null,
+                  "service_date": null
+                }
+              ],
+              "deleted_at": null,
+              "paid_at": null,
+              "location": "BELEGE",
+              "last_modified_datetime": "2025-10-02T16:45:41.389486Z",
+              "invoice_business_partner_id": null
+            }
+          },
+          "etag": "22aceb2d62da14166946010e75004995",
+          "id": "120084053_8b78805b-fa16-4ac4-8f39-d2a080624325",
+          "content_length": 203805
+        }
+      },
+      {
+        "_index": "duo_belege_20251002",
+        "_id": "900009806_8fc2d745-0798-4283-b99f-d5053b991590",
+        "_score": 0,
+        "_source": {
+          "dss_creation_user_id_key": "WSDNFI1@fkt.datev.de",
+          "dss_last_modified_user_id_key": "rzId-not-set",
+          "dss_last_modified_datetime": "2025-10-09T07:43:03+02:00",
+          "dss_last_modified_user_display_name": "",
+          "ocr_fulltext": "Vodaf one 1 Testing Company GmbH Musterhobelweg 5 90451 Nürnberg Rechnung Nr. 12377/0721 Vogtsbergweg 13 79235 Vogtsburg USt.-ID: DE 187474286 Steuernummer: 102/161/29429 02.07.2021 Verbindungsnachweis 07/21 Min. Preis Gesamt Flatrate 120,00 € 120,00 € netto 120,00 € 19% MwSt. 22,80 € zu zahlen 142,80 € 142,80 € werden am 12.07.2021 von Ihrem Konto eingezogen. Unsere Bankverbindung VR-Bank Nürnberg BIC: GENODEF1N02 IBAN: DE82760606181162094282",
+          "dss_document_name": "01_ER_Vodafone_0721.pdf",
+          "dss_version": "1.2",
+          "dss_dataspace_id": "900009806",
+          "last_document_change": "2025-10-09T05:43:03.158Z",
+          "content_type": "application/pdf",
+          "dss_creation_user_display_name": "",
+          "dss_document_id": "8fc2d745-0798-4283-b99f-d5053b991590",
+          "dss_custom_metadata": {
+            "duo": {
+              "invoice_business_partner": null,
+              "has_position_correction": false,
+              "time_of_upload": "2025-09-30T13:48:13.93978Z",
+              "customer_number": null,
+              "document_approval_state": "NOT_RELEVANT",
+              "document_category": "SUPPLIER_INVOICE",
+              "booking_state": "TO_BOOK",
+              "uploader_sc_id": "00000000026036382@sca.datev.de",
+              "invoice_date": "2021-07-02",
+              "last_modified_user_id_key": null,
+              "currency": "EUR",
+              "transaction_ids": [],
+              "invoice_number": "12377/0721",
+              "document_type": -2,
+              "paid_status": "NOT_PAID",
+              "company_id": 38925,
+              "total_gross_amount": 142.8,
+              "document_invoice_type": "OTHER",
+              "booking_state_changed_at": null,
+              "positions": [
+                {
+                  "note": null,
+                  "cost_center_1": null,
+                  "cost_center_2": null,
+                  "service_date": null
+                }
+              ],
+              "deleted_at": null,
+              "paid_at": null,
+              "location": "BELEGE",
+              "last_modified_datetime": "2025-10-09T05:42:06.402662Z",
+              "invoice_business_partner_id": 3000006436
+            }
+          },
+          "etag": "e9137ca7a8817c34c8c79bb42fcbcda1",
+          "id": "900009806_8fc2d745-0798-4283-b99f-d5053b991590",
+          "content_length": 68498
+        }
+      },
+      {
+        "_index": "duo_belege_20251002",
+        "_id": "900009806_b9d28b6b-9f68-4f9f-bf8f-356f82ba7169",
+        "_score": 0,
+        "_source": {
+          "dss_creation_user_id_key": "WSDNFI1@fkt.datev.de",
+          "dss_last_modified_user_id_key": "rzId-not-set",
+          "dss_last_modified_datetime": "2025-10-09T07:43:03+02:00",
+          "dss_last_modified_user_display_name": "",
+          "ocr_fulltext": "Vodaf one 1 Testing Company GmbH Musterhobelweg 5 90451 Nürnberg Rechnung Nr. 12412/1121 Vogtsbergweg 13 79235 Vogtsburg USt.-ID: DE 187474286 Steuernummer: 102/161/29429 02.11.2021 Verbindungsnachweis 11/21 Min. Preis Gesamt Flatrate 120,00 € 120,00 € netto 120,00 € 19% MwSt. 22,80 € zu zahlen 142,80 € 142,80 € werden am 12.09.2021 von Ihrem Konto eingezogen. Unsere Bankverbindung VR-Bank Nürnberg BIC: GENODEF1N02 IBAN: DE82760606181162094282",
+          "dss_document_name": "01_ER_Vodafone_1121.pdf",
+          "dss_version": "1.2",
+          "dss_dataspace_id": "900009806",
+          "last_document_change": "2025-10-09T05:43:03.265Z",
+          "content_type": "application/pdf",
+          "dss_creation_user_display_name": "",
+          "dss_document_id": "b9d28b6b-9f68-4f9f-bf8f-356f82ba7169",
+          "dss_custom_metadata": {
+            "duo": {
+              "invoice_business_partner": null,
+              "has_position_correction": false,
+              "time_of_upload": "2025-09-30T13:48:13.94378Z",
+              "customer_number": null,
+              "document_approval_state": "NOT_RELEVANT",
+              "document_category": "SUPPLIER_INVOICE",
+              "booking_state": "TO_BOOK",
+              "uploader_sc_id": "00000000026036382@sca.datev.de",
+              "invoice_date": "2021-11-02",
+              "last_modified_user_id_key": null,
+              "currency": "EUR",
+              "transaction_ids": [],
+              "invoice_number": "12412/1121",
+              "document_type": -2,
+              "paid_status": "NOT_PAID",
+              "company_id": 38925,
+              "total_gross_amount": 142.8,
+              "document_invoice_type": "OTHER",
+              "booking_state_changed_at": null,
+              "positions": [
+                {
+                  "note": null,
+                  "cost_center_1": null,
+                  "cost_center_2": null,
+                  "service_date": null
+                }
+              ],
+              "deleted_at": null,
+              "paid_at": null,
+              "location": "BELEGE",
+              "last_modified_datetime": "2025-10-09T05:42:47.299019Z",
+              "invoice_business_partner_id": 3000006436
+            }
+          },
+          "etag": "7a5619f07ee2f78b57b7429477ccbbb8",
+          "id": "900009806_b9d28b6b-9f68-4f9f-bf8f-356f82ba7169",
+          "content_length": 68159
+        }
+      },
+      {
+        "_index": "duo_belege_20251002",
+        "_id": "900009806_63fbbef3-0f7e-40b5-9cef-13a95a6514fa",
+        "_score": 0,
+        "_source": {
+          "dss_creation_user_id_key": "WSDNFI1@fkt.datev.de",
+          "dss_last_modified_user_id_key": "rzId-not-set",
+          "dss_last_modified_datetime": "2025-10-09T07:43:03+02:00",
+          "dss_last_modified_user_display_name": "",
+          "ocr_fulltext": "7C,affee-7Cenig Kaffewaldweg 19 67294 Kaffeewaldsmühle VRBankNürnberg - GENODEF1N02 IBAN: DE86760606188988379548 USt.-ID: DE 172427334 Steuer-Nr.: 202/152/31829 Testing Company GmbH Musterhobelweg 5 90451 Nürnberg RECHNUNGvom 22.03.2021 Geliefert wurden am 21.03.2021: Rechnung Nr. 43 Artikel Preis Menge MwSt Betrag Arabica, Mischung 8,30 €/kg 2 7% 16,60 € Filter, Kaffee 6,45 €/kg 3 7% 19,35 € Warenwert (netto) 35,95 € zzgl. 7 % MwSt 2,52 € Rechnungswert (brutto) 38,47 € Bitte überweisen Sie innerhalb von 30 Tagen auf oben angegebenes Bankkonto.",
+          "dss_document_name": "02_ER_KaffeeKoenig_0321b.pdf",
+          "dss_version": "1.2",
+          "dss_dataspace_id": "900009806",
+          "last_document_change": "2025-10-09T05:43:03.627Z",
+          "content_type": "application/pdf",
+          "dss_creation_user_display_name": "",
+          "dss_document_id": "63fbbef3-0f7e-40b5-9cef-13a95a6514fa",
+          "dss_custom_metadata": {
+            "duo": {
+              "invoice_business_partner": null,
+              "has_position_correction": false,
+              "time_of_upload": "2025-09-30T13:48:13.94978Z",
+              "customer_number": null,
+              "document_approval_state": "NOT_RELEVANT",
+              "document_category": "SUPPLIER_INVOICE",
+              "booking_state": "TO_BOOK",
+              "uploader_sc_id": "00000000026036382@sca.datev.de",
+              "invoice_date": "2021-03-22",
+              "last_modified_user_id_key": null,
+              "currency": "EUR",
+              "transaction_ids": [],
+              "invoice_number": "43",
+              "document_type": -2,
+              "paid_status": "NOT_PAID",
+              "company_id": 38925,
+              "total_gross_amount": 38.47,
+              "document_invoice_type": "OTHER",
+              "booking_state_changed_at": null,
+              "positions": [
+                {
+                  "note": null,
+                  "cost_center_1": null,
+                  "cost_center_2": null,
+                  "service_date": null
+                }
+              ],
+              "deleted_at": null,
+              "paid_at": null,
+              "location": "BELEGE",
+              "last_modified_datetime": "2025-10-09T05:42:47.352514Z",
+              "invoice_business_partner_id": 3000006445
+            }
+          },
+          "etag": "53143c104b6a7b335f5f21970203abb1",
+          "id": "900009806_63fbbef3-0f7e-40b5-9cef-13a95a6514fa",
+          "content_length": 83336
+        }
+      }
+    ]
+  }
+}
