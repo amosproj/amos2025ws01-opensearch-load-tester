@@ -1,12 +1,12 @@
 Title	URL	Assignees	Status	Estimated size	Real size
 Load Generator Query Type Mix	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/104		Product Backlog		
-Query Refactoring	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/117		Product Backlog		
-Add Linting to CI/CD Pipeline	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/103		Product Backlog		
 Architecture (Diargram) Refactoring	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/118		Product Backlog		
-View for Test Summary	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/63		Product Backlog		
 Compound Queries	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/145		Product Backlog		
 Leaf Queries: specialized/span queries	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/146		Product Backlog		
 Expensive Queries	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/147		Product Backlog		
+Query Refactoring	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/117		Product Backlog		
+Add Linting to CI/CD Pipeline	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/103		Product Backlog		
+View for Test Summary	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/63		Product Backlog		
 Complex Queries	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/120	Carlit0	Sprint Backlog	2	
 Load Generator Start Synchronization	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/100	BeEugen	In Progress	3	
 Extend (Unit) Test Coverage	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/115	BeEugen, Carlit0, Leolingio, SaraBelz, SeboKnt	In Progress	5	
