@@ -15,7 +15,8 @@ public enum QueryType {
     DUO_CLIENT_BY_NAME_AND_STATE(DuoClientByNameAndStateQuery::new),
     ANO_PAYROLL_TYPE_LANGUAGE(AnoPayrollTypeLanguageQuery::new),
     DUO_BOOKING_BY_COSTCENTER_AND_DATE(DuoBookingByCostcenterAndDateQuery::new),
-    DUO_BOOKING_BY_AMOUNT_RANGE(DuoBookingByAmountRangeQuery::new);
+    DUO_BOOKING_BY_AMOUNT_RANGE(DuoBookingByAmountRangeQuery::new),
+    DUO_COMPLEX(DuoComplexQuery::new);
 
     private final Supplier<Query> constructor;
 
