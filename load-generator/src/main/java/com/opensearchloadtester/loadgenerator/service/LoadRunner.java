@@ -20,7 +20,7 @@ public class LoadRunner {
     private final MetricsCollector metricsCollector;
 
     public LoadRunner(
-            @Value("${HOSTNAME}") String loadGeneratorId,
+            @Value("${HOSTNAME:local-load-generator}") String loadGeneratorId,
             OpenSearchGenericClient openSearchClient,
             MetricsReporterClient metricsReporterClient,
             MetricsCollector metricsCollector
