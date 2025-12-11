@@ -42,16 +42,29 @@ jobs:
 
       - name: delpoy container
         run: |
-          apt-get update && apt-get install -y make
           make build
           make run
-          make logs >> integration-test-reports.log
+          echo "Waiting for load test to complete..."
+          mkdir -p reports
+          timeout 300 bash -c \
+            'while [ ! -f reports/query_results.json ]; do \
+               ls -l reports || true; \
+               sleep 5; \
+             done'
+          docker-compose logs >> integration-test-container.log
+
+      - name: Upload generated report
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: reports
+          path: reports/**
 
       - name: Upload Test Reports
         uses: actions/upload-artifact@v5
         with:
-          name: integration-test-reports.log
-          path: integration-test-reports.log
+          name: integration-test-container.log
+          path: integration-test-container.log
 
 #####
 # No workflow to tag and push images to Docker Hub or GitHub Container Registry yet
