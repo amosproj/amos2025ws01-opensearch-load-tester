@@ -11,3 +11,4 @@ public enum DocumentType {
 
     private final String index;
 }
+
