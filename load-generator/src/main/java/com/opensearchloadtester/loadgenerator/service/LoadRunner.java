@@ -58,7 +58,8 @@ public class LoadRunner {
         try {
             long durationNs = scenarioConfig.getDuration().toNanos();
             int qpsTotal = scenarioConfig.getQueriesPerSecond();
-            int qpsPerLoadGen = qpsTotal / Integer.parseInt(System.getenv("LOAD_GENERATOR_REPLICAS"));
+            int replicas = Integer.parseInt(System.getenv().getOrDefault("LOAD_GENERATOR_REPLICAS", "1"));
+            int qpsPerLoadGen = qpsTotal / replicas;
             long durationPerQuery = 1000_000_000L / qpsPerLoadGen;
             AtomicInteger queryCounter = new AtomicInteger();
             log.debug("Schedule delay:  {} ms  ", durationPerQuery);
