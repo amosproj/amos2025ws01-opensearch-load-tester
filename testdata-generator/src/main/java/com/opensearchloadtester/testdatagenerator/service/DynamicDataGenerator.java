@@ -33,7 +33,7 @@ public class DynamicDataGenerator implements DataGenerator {
             default -> throw new IllegalArgumentException("Unsupported document type: " + documentType.name());
         }
 
-        log.info("Generated {} random {} documents", documents.size(), documentType.name());
+        log.debug("Generated {} random {} documents", documents.size(), documentType.name());
         return documents;
     }
 }
