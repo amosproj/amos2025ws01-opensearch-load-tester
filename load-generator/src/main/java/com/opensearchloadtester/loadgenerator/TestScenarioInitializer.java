@@ -24,7 +24,7 @@ public class TestScenarioInitializer implements CommandLineRunner {
     private final OpenSearchGenericClient openSearchClient;
 
     public TestScenarioInitializer(
-            @Value("${HOSTNAME}") String loadGeneratorId,
+            @Value("${HOSTNAME:local-load-generator}") String loadGeneratorId,
             ScenarioConfig scenarioConfig,
             LoadRunner loadRunner,
             OpenSearchGenericClient openSearchClient
