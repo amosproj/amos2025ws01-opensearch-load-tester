@@ -46,11 +46,13 @@ jobs:
           make run
 
       - name: Wait for test completion
-        timeout-minutes: 10
+        timeout-minutes: 15
         run: |
-          until docker compose exec -T metrics-reporter test -f /app/reports/query_results.json; do
+          CONTAINER_ID=$(docker ps -aqf "name=metrics-reporter")
+          while ! docker cp ${CONTAINER_ID}:/app/reports/query_results.json ./reports/ 2>/dev/null; do
             sleep 5
           done
+          docker cp ${CONTAINER_ID}:/app/reports/. ./reports/
           docker compose logs >> integration-test-container.log
 
       - name: Upload generated report
