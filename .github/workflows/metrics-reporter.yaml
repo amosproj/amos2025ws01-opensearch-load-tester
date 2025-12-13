@@ -1,0 +1,95 @@
+name: Test & Build Metrics Reporter
+
+on:
+  push:
+    paths:
+      - 'metrics-reporter/**'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      logging_level:
+        description: 'LOGGING_LEVEL_METRICS_REPORTER'
+        required: false
+        default: 'INFO'
+
+jobs:
+  metrics-reporter:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Change permissions for report folder
+        run: chmod -R 777 ./reports
+
+      - name: start opensearch container
+        run: docker compose -f docker-compose.yaml up --wait -d test-target-opensearch
+
+      - name: Start testdata-generator
+        run: docker compose -f docker-compose.yaml up -d testdata-generator
+
+      - name: Start load-generator
+        run: docker compose -f docker-compose.yaml up -d --scale load-generator=2 load-generator
+
+      - name: Build metrics-reporter image from Build Stage
+        run: docker build --target build -t metrics-reporter-build -f metrics-reporter/Dockerfile .
+
+      - name: Run unit tests inside Build container
+        env:
+          LOGGING_LEVEL_COM_OPENSEARCHLOADTESTER_METRICSREPORTER: ${{ github.event.inputs.logging_level || 'INFO' }}
+          LOAD_GENERATOR_REPLICAS: 2
+        run: |
+          NETWORK=$(docker inspect --format='{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}' test-target-opensearch)
+          echo "Using network: $NETWORK"
+          docker run \
+            --name metrics-reporter-test-runner \
+            --network "$NETWORK" \
+            -v "${{ github.workspace }}":/app:rw \
+            -v "${{ github.workspace }}/reports":/app/reports:rw \
+            -w /app \
+            -e LOGGING_LEVEL_COM_OPENSEARCHLOADTESTER_METRICSREPORTER \
+            -e LOAD_GENERATOR_REPLICAS \
+            metrics-reporter-build \
+            mvn -f metrics-reporter/pom.xml clean test
+
+      - name: Export Container Logs - Make Directory
+        if: always()
+        run: mkdir -p container-logs
+
+      - name: Export Container Logs - testdata-generator
+        if: always()
+        run: docker compose -f docker-compose.yaml logs testdata-generator > container-logs/testdata-generator.log 2>&1
+
+      - name: Export Container Logs - metrics-reporter
+        if: always()
+        run: docker compose -f docker-compose.yaml logs metrics-reporter > container-logs/metrics-reporter.log 2>&1
+
+      - name: Export Container Logs - test-runner
+        if: always()
+        run: docker logs metrics-reporter-test-runner > container-logs/metrics-reporter-test-runner.log 2>&1
+
+      - name: Upload Container Logs Artifact
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: docker-container-logs
+          path: container-logs/**
+
+      - name: Upload generated report
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: reports
+          path: reports/**
+
+      - name: Upload Unit Test Reports
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: metrics-reporter-test-reports
+          path: metrics-reporter/target/surefire-reports/**
+
