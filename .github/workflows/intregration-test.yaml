@@ -46,12 +46,12 @@ jobs:
           make run
 
       - name: Wait for test completion
+        timeout-minutes: 10
         run: |
-          timeout 300 bash -c \
-            'while [ ! -f reports/query_results.json ]; do \
-               sleep 5; \
-             done'
-          docker-compose logs >> integration-test-container.log
+          until docker compose exec -T metrics-reporter test -f /app/reports/query_results.json; do
+            sleep 5
+          done
+          docker compose logs >> integration-test-container.log
 
       - name: Upload generated report
         if: always()
@@ -69,3 +69,4 @@ jobs:
 #####
 # No workflow to tag and push images to Docker Hub or GitHub Container Registry yet
 #####
+     
