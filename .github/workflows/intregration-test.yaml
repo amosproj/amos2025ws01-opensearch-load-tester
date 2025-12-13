@@ -44,11 +44,11 @@ jobs:
         run: |
           make build
           make run
-          echo "Waiting for load test to complete..."
-          mkdir -p reports
+
+      - name: Wait for test completion
+        run: |
           timeout 300 bash -c \
             'while [ ! -f reports/query_results.json ]; do \
-               ls -l reports || true; \
                sleep 5; \
              done'
           docker-compose logs >> integration-test-container.log
