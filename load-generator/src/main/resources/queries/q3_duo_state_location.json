@@ -5,12 +5,12 @@
       "must": [
         {
           "term": {
-            "dss_custom_metadata.duo.document_approval_state.raw": "{{approval_state}}"
+            "dssCustomMetadataDuo.documentApprovalState.raw": "{{approval_state}}"
           }
         },
         {
           "term": {
-            "dss_custom_metadata.duo.location.raw": "{{location}}"
+            "dssCustomMetadataDuo.location.raw": "{{location}}"
           }
         }
       ]
@@ -18,8 +18,8 @@
   },
   "_source": [
     "dss_document_name",
-    "dss_custom_metadata.duo.document_approval_state",
-    "dss_custom_metadata.duo.location"
+    "dssCustomMetadataDuo.documentApprovalState",
+    "dssCustomMetadataDuo.location"
   ]
 }
 

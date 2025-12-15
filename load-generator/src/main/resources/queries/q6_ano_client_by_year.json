@@ -5,25 +5,25 @@
       "must": [
         {
           "term": {
-            "dss_creation_user_display_name.raw": "{{client_name}}"
+            "dssCreationUserDisplayName.raw": "{{client_name}}"
           }
         }
       ],
       "filter": [
         {
           "term": {
-            "dss_custom_metadata.payrollinfo.accounting_year": "{{year}}"
+            "dssCustomMetadataPayrollInfo.accountingYear": "{{year}}"
           }
         }
       ]
     }
   },
   "_source": [
-    "dss_document_name",
-    "dss_custom_metadata.payrollinfo.accounting_year",
-    "dss_custom_metadata.payrollinfo.accounting_month",
-    "dss_creation_user_display_name",
-    "dss_dataspace_id"
+    "dssDocumentName",
+    "dssCustomMetadataPayrollInfo.accounting_year",
+    "dssCustomMetadataPayrollInfo.accounting_month",
+    "dssCreationUserDisplayName",
+    "dssDataspaceId"
   ]
 }
 

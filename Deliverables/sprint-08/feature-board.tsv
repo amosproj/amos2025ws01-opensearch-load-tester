@@ -1,0 +1,45 @@
+Title	URL	Assignees	Status	Estimated size	Real size
+Load Generator Query Type Mix	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/104		Product Backlog		
+Architecture (Diargram) Refactoring	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/118		Product Backlog		
+Compound Queries	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/145		Product Backlog		
+Leaf Queries: specialized/span queries	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/146		Product Backlog		
+Expensive Queries	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/147		Product Backlog		
+Query Refactoring	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/117		Product Backlog		
+Add Linting to CI/CD Pipeline	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/103		Product Backlog		
+View for Test Summary	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/63		Product Backlog		
+Complex Queries	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/120	Carlit0	Sprint Backlog	2	
+Load Generator Start Synchronization	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/100	BeEugen	In Progress	3	
+Extend (Unit) Test Coverage	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/115	BeEugen, Carlit0, Leolingio, SaraBelz, SeboKnt	In Progress	5	
+Test ending wait mechanism	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/136	Carlit0, Leolingio	In Progress	2	
+CI/CD Pipeline Setup	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/61	SeboKnt	In Progress	2	
+Redesign Metrics Data Model	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/138	BeEugen	Awaiting Review	2	
+Extend Ano and Duo Index Mapping and Settings	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/137	Leolingio	Awaiting Review	3	
+Refactoring: Include DTO changes in Metrics Reporter 	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/133	Carlit0	Awaiting Review	2	
+Query Parameter Randomization	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/122	BeEugen, Carlit0, Leolingio, SaraBelz, SeboKnt	Awaiting Review	5	
+Warm-Up Phase	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/109	SaraBelz	Awaiting Review	1	
+Implementation of Batch Processing for Data Pre-Loading	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/79	SaraBelz	Awaiting Review	3	3
+Configurable Test Duration Feature	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/112	BeEugen	Feature Archive	3	3
+Code Refactoring	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/78	BeEugen, Carlit0, Leolingio, SaraBelz, SeboKnt	Feature Archive	5	5
+Big Data Handling in MetricsReporter	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/94	Carlit0	Feature Archive	5	5
+Shared Library Creation	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/99	Carlit0	Feature Archive	1	1
+Configurable Queries per Second Feature	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/111	Leolingio, SaraBelz	Feature Archive	3	5
+Optimize Random Generation of Test Data	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/119	SeboKnt	Feature Archive	3	3
+Load Generator Functionality Definition	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/116	BeEugen, Carlit0, Leolingio, SaraBelz, SeboKnt	Feature Archive	3	3
+Implementation of Load Test Scenario	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/67	BeEugen, Leolingio	Feature Archive	5	5
+Wiki Creation	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/66	BeEugen, Carlit0, Leolingio, SaraBelz, SeboKnt	Feature Archive	3	3
+Research - How to destroy OpenSearch	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/68	SaraBelz	Feature Archive	3	2
+ReportCreator Component Prototype Implementation	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/38	Carlit0	Feature Archive	5	8
+Definitions of Done	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/77	engelharddirk, LeaBuchner, SaraBelz	Feature Archive	3	2
+Load Generator Port Setup Dockerized Services	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/76	SeboKnt	Feature Archive	3	2
+Data Generation Ano/Duo Separation	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/80	BeEugen	Feature Archive	3	3
+Data Generation <-> OpenSearch Client Integration	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/44	BeEugen	Feature Archive	3	5
+Load Generator Internal Component Integration	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/59	Leolingio, SeboKnt	Feature Archive	5	5
+ReportController Component Prototype Implementation	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/60	Leolingio, SaraBelz	Feature Archive	5	3
+Implementation of MetricsReporterClient Prototype	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/81	Leolingio	Feature Archive	3	2
+Build Process Video	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/64	SaraBelz	Feature Archive	2	2
+Unified Code Styling & Editor Configurations	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/50	Carlit0, Hydraneut	Feature Archive	1	2
+Research - OpenSearch	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/7	BeEugen, Carlit0, Leolingio, SaraBelz, SeboKnt	Feature Archive	3	3
+QueryExecution Component Prototype Implementation	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/35	SaraBelz	Feature Archive	3	2
+Logging Mechanism Implementation	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/37	Leolingio	Feature Archive	2	2
+MetricsCollector Prototype Implementation 	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/19	SeboKnt	Feature Archive	5	3
+Environment Variable Support for Dockerized Services	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/52	SeboKnt	Feature Archive	2	2

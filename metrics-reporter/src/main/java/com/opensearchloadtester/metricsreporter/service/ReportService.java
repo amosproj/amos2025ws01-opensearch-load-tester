@@ -3,11 +3,11 @@ package com.opensearchloadtester.metricsreporter.service;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.opensearchloadtester.common.dto.Metrics;
-import com.opensearchloadtester.metricsreporter.dto.QueryResult;
-import com.opensearchloadtester.metricsreporter.dto.TestRunReport;
+import com.opensearchloadtester.common.dto.MetricsDto;
+import com.opensearchloadtester.metricsreporter.dto.StatisticsDto;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -56,23 +56,23 @@ public class ReportService {
         this.objectMapper.registerModule(new JavaTimeModule());
         this.objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
         this.objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        this.objectMapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
         this.ndjsonWriter = this.objectMapper.writer().without(SerializationFeature.INDENT_OUTPUT);
     }
 
     /**
      * Processes incoming metrics in a streaming fashion:
-     * - converts to QueryResults
+     * - flattens the MetricsDto list into entries
      * - appends to CSV and NDJSON
      * - updates aggregated statistics in memory
      */
-    public synchronized void processMetrics(Metrics metrics) throws IOException {
+    public synchronized void processMetrics(List<MetricsDto> metricsList) throws IOException {
+        // metricsList is already validated in the controller, so we can skip the validation here
+
         initializeReportFiles();
-
-        List<QueryResult> queryResults = convertMetricsToQueryResults(metrics);
-
-        appendToCsvReport(queryResults);
-        appendToNdjsonReport(queryResults);
-        stats.update(queryResults);
+        appendToCsvReport(metricsList);
+        appendToNdjsonReport(metricsList);
+        stats.update(metricsList);
     }
 
     /**
@@ -96,7 +96,7 @@ public class ReportService {
 
         // Create CSV file with headers
         if (!Files.exists(csvPath)) {
-            String csvHeaders = "Load Generator Instance,Request Type,Roundtrip (ms),OpenSearch Took (ms),Hits Count,Has Error,JSON Response\n";
+            String csvHeaders = "Load Generator ID,Query Type,Request Duration (ms),Query Duration (ms),Total Hits,HTTP Status Code\n";
             Files.writeString(csvPath, csvHeaders);
             log.info("Created initial CSV report file: {}", csvPath.toAbsolutePath());
         }
@@ -111,7 +111,7 @@ public class ReportService {
     }
 
 
-    private void appendToCsvReport(List<QueryResult> queryResults) throws IOException {
+    private void appendToCsvReport(List<MetricsDto> metricsList) throws IOException {
         Path csvPath = Paths.get(outputDirectory, csvFilename);
 
         if (!Files.exists(csvPath)) {
@@ -121,25 +121,24 @@ public class ReportService {
         try (FileWriter fileWriter = new FileWriter(csvPath.toFile(), true);
              CSVPrinter csvPrinter = new CSVPrinter(fileWriter, CSVFormat.DEFAULT)) {
 
-            for (QueryResult result : queryResults) {
+            for (MetricsDto metrics : metricsList) {
                 csvPrinter.printRecord(
-                        result.getLoadGeneratorInstance(),
-                        result.getRequestType(),
-                        result.getRoundtripMs(),
-                        result.getOpensearchTookMs(),
-                        result.getHitsCount(),
-                        result.getHasError(),
-                        result.getJsonResponse()
+                        metrics.getLoadGeneratorId(),
+                        metrics.getQueryType(),
+                        metrics.getRequestDurationMillis(),
+                        metrics.getQueryDurationMillis(),
+                        metrics.getTotalHits(),
+                        metrics.getHttpStatusCode()
                 );
             }
 
             csvPrinter.flush();
         }
 
-        log.info("Appended {} query results to CSV report", queryResults.size());
+        log.info("Appended {} metrics entries to CSV report", metricsList.size());
     }
 
-    private void appendToNdjsonReport(List<QueryResult> queryResults) throws IOException {
+    private void appendToNdjsonReport(List<MetricsDto> metricsList) throws IOException {
         Path ndjsonPath = Paths.get(outputDirectory, ndjsonFilename);
 
         if (!Files.exists(ndjsonPath)) {
@@ -147,77 +146,15 @@ public class ReportService {
         }
 
         try (FileWriter writer = new FileWriter(ndjsonPath.toFile(), true)) {
-            for (QueryResult result : queryResults) {
-                writer.write(ndjsonWriter.writeValueAsString(result));
+            for (MetricsDto metrics : metricsList) {
+                writer.write(ndjsonWriter.writeValueAsString(metrics));
                 writer.write("\n");
             }
             writer.flush();
         }
 
-        log.info("Appended {} query results to NDJSON report", queryResults.size());
+        log.info("Appended {} metrics entries to NDJSON report", metricsList.size());
     }
-
-    /**
-     * Helper method to convert a Metrics object to a list of QueryResult objects.
-     *
-     * @param metrics Metrics object to convert
-     * @return List of QueryResult objects
-     */
-    private List<QueryResult> convertMetricsToQueryResults(Metrics metrics) {
-        List<QueryResult> queryResults = new ArrayList<>();
-        String instanceName = metrics.getLoadGeneratorInstance();
-
-        for (int i = 0; i < metrics.getRequestType().size(); i++) {
-            String requestType = metrics.getRequestType(i);
-            Long roundtripMs = metrics.getRoundtripMilSec(i);
-            String jsonResponseStr = metrics.getJsonResponse(i);
-
-            // Parse JSON response
-            com.fasterxml.jackson.databind.JsonNode jsonResponse = null;
-            Long opensearchTookMs = null;
-            Integer hitsCount = null;
-            boolean hasError = false;
-
-            try {
-                jsonResponse = objectMapper.readTree(jsonResponseStr);
-
-                // Extract took
-                if (jsonResponse.has("took")) {
-                    opensearchTookMs = jsonResponse.get("took").asLong();
-                }
-
-                // Extract hits count
-                if (jsonResponse.has("hits")) {
-                    com.fasterxml.jackson.databind.JsonNode hitsNode = jsonResponse.get("hits");
-                    if (hitsNode.has("total") && hitsNode.get("total").has("value")) {
-                        hitsCount = hitsNode.get("total").get("value").asInt();
-                    }
-                }
-
-                // Check for errors
-                hasError = jsonResponse.has("error");
-
-            } catch (Exception e) {
-                log.warn("Failed to parse JSON response for {}: {}", requestType, e.getMessage());
-                hasError = true;
-            }
-
-            QueryResult queryResult = new QueryResult(
-                    requestType,
-                    roundtripMs,
-                    opensearchTookMs,
-                    hitsCount,
-                    jsonResponse,
-                    hasError,
-                    instanceName
-            );
-
-            queryResults.add(queryResult);
-        }
-
-        return queryResults;
-    }
-
 
     /**
      * Returns the absolute path to the JSON statistics report file.
@@ -225,7 +162,7 @@ public class ReportService {
      * @return Path to JSON statistics report file
      */
     public Path getStatisticsReportPath() {
-        return Paths.get(outputDirectory, statsFilename).toAbsolutePath();
+        return resolveReportPath(statsFilename);
     }
 
     /**
@@ -234,56 +171,53 @@ public class ReportService {
      * @return Path to CSV report file
      */
     public Path getCsvReportPath() {
-        return Paths.get(outputDirectory, csvFilename).toAbsolutePath();
+        return resolveReportPath(csvFilename);
     }
 
     /**
      * Returns the absolute path to the NDJSON report file.
      */
     public Path getNdjsonReportPath() {
-        return Paths.get(outputDirectory, ndjsonFilename).toAbsolutePath();
+        return resolveReportPath(ndjsonFilename);
     }
 
     /**
      * Returns the absolute path to the full JSON report file containing all query results.
      */
     public Path getFullJsonReportPath() {
-        return Paths.get(outputDirectory, fullJsonFilename).toAbsolutePath();
+        return resolveReportPath(fullJsonFilename);
+    }
+
+    private Path resolveReportPath(String fileName) {
+        return Paths.get(outputDirectory, fileName).toAbsolutePath();
     }
 
     /**
-     * Finalizes reports by writing a summary JSON without loading all query results into memory.
+     * Finalizes reports by writing the aggregated statistics JSON and building the full query results JSON
+     * without loading all query results into memory.
      */
-    public synchronized TestRunReport finalizeReports(Set<String> loadGeneratorInstances) throws IOException {
+    public synchronized StatisticsDto finalizeReports(Set<String> loadGeneratorInstances) throws IOException {
         initializeReportFiles();
 
-        TestRunReport.Statistics statistics = stats.toStatistics();
-
-        TestRunReport report = new TestRunReport(
-                statistics,
-                LocalDateTime.now(),
-                stats.getTotalQueries(),
-                stats.getTotalErrors(),
-                new ArrayList<>(), // omit query_results to stay lean
-                new ArrayList<>(loadGeneratorInstances)
-        );
+        StatisticsDto statistics = stats.toStatistics(LocalDateTime.now(), loadGeneratorInstances);
 
         Path statsPath = Paths.get(outputDirectory, statsFilename);
-        objectMapper.writeValue(statsPath.toFile(), report);
+        objectMapper.writeValue(statsPath.toFile(), statistics);
         Path ndjsonPath = Paths.get(outputDirectory, ndjsonFilename);
         Path fullJsonPath = Paths.get(outputDirectory, fullJsonFilename);
         writeFullJsonReport(ndjsonPath, fullJsonPath);
+        deleteNdjsonFile(ndjsonPath);
 
-        log.info("Summary written: queries={}, errors={}, instances={}", report.getTotalQueries(), report.getTotalErrors(), report.getLoadGeneratorInstances().size());
-        log.info("Roundtrip stats: avg={}ms min={}ms max={}ms | Took stats: avg={}ms min={}ms max={}ms",
-                String.format("%.2f", statistics.getRoundtripMs().getAverage()),
-                statistics.getRoundtripMs().getMin(),
-                statistics.getRoundtripMs().getMax(),
-                String.format("%.2f", statistics.getOpensearchTookMs().getAverage()),
-                statistics.getOpensearchTookMs().getMin(),
-                statistics.getOpensearchTookMs().getMax());
+        log.info("Statistics written: queries={}, errors={}, instances={}", statistics.getTotalQueries(), statistics.getTotalErrors(), statistics.getLoadGeneratorInstances().size());
+        log.info("Request duration stats: avg={}ms min={}ms max={}ms | Query duration stats: avg={}ms min={}ms max={}ms",
+                String.format("%.2f", statistics.getRequestDurationMs().getAverage()),
+                statistics.getRequestDurationMs().getMin(),
+                statistics.getRequestDurationMs().getMax(),
+                String.format("%.2f", statistics.getQueryDurationMs().getAverage()),
+                statistics.getQueryDurationMs().getMin(),
+                statistics.getQueryDurationMs().getMax());
 
-        return report;
+        return statistics;
     }
 
     /**
@@ -313,7 +247,17 @@ public class ReportService {
 
             generator.writeEndArray();
             generator.flush();
-            log.info("Full JSON report written to {} with {} query results", fullJsonPath.toAbsolutePath(), count);
+            log.info("Full JSON report written to {} with {} metrics entries", fullJsonPath.toAbsolutePath(), count);
+        }
+    }
+
+    private void deleteNdjsonFile(Path ndjsonPath) {
+        try {
+            if (Files.deleteIfExists(ndjsonPath)) {
+                log.info("Deleted temporary NDJSON file {}", ndjsonPath.toAbsolutePath());
+            }
+        } catch (IOException e) {
+            log.warn("Failed to delete temporary NDJSON file {}: {}", ndjsonPath.toAbsolutePath(), e.getMessage());
         }
     }
 
@@ -323,66 +267,73 @@ public class ReportService {
         private int totalQueries = 0;
         private int totalErrors = 0;
 
-        private long roundtripCount = 0;
-        private long roundtripSum = 0;
-        private long roundtripMin = Long.MAX_VALUE;
-        private long roundtripMax = Long.MIN_VALUE;
+        private long requestDurationCount = 0;
+        private long requestDurationSum = 0;
+        private long requestDurationMin = Long.MAX_VALUE;
+        private long requestDurationMax = Long.MIN_VALUE;
 
-        private long tookCount = 0;
-        private long tookSum = 0;
-        private long tookMin = Long.MAX_VALUE;
-        private long tookMax = Long.MIN_VALUE;
+        private long queryDurationCount = 0;
+        private long queryDurationSum = 0;
+        private long queryDurationMin = Long.MAX_VALUE;
+        private long queryDurationMax = Long.MIN_VALUE;
 
-        void update(List<QueryResult> results) {
-            for (QueryResult result : results) {
+        void update(List<MetricsDto> results) {
+            for (MetricsDto result : results) {
                 totalQueries++;
-                if (Boolean.TRUE.equals(result.getHasError())) {
+
+                if (result.getHttpStatusCode() >= 400) {
                     totalErrors++;
                 }
 
-                Long rt = result.getRoundtripMs();
-                if (rt != null) {
-                    roundtripCount++;
-                    roundtripSum += rt;
-                    roundtripMin = Math.min(roundtripMin, rt);
-                    roundtripMax = Math.max(roundtripMax, rt);
+                Long requestDurationMs = result.getRequestDurationMillis();
+                if (requestDurationMs != null) {
+                    requestDurationCount++;
+                    requestDurationSum += requestDurationMs;
+                    requestDurationMin = Math.min(requestDurationMin, requestDurationMs);
+                    requestDurationMax = Math.max(requestDurationMax, requestDurationMs);
                 }
 
-                Long took = result.getOpensearchTookMs();
-                if (took != null) {
-                    tookCount++;
-                    tookSum += took;
-                    tookMin = Math.min(tookMin, took);
-                    tookMax = Math.max(tookMax, took);
+                Long queryDurationMs = result.getQueryDurationMillis();
+                if (queryDurationMs != null && queryDurationMs >= 0) {
+                    queryDurationCount++;
+                    queryDurationSum += queryDurationMs;
+                    queryDurationMin = Math.min(queryDurationMin, queryDurationMs);
+                    queryDurationMax = Math.max(queryDurationMax, queryDurationMs);
                 }
             }
         }
 
-        TestRunReport.Statistics toStatistics() {
-            TestRunReport.RoundtripStats rts = new TestRunReport.RoundtripStats();
-            if (roundtripCount > 0) {
-                rts.setAverage(roundtripSum / (double) roundtripCount);
-                rts.setMin(roundtripMin);
-                rts.setMax(roundtripMax);
+        StatisticsDto toStatistics(LocalDateTime generatedAt, Set<String> loadGeneratorInstances) {
+            StatisticsDto.DurationStats requestDuration = new StatisticsDto.DurationStats();
+            if (requestDurationCount > 0) {
+                requestDuration.setAverage(requestDurationSum / (double) requestDurationCount);
+                requestDuration.setMin(requestDurationMin);
+                requestDuration.setMax(requestDurationMax);
             } else {
-                rts.setAverage(0.0);
-                rts.setMin(0L);
-                rts.setMax(0L);
+                requestDuration.setAverage(0.0);
+                requestDuration.setMin(0L);
+                requestDuration.setMax(0L);
             }
 
-            TestRunReport.OpenSearchTookStats ots = new TestRunReport.OpenSearchTookStats();
-            if (tookCount > 0) {
-                ots.setAverage(tookSum / (double) tookCount);
-                ots.setMin(tookMin);
-                ots.setMax(tookMax);
+            StatisticsDto.DurationStats queryDuration = new StatisticsDto.DurationStats();
+            if (queryDurationCount > 0) {
+                queryDuration.setAverage(queryDurationSum / (double) queryDurationCount);
+                queryDuration.setMin(queryDurationMin);
+                queryDuration.setMax(queryDurationMax);
             } else {
-                ots.setAverage(0.0);
-                ots.setMin(0L);
-                ots.setMax(0L);
+                queryDuration.setAverage(0.0);
+                queryDuration.setMin(0L);
+                queryDuration.setMax(0L);
             }
 
-            return new TestRunReport.Statistics(rts, ots);
+            return new StatisticsDto(
+                    generatedAt,
+                    requestDuration,
+                    queryDuration,
+                    totalQueries,
+                    totalErrors,
+                    new ArrayList<>(loadGeneratorInstances)
+            );
         }
     }
-
 }

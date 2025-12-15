@@ -5,21 +5,21 @@
       "must": [
         {
           "term": {
-            "dss_custom_metadata.duo.customer_number.raw": "{{customer_number}}"
+            "dsCustomMetadataDuo.customerNumber.raw": "{{customer_number}}"
           }
         }
       ]
     }
   },
   "_source": [
-    "dss_document_name",
-    "dss_custom_metadata.duo.customer_number",
-    "dss_custom_metadata.duo.invoice_date",
-    "dss_custom_metadata.duo.invoice_number",
-    "dss_custom_metadata.duo.total_gross_amount",
-    "dss_custom_metadata.duo.booking_state",
-    "dss_custom_metadata.duo.document_approval_state",
-    "dss_custom_metadata.duo.location"
+    "dssDocumentName",
+    "dsCustomMetadataDuo.customerNumber",
+    "dsCustomMetadataDuo.invoiceDate",
+    "dsCustomMetadataDuo.invoiceNumber",
+    "dsCustomMetadataDuo.totalGrossAmount",
+    "dsCustomMetadataDuo.bookingState",
+    "dsCustomMetadataDuo.documentApprovalState",
+    "dsCustomMetadataDuo.location"
   ]
 }
 

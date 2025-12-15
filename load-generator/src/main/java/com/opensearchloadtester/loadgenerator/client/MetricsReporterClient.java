@@ -2,7 +2,7 @@ package com.opensearchloadtester.loadgenerator.client;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.opensearchloadtester.common.dto.Metrics;
+import com.opensearchloadtester.common.dto.MetricsDto;
 import com.opensearchloadtester.loadgenerator.exception.MetricsReporterAccessException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.List;
 
 @Slf4j
 @Component
@@ -29,17 +30,17 @@ public class MetricsReporterClient {
     /**
      * Sends the given metrics as JSON to the configured Metrics Reporter service.
      */
-    public void reportMetrics(Metrics metrics) {
+    public void reportMetrics(List<MetricsDto> metricsList) {
         String jsonBody;
 
         try {
-            jsonBody = mapper.writeValueAsString(metrics);
+            jsonBody = mapper.writeValueAsString(metricsList);
         } catch (JsonProcessingException e) {
             log.error("Failed to serialize Metrics to JSON: {}", e.getMessage());
             throw new MetricsReporterAccessException("Failed to serialize Metrics to JSON", e);
         }
 
-        String url = metricsReporterUrl + "addMetrics";
+        String url = metricsReporterUrl + "metrics";
 
         HttpPost request = new HttpPost(url);
         request.setHeader("Content-Type", ContentType.APPLICATION_JSON.getMimeType());

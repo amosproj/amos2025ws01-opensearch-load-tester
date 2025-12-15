@@ -1,7 +1,7 @@
 package com.opensearchloadtester.metricsreporter.controller;
 
-import com.opensearchloadtester.common.dto.Metrics;
-import com.opensearchloadtester.metricsreporter.dto.TestRunReport;
+import com.opensearchloadtester.common.dto.MetricsDto;
+import com.opensearchloadtester.metricsreporter.dto.StatisticsDto;
 import com.opensearchloadtester.metricsreporter.service.ReportService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -41,22 +43,41 @@ public class ReportController {
      * @param metrics DTO for metrics data
      * @return ResponseEntity with status message
      */
-    @PostMapping("/addMetrics")
-    public synchronized ResponseEntity<String> addMetrics(@RequestBody Metrics metrics) {
-        log.info("Received metrics from load generator: {}", metrics.getLoadGeneratorInstance());
+    @PostMapping("/metrics")
+    public synchronized ResponseEntity<String> submitMetrics(@RequestBody List<MetricsDto> metricsList) {
+        Set<String> loadGeneratorIds = new HashSet<>();
 
-        // Validate params
-        if (metrics.getRequestType() == null || metrics.getRoundtripMilSec() == null ||
-                metrics.getJsonResponse() == null || metrics.getLoadGeneratorInstance() == null) {
-            log.error("Invalid request parameters - requestType:{}, roundtripMilSec:{}, jsonResponse:{}, instance:{}",
-                    metrics.getRequestType(), metrics.getRoundtripMilSec(),
-                    metrics.getJsonResponse(), metrics.getLoadGeneratorInstance());
-            return ResponseEntity.badRequest().body("Invalid metrics data\n");
+        // Validate payload (empty payload is invalid)
+        if (metricsList == null || metricsList.isEmpty()) {
+            log.error("Received empty metrics payload");
+            return ResponseEntity.badRequest().body("Invalid metrics payload\n");
         }
+
+        // Validate metrics entries
+        String payloadLoadGeneratorId = null;
+        for (int i = 0; i < metricsList.size(); i++) {
+            MetricsDto metrics = metricsList.get(i);
+            String validationError = validateMetrics(metrics);
+            if (validationError != null) {
+                log.error("Invalid metrics entry at index {}: {}", i, validationError);
+                return ResponseEntity.badRequest().body("Invalid metrics payload\n");
+            }
+            // Validate that all metrics entries have the same loadGeneratorId
+            if (payloadLoadGeneratorId == null) {
+                payloadLoadGeneratorId = metrics.getLoadGeneratorId();
+            } else if (!payloadLoadGeneratorId.equals(metrics.getLoadGeneratorId())) {
+                log.error("Mixed loadGeneratorId values in one payload (first: {}, current: {}, index: {})",
+                        payloadLoadGeneratorId, metrics.getLoadGeneratorId(), i);
+                return ResponseEntity.badRequest().body("Invalid metrics payload\n");
+            }
+        }
+
+        loadGeneratorIds.add(payloadLoadGeneratorId);
+        log.info("Received {} metrics entries from load generator: {}", metricsList.size(), payloadLoadGeneratorId);
 
         // Immediately process and persist metrics to avoid unbounded in-memory growth
         try {
-            reportService.processMetrics(metrics);
+            reportService.processMetrics(metricsList);
         } catch (IOException e) {
             log.error("Failed to persist metrics", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -64,21 +85,21 @@ public class ReportController {
         }
 
         // Count unique reporting instances
-        reportedInstances.add(metrics.getLoadGeneratorInstance());
+        reportedInstances.addAll(loadGeneratorIds);
         int currentCount = reportedInstances.size();
 
         log.info("Stored metrics from {}. Received {}/{} replicas. Query count: {}",
-                metrics.getLoadGeneratorInstance(),
+                loadGeneratorIds,
                 currentCount,
                 expectedReplicas,
-                metrics.getRequestType().size());
+                metricsList.size());
 
         // Check if all replicas have reported
         if (currentCount >= expectedReplicas) {
             log.info("All {} replicas have reported. Generating reports...", expectedReplicas);
 
             try {
-                TestRunReport summary = reportService.finalizeReports(reportedInstances);
+                StatisticsDto summary = reportService.finalizeReports(reportedInstances);
 
                 StringBuilder message = new StringBuilder(String.format(
                         "All metrics received (%d/%d replicas). Reports generated successfully!\n" +
@@ -119,6 +140,30 @@ public class ReportController {
     @GetMapping("/health")
     public ResponseEntity<String> health() {
         return ResponseEntity.ok("Report Controller is running!\n");
+    }
+
+    // Validate a single metrics entry
+    // Returns a string with the validation error, or null if the metrics entry is valid
+    private String validateMetrics(MetricsDto metrics) {
+        if (metrics == null) {
+            return "metrics entry is null";
+        }
+        if (metrics.getLoadGeneratorId() == null || metrics.getLoadGeneratorId().isBlank()) {
+            return "loadGeneratorId is missing";
+        }
+        if (metrics.getQueryType() == null || metrics.getQueryType().isBlank()) {
+            return "queryType is missing";
+        }
+        if (metrics.getRequestDurationMillis() != null && metrics.getRequestDurationMillis() < 0) {
+            return "requestDurationMillis is negative";
+        }
+        if (metrics.getQueryDurationMillis() != null && metrics.getQueryDurationMillis() < 0) {
+            return "queryDurationMillis is negative";
+        }
+        if (metrics.getHttpStatusCode() < 100 || metrics.getHttpStatusCode() > 599) {
+            return "httpStatusCode is out of range";
+        }
+        return null;
     }
 
 }

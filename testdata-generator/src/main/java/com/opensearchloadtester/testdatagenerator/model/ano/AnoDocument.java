@@ -1,19 +1,17 @@
 package com.opensearchloadtester.testdatagenerator.model.ano;
 
-import net.datafaker.Faker;
-
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.opensearchloadtester.testdatagenerator.model.AbstractDocument;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
 
-import java.time.temporal.ChronoUnit;
-import java.util.concurrent.TimeUnit;
 import java.time.Instant;
-import java.util.Locale;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Getter
 @Setter
@@ -24,13 +22,16 @@ public class AnoDocument extends AbstractDocument {
      * Attributes of an AnoDocument correspond to the data stored in an OpenSearch index.
      * Wrapper Classes are used for datatypes to ensure stability for null entries.
      */
-    private Instant dssCreationDatetime;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssXXX", timezone = "Europe/Berlin")
+    private Date dssCreationDatetime;
     private PayrollInfo dssCustomMetadataPayrollInfo;
-    private Instant dssDeleteRetentionMinRetention;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssXXX", timezone = "Europe/Berlin")
+    private Date dssDeleteRetentionMinRetention;
     private int dssDocumentOrientation;
     private String dssDocumentPath;
     private String dssDocumentSource;
-    private Instant dssLastModifiedUserDatetime;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssXXX", timezone = "Europe/Berlin")
+    private Date dssLastModifiedUserDatetime;
     private String dssOriginalFilename;
     private Boolean dssRecyclebin;
 
@@ -39,11 +40,11 @@ public class AnoDocument extends AbstractDocument {
         AnoDocument anoDocument = fillCommonFieldsRandomly(new AnoDocument());
         // Fill with random values
         anoDocument.dssCustomMetadataPayrollInfo = PayrollInfo.random();
-        anoDocument.dssCreationDatetime = faker.timeAndDate().past(3650, TimeUnit.DAYS);
+        anoDocument.dssCreationDatetime = Date.from(faker.timeAndDate().past(3650, TimeUnit.DAYS));
         // All examples where null
         anoDocument.dssDeleteRetentionMinRetention = switch (RANDOM.nextInt(3)) {
-            case 0 -> faker.timeAndDate().past(90, TimeUnit.DAYS);
-            case 1 -> faker.timeAndDate().future(3650, TimeUnit.DAYS);
+            case 0 -> Date.from(faker.timeAndDate().past(90, TimeUnit.DAYS));
+            case 1 -> Date.from(faker.timeAndDate().future(3650, TimeUnit.DAYS));
             default -> null;
         };
         // All examples were 0
@@ -51,7 +52,7 @@ public class AnoDocument extends AbstractDocument {
         anoDocument.dssDocumentPath = "/" + anoDocument.dssDataspaceId
                 + "/documents/" + anoDocument.dssDocumentId + "/document";
         anoDocument.dssDocumentSource = faker.internet().url();
-        anoDocument.dssLastModifiedUserDatetime = faker.timeAndDate().past(90, TimeUnit.DAYS);
+        anoDocument.dssLastModifiedUserDatetime = Date.from(faker.timeAndDate().past(90, TimeUnit.DAYS));
         anoDocument.dssOriginalFilename = "Brutto-Netto-Abrechnung "
                 + translateMonthToName(anoDocument.dssCustomMetadataPayrollInfo.getAccountingMonth())
                 + " " + anoDocument.dssCustomMetadataPayrollInfo.getAccountingYear() + ".pdf";
@@ -94,24 +95,27 @@ public class AnoDocument extends AbstractDocument {
 
         private Integer accountingMonth;
         private Integer accountingYear;
-        private Instant firstAccess;
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssXXX", timezone = "Europe/Berlin")
+        private Date firstAccess;
         private String language;
         private String payrollType;
-        private Instant provisionDate;
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+        private Date provisionDate;
 
         // Method to create a random PayrollInfo object
         public static PayrollInfo random() {
             PayrollInfo payrollInfo = new PayrollInfo();
-            payrollInfo.provisionDate = faker.timeAndDate().past(3650, TimeUnit.DAYS);
+            payrollInfo.provisionDate = Date.from(faker.timeAndDate().past(3650, TimeUnit.DAYS));
             // Extract month and year from provisionDate
-            java.time.ZonedDateTime zdt = payrollInfo.provisionDate.atZone(java.time.ZoneId.systemDefault());
+            Instant provDate = payrollInfo.provisionDate.toInstant();
+            java.time.ZonedDateTime zdt = provDate.atZone(java.time.ZoneId.systemDefault());
             payrollInfo.accountingMonth = zdt.getMonthValue();
             payrollInfo.accountingYear = zdt.getYear();
             // can be null (30%) or typically next month (16 days later)
             if (RANDOM.nextDouble() < 0.3) {
                 payrollInfo.firstAccess = null;
             } else {
-                payrollInfo.firstAccess = payrollInfo.provisionDate.plus(RANDOM.nextInt(16), ChronoUnit.DAYS);
+                payrollInfo.firstAccess = Date.from(provDate.plus(RANDOM.nextInt(16), ChronoUnit.DAYS));
             }
 
             List<String> lang = List.of("German", "English", "Spanish", "French");
