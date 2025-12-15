@@ -2,6 +2,7 @@ package com.opensearchloadtester.loadgenerator.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opensearchloadtester.common.dto.LoadTestSyncStatusDto;
+import com.opensearchloadtester.common.utils.TimeFormatter;
 import com.opensearchloadtester.loadgenerator.exception.LoadTestStartSyncException;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -18,9 +19,6 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 
 @Slf4j
 @Component
@@ -72,8 +70,8 @@ public class LoadTestStartSyncClient {
                 if (plannedStart < now) {
                     throw new LoadTestStartSyncException(
                             String.format("Missed global start (planned: %s, now: %s)",
-                                    formatEpochMillisToUtcString(plannedStart),
-                                    formatEpochMillisToUtcString(now))
+                                    TimeFormatter.formatEpochMillisToUtcString(plannedStart),
+                                    TimeFormatter.formatEpochMillisToUtcString(now))
                     );
                 }
 
@@ -142,14 +140,5 @@ public class LoadTestStartSyncClient {
         } catch (IOException e) {
             log.warn("Failed to close HTTP client", e);
         }
-    }
-
-    private String formatEpochMillisToUtcString(long epochMillis) {
-        DateTimeFormatter utcFormatter = DateTimeFormatter
-                .ofPattern("yyyy-MM-dd HH:mm:ss 'UTC'")
-                .withZone(ZoneOffset.UTC);
-
-        Instant instant = Instant.ofEpochMilli(epochMillis);
-        return utcFormatter.format(instant);
     }
 }

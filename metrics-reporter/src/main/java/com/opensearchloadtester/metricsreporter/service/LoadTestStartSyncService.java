@@ -1,14 +1,12 @@
 package com.opensearchloadtester.metricsreporter.service;
 
 import com.opensearchloadtester.common.dto.LoadTestSyncStatusDto;
+import com.opensearchloadtester.common.utils.TimeFormatter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -43,7 +41,7 @@ public class LoadTestStartSyncService {
             plannedStartTimeMillis = System.currentTimeMillis() + START_DELAY_MILLIS;
             log.info("All Load Generators are ready. Planned load test start in {} seconds at {}",
                     Duration.ofMillis(START_DELAY_MILLIS).toSeconds(),
-                    formatEpochMillisToUtcString(plannedStartTimeMillis));
+                    TimeFormatter.formatEpochMillisToUtcString(plannedStartTimeMillis));
         }
     }
 
@@ -56,14 +54,5 @@ public class LoadTestStartSyncService {
                 isStartAllowed,
                 plannedStartTimeMillis
         );
-    }
-
-    private String formatEpochMillisToUtcString(long epochMillis) {
-        DateTimeFormatter utcFormatter = DateTimeFormatter
-                .ofPattern("yyyy-MM-dd HH:mm:ss 'UTC'")
-                .withZone(ZoneOffset.UTC);
-
-        Instant instant = Instant.ofEpochMilli(epochMillis);
-        return utcFormatter.format(instant);
     }
 }
