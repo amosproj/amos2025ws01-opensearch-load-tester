@@ -9,13 +9,13 @@ public class DuoBookingByCostcenterAndDateQuery extends AbstractQuery {
     }
 
     public static DuoBookingByCostcenterAndDateQuery random() {
-        int startYear = faker().number().numberBetween(2015, 2025);
-        String minYear = String.valueOf(startYear);
-        String maxYear = String.valueOf(faker().number().numberBetween(startYear, 2025));
+        int startYear = faker().number().numberBetween(2015, 2026);
+        String year_from = String.valueOf(startYear);
+        String year_to = String.valueOf(faker().number().numberBetween(startYear, 2026));
 
         Map<String, String> queryParams = Map.of(
-                "min_year", minYear,
-                "max_year", maxYear
+                "date_from", year_from,
+                "date_to", year_to
         );
 
         return new DuoBookingByCostcenterAndDateQuery(queryParams,

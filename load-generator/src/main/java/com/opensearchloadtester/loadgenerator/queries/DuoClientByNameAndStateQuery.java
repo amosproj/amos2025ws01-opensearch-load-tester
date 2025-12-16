@@ -13,7 +13,7 @@ public class DuoClientByNameAndStateQuery extends AbstractQuery {
         String clientName = faker().name().fullName();
 
         List<String> appStates = List.of("APPROVED", "NOT_RELEVANT", "UNDISPATCHED");
-        String documentApprovalState = appStates.get(faker().number().numberBetween(0, 2));
+        String documentApprovalState = appStates.get(faker().random().nextInt(appStates.size()));
 
         Map<String, String> queryParams = Map.of(
                 "client_name", clientName,

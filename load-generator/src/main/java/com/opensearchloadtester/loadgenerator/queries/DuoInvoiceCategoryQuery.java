@@ -11,8 +11,7 @@ public class DuoInvoiceCategoryQuery extends AbstractQuery {
 
     public static DuoInvoiceCategoryQuery random() {
         List<String> documentCategoryTypes = List.of("SUPPLIER_INVOICE", "OTHER", "SALES_INVOICE");
-        String documentCategory = documentCategoryTypes.get(faker().number().numberBetween(0, 2));
-
+        String documentCategory = documentCategoryTypes.get(faker().random().nextInt(documentCategoryTypes.size()));
 
         Map<String, String> queryParams = Map.of(
                 "category", documentCategory
