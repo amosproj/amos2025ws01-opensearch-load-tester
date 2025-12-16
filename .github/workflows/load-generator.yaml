@@ -46,7 +46,7 @@ jobs:
         env:
           LOGGING_LEVEL_COM_OPENSEARCHLOADTESTER_LOADGENERATOR: ${{ github.event.inputs.logging_level || 'INFO' }}
           OPENSEARCH_URL: http://test-target-opensearch:9200
-          METRICS_REPORTER_URL: http://metrics-reporter:8080/api/
+          METRICS_REPORTER_URL: http://metrics-reporter:8080/api
           SCENARIO_CONFIG_PATH: scenarios/default-scenario.yaml
           LOAD_GENERATOR_REPLICAS: ${{ github.event.inputs.LOAD_GENERATOR_REPLICAS || '2' }}
         run: |
