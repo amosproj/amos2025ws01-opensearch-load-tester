@@ -1,23 +1,26 @@
 package com.opensearchloadtester.testdatagenerator.service;
 
 import com.opensearchloadtester.testdatagenerator.exception.OpenSearchDataAccessException;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.opensearch.OpenSearchClient;
-import org.opensearch.client.opensearch._types.FieldValue;
-import org.opensearch.client.opensearch._types.mapping.TypeMapping;
 import org.opensearch.client.opensearch.core.*;
 import org.opensearch.client.opensearch.core.bulk.BulkOperation;
 import org.opensearch.client.opensearch.core.bulk.IndexOperation;
 import org.opensearch.client.opensearch.core.search.Hit;
+import org.opensearch.client.opensearch._types.FieldValue;
+import org.opensearch.client.opensearch._types.mapping.TypeMapping;
 import org.opensearch.client.opensearch.indices.CreateIndexRequest;
 import org.opensearch.client.opensearch.indices.ExistsRequest;
 import org.opensearch.client.opensearch.indices.IndexSettings;
 import org.opensearch.client.opensearch.indices.RefreshRequest;
 import org.opensearch.client.transport.endpoints.BooleanResponse;
+import org.opensearch.client.transport.httpclient5.ResponseException;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -28,6 +31,14 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Service
 public class OpenSearchDataService {
+
+    private static final int HTTP_TOO_MANY_REQUESTS = 429;
+    @Getter
+    private volatile int dynamicBatchLimit = Integer.MAX_VALUE;
+
+
+    private static final int MIN_SUB_BATCH_SIZE = 1_000;
+    private static final int ABSOLUTE_MAX_SPLIT_DEPTH = 8;
 
     private final OpenSearchClient openSearchClient;
 
@@ -41,6 +52,7 @@ public class OpenSearchDataService {
      * @param indexSettings optional index settings (may be {@code null})
      * @param indexMapping  optional index mapping (may be {@code null})
      */
+
     public void createIndex(String indexName,
                             @Nullable IndexSettings indexSettings,
                             @Nullable TypeMapping indexMapping) {
@@ -95,6 +107,31 @@ public class OpenSearchDataService {
         }
     }
 
+    //  BULK INDEXING WITH AUTO-SPLIT ON 429
+
+    /**
+     * Bulk indexes documents. If OpenSearch responds with HTTP 429, the batch is split
+     * into smaller sub-batches (down to MIN_SUB_BATCH_SIZE) and retried.
+     * The split/retry logic lives in this public method (not in executeBulk()).
+     */
+
+    /**
+     * Computes how deep we are allowed to split the initial batch without
+     * going below MIN_SUB_BATCH_SIZE and without exceeding ABSOLUTE_MAX_SPLIT_DEPTH.
+     */
+    private int computeMaxSplitDepth(int initialSize) {
+        int depth = 0;
+        int size = initialSize;
+
+        while (size > MIN_SUB_BATCH_SIZE * 2 && depth < ABSOLUTE_MAX_SPLIT_DEPTH) {
+            size = size / 2;
+            depth++;
+        }
+
+        log.debug("Computed maxSplitDepth={} for initialSize={}", depth, initialSize);
+        return depth;
+    }
+
     public <T> void bulkIndexDocuments(String indexName, List<T> documents) {
         validateIndexName(indexName);
         Objects.requireNonNull(documents, "documents list must not be null");
@@ -104,53 +141,122 @@ public class OpenSearchDataService {
             return;
         }
 
-        try {
-            ArrayList<BulkOperation> ops = new ArrayList<>();
+        final int maxSplitDepth = computeMaxSplitDepth(documents.size());
 
-            for (T document : documents) {
-                Objects.requireNonNull(document, "document must not be null");
+        record Work<T>(List<T> docs, int depth) {}
 
-                ops.add(new BulkOperation.Builder()
-                        .index(new IndexOperation.Builder<T>()
-                                .index(indexName)
-                                .document(document)
-                                .build()
-                        )
-                        .build()
-                );
-            }
+        var stack = new java.util.ArrayDeque<Work<T>>();
+        stack.push(new Work<>(documents, 0));
 
-            BulkRequest request = new BulkRequest.Builder()
-                    .operations(ops)
-                    .build();
+        while (!stack.isEmpty()) {
+            Work<T> work = stack.pop();
+            List<T> batch = work.docs();
+            int depth = work.depth();
 
-            BulkResponse response = openSearchClient.bulk(request);
+            if (batch == null || batch.isEmpty()) continue;
 
-            if (response.errors()) {
-                String errorMessages = response.items().stream()
-                        .filter(item -> item.error() != null)
-                        .map(item -> String.format(
-                                "id: %s, status: %d, reason: %s",
-                                item.id(),
-                                item.status(),
-                                item.error().reason()
-                        ))
-                        .collect(Collectors.joining("; "));
+            try {
+                executeBulk(indexName, batch);
+                log.debug("Bulk indexed {} documents in index '{}' (depth={})", batch.size(), indexName, depth);
 
-                log.error("Bulk indexing completed with errors for index '{}': {}", indexName, errorMessages);
+            } catch (ResponseException e) {
+                int status = e.status();
 
+                boolean canSplit =
+                        status == HTTP_TOO_MANY_REQUESTS
+                                && batch.size() > MIN_SUB_BATCH_SIZE
+                                && depth < maxSplitDepth;
+
+                if (!canSplit) {
+                    log.error("ResponseException while bulk indexing documents in index '{}' (status={})",
+                            indexName, status, e);
+                    throw new OpenSearchDataAccessException(
+                            "Unexpected error while bulk indexing documents in index '" + indexName + "'", e);
+                }
+
+                // ---- 429 handling & split logic lives HERE (public method) ----
+                int newLimit = batch.size() / 2;
+                dynamicBatchLimit = Math.min(dynamicBatchLimit, newLimit);
+
+                log.warn("Adjusted dynamic batch limit to {} based on failing batch size {}",
+                        dynamicBatchLimit, batch.size());
+                log.warn("Bulk request rejected with 429 for {} docs in index '{}'. Splitting (depth={}/{})...",
+                        batch.size(), indexName, depth, maxSplitDepth);
+
+                int mid = batch.size() / 2;
+
+                // IMPORTANT: subList() is a view; copy to avoid retaining huge backing list
+                List<T> left  = new ArrayList<>(batch.subList(0, mid));
+                List<T> right = new ArrayList<>(batch.subList(mid, batch.size()));
+
+                try {
+                    Thread.sleep(200L);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                }
+
+                // push right then left so left is processed first (LIFO)
+                stack.push(new Work<>(right, depth + 1));
+                stack.push(new Work<>(left,  depth + 1));
+
+            } catch (IOException e) {
+                log.error("I/O error while bulk indexing documents in index '{}'", indexName, e);
                 throw new OpenSearchDataAccessException(
-                        String.format("Bulk indexing completed with errors for index '%s': %s", indexName, errorMessages)
-                );
+                        "I/O error while bulk indexing documents in index '" + indexName + "'", e);
+
+            } catch (OpenSearchDataAccessException e) {
+                throw e;
+
+            } catch (Exception e) {
+                log.error("Unexpected error while bulk indexing documents in index '{}'", indexName, e);
+                throw new OpenSearchDataAccessException(
+                        "Unexpected error while bulk indexing documents in index '" + indexName + "'", e);
             }
 
-            log.info("Bulk indexed {} documents in index '{}'", response.items().size(), indexName);
-        } catch (Exception e) {
-            log.error("Unexpected error while bulk indexing documents in index '{}'", indexName, e);
-            throw new OpenSearchDataAccessException(
-                    String.format("Unexpected error while bulk indexing documents in index '%s'", indexName), e);
         }
     }
+
+
+    // Builds the bulk request from the given documents
+
+    private <T> void executeBulk(String indexName, List<T> documents) throws IOException {
+        ArrayList<BulkOperation> ops = new ArrayList<>();
+
+        for (T document : documents) {
+            Objects.requireNonNull(document, "document must not be null");
+
+            ops.add(new BulkOperation.Builder()
+                    .index(new IndexOperation.Builder<T>()
+                            .index(indexName)
+                            .document(document)
+                            .build())
+                    .build());
+        }
+
+        BulkRequest request = new BulkRequest.Builder()
+                .operations(ops)
+                .build();
+
+        BulkResponse response = openSearchClient.bulk(request);
+
+        if (response.errors()) {
+            String errorMessages = response.items().stream()
+                    .filter(item -> item.error() != null)
+                    .map(item -> String.format(
+                            "id: %s, status: %d, reason: %s",
+                            item.id(), item.status(), item.error().reason()
+                    ))
+                    .collect(Collectors.joining("; "));
+
+            log.error("Bulk indexing completed with errors for index '{}': {}", indexName, errorMessages);
+
+            throw new OpenSearchDataAccessException(
+                    String.format("Bulk indexing completed with errors for index '%s': %s", indexName, errorMessages)
+            );
+        }
+    }
+
+    //  OTHER METHODS (search, delete, refresh...)
 
     public <T> Optional<T> getDocument(String indexName, String id, Class<T> documentClass) {
         validateIndexName(indexName);
@@ -262,7 +368,7 @@ public class OpenSearchDataService {
                     .build();
 
             BooleanResponse response = openSearchClient.indices().exists(request);
-            return response.value(); // true, if index exists
+            return response.value();
         } catch (Exception e) {
             log.error("Unexpected error while checking if index '{}' exists", indexName, e);
             throw new OpenSearchDataAccessException(

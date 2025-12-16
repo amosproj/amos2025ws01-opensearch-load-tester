@@ -1,58 +1,58 @@
 .PHONY: run stop logs clean loadtest status help build curl
 
 help:
-	@echo "Verfügbare Befehle:"
-	@echo "  make build        - Baut alle Docker-Images"
-	@echo "  make run          - Startet alle Container"
-	@echo "  make stop         - Stoppt alle Container"
-	@echo "  make logs         - Zeigt Container-Logs"
-	@echo "  make curl         - Startet eine Shell im Curl-Debug Container"
-	@echo "  make loadtest     - Interaktiver Loadtest Setup"
-	@echo "  make status       - Zeigt Ressourcen-Nutzung der Container"
-	@echo "  make clean        - Stoppt Container und löscht Volumes/Images"
-	@echo "  make help         - Zeigt diese Hilfe an"
-
+	@echo "Available make commands:"
+	@echo "  make build        - Builds all Docker images"
+	@echo "  make run          - Starts all containers"
+	@echo "  make stop         - Stops all containers"
+	@echo "  make logs         - Shows all container logs"
+	@echo "    make logs testdata-generator  -> logs for testdata-generator"
+	@echo "    make logs load-generator      -> logs for load-generator"
+	@echo "    make logs metrics-reporter    -> logs for metrics-reporter"
+	@echo "  make curl         - Starts a shell in the Curl debug container"
+	@echo "  make loadtest     - Interactive load test setup"
+	@echo "  make status       - Shows resource usage of containers"
+	@echo "  make clean        - Stops containers and removes volumes/images"
+	@echo "  make help         - Shows this help message"
 loadtest:
-	@echo "Loadtest Konfiguration"
+	@echo "Loadtest Configuration"
 	@echo "=========================="
-	@read -p "Anzahl Load-Generator Replicas (default: 3): " replicas; \
+	@read -p "Number of Load-Generator Replicas (default: 3): " replicas; \
 	replicas=$${replicas:-3}; \
-	read -p "Anzahl zu generierende Datensätze (default: 1000): " records; \
+	read -p "Number of records to generate (default: 1000): " records; \
 	records=$${records:-1000}; \
-	read -p "Art der Testdata (default: ANO): " type; \
+	read -p "Type of test data (default: ANO): " type; \
 	type=$${type:-ANO}; \
 	echo ""; \
-	echo "Konfiguriere Loadtest mit:"; \
+	echo "Configuring load test with:"; \
 	echo "  - Load-Generator Replicas: $$replicas"; \
-	echo "  - Datensätze: $$records"; \
+	echo "  - Records: $$records"; \
 	echo ""; \
 	sed -i.bak "s/^LOAD_GENERATOR_REPLICAS=.*/LOAD_GENERATOR_REPLICAS=$$replicas/" .env; \
 	sed -i.bak "s/^TEST_DATA_GENERATION_COUNT=.*/TEST_DATA_GENERATION_COUNT=$$records/" .env; \
 	sed -i.bak "s/^TEST_DATA_GENERATION_DOCUMENT_TYPE=.*/TEST_DATA_GENERATION_DOCUMENT_TYPE=$$type/" .env; \
 	rm -f .env.bak; \
-	echo ".env wurde aktualisiert"; \
+	echo ".env has been updated"; \
 	echo ""; \
-	read -p "Container (neu) starten? (Y/n): " restart; \
+	read -p "Restart containers? (Y/n): " restart; \
 	echo ""; \
 	if [ -z "$$restart" ] || [ "$$restart" = "y" ] || [ "$$restart" = "Y" ]; then \
 		make clean; \
 		make build; \
 		make run; \
-		make curl; \
 	fi
 
 build:
-	@echo "Docker Images werden gebaut..."
+	@echo "Docker Images are building..."
 	@docker-compose build testdata-generator
 	@docker-compose build load-generator
 	@docker-compose build metrics-reporter
-	@echo "Alle Images wurden erfolgreich gebaut!"
-
+	@echo "All images have been successfully built!"
 run:
-	@echo "Container werden gestartet..."
+	@echo "Containers are starting..."
 	@docker-compose --profile curl up -d
 	@echo ""
-	@echo "Container erfolgreich gestartet!"
+	@echo "Containers successfully started!"
 	@echo ""
 	@echo "Load-Generator Container:"
 	@for c in $$(docker-compose ps -q); do \
@@ -65,16 +65,23 @@ run:
 	done
 
 stop:
-	@echo "Container werden gestoppt..."
+	@echo "Containers are stopping..."
 	@docker-compose down
-	@echo "Container gestoppt"
+	@echo "Containers stopped"
 
 logs:
-	@echo "Container-Logs (Ctrl+C zum Beenden)..."
-	@docker-compose logs -f
+	@echo "Container Logs (Ctrl+C to stop)..."; \
+	services="$(filter-out $@,$(MAKECMDGOALS))"; \
+	if [ -n "$$services" ]; then \
+		echo "Showing logs for: $$services"; \
+		docker-compose logs -f $$services; \
+	else \
+		echo "Showing logs for all services"; \
+		docker-compose logs -f; \
+	fi
 
 status:
-	@echo "Ressourcen-Nutzung:"
+	@echo "Resource Usage:"
 	@docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}"
 
 curl:
@@ -82,6 +89,6 @@ curl:
 	@docker exec -it curl sh
 
 clean:
-	@echo "Falls noch alte Container laufen werden die gelöscht"
+	@echo "If any old containers are still running, they will be removed"
 	@docker-compose --profile curl down --volumes --rmi local --remove-orphans
-	@echo "Alle Container, Volumes und Images entfernt"
+	@echo "All Containers, Volumes and Images removed"

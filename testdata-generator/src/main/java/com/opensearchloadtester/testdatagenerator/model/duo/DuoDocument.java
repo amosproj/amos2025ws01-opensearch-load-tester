@@ -251,7 +251,7 @@ public class DuoDocument extends AbstractDocument {
 
             // From Examples
             String intro;
-            int introVariant = faker.number().numberBetween(0, 6);
+            int introVariant = faker.number().numberBetween(0, 7);
             switch (introVariant) {
                 case 0 -> intro = "Für die Lieferung/Leistung berechnen wir Ihnen:";
                 case 1 -> intro = "Gemäß Auftrag stellen wir folgende Positionen in Rechnung:";
