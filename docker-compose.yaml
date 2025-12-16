@@ -2,8 +2,8 @@
 services:
   testdata-generator:
     build:
-      context: ./testdata-generator
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: testdata-generator/Dockerfile
     container_name: testdata-generator
     environment:
       - SPRING_APPLICATION_NAME=testdata-generator
@@ -11,6 +11,7 @@ services:
       - DATA_GENERATION_MODE=${TEST_DATA_GENERATION_MODE:-dynamic}
       - DATA_GENERATION_DOCUMENT_TYPE=${TEST_DATA_GENERATION_DOCUMENT_TYPE:-ano}
       - DATA_GENERATION_COUNT=${TEST_DATA_GENERATION_COUNT:-1000}
+      - DATA_GENERATION_BATCH_SIZE=${TEST_DATA_GENERATION_BATCH_SIZE:-1000}
       - LOGGING_LEVEL_ROOT=${LOGGING_LVL_ROOT:-ERROR}
       - LOGGING_LEVEL_ORG_ELASTICSEARCH=${LOGGING_LVL_ELASTIC:-ERROR}
       - LOGGING_LEVEL_COM_OPENSEARCHLOADTESTER_TESTDATAGENERATOR=${LOGGING_LVL_TESTDATA_GEN:-INFO}
@@ -39,7 +40,7 @@ services:
     environment:
       - SPRING_APPLICATION_NAME=load-generator
       - OPENSEARCH_URL=${OPENSEARCH_URL:-http://test-target-opensearch:9200}
-      - METRICS_REPORTER_URL=${METRICS_REPORTER_URL:-http://metrics-reporter:8080/api/}
+      - METRICS_REPORTER_URL=${METRICS_REPORTER_URL:-http://metrics-reporter:8080/api}
       - LOAD_GENERATOR_REPLICAS=${LOAD_GENERATOR_REPLICAS:-1}
       - LOGGING_LEVEL_ROOT=${LOGGING_LVL_ROOT:-ERROR}
       - LOGGING_LEVEL_ORG_ELASTICSEARCH=${LOGGING_LVL_ELASTIC:-ERROR}
@@ -69,6 +70,7 @@ services:
     environment:
       - SPRING_APPLICATION_NAME=metrics-reporter
       - LOAD_GENERATOR_REPLICAS=${LOAD_GENERATOR_REPLICAS:-1}
+      - REPORT_OUTPUT_DIRECTORY=${REPORT_OUTPUT_DIRECTORY:-./reports}
       - LOGGING_LEVEL_ROOT=${LOGGING_LVL_ROOT:-ERROR}
       - LOGGING_LEVEL_ORG_ELASTICSEARCH=${LOGGING_LVL_ELASTIC:-ERROR}
       - LOGGING_LEVEL_COM_OPENSEARCHLOADTESTER_METRICSREPORTER=${LOGGING_LVL_METRICS_REPORTER:-INFO}
@@ -117,16 +119,6 @@ services:
       timeout: 5s
       retries: 20
       start_period: 10s
-
-  curl:
-    image: alpine/curl
-    container_name: curl
-    restart: unless-stopped
-    profiles:
-      - curl
-    command: ["sleep", "infinity"]
-    networks:
-      - opensearch-loadtester-network
 
 networks:
   opensearch-loadtester-network:

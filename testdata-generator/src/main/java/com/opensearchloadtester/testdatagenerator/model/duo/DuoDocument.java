@@ -6,6 +6,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import net.datafaker.providers.base.Company;
 
 import java.text.DecimalFormat;
 import java.time.LocalDate;
@@ -108,7 +109,11 @@ public class DuoDocument extends AbstractDocument {
             duoMetadata.invoiceBusinessPartnerId = faker.random().nextDouble() < 0.7
                     ? faker.number().numberBetween(1000, 1000000)
                     : null;
-            duoMetadata.invoiceBusinessPartner = faker.company().name();
+            Company baseCompany = faker.company();
+            String baseCompanyName = baseCompany.name();
+            // Prefer "GmbH" suffix; fall back to faker suffixes for variety
+            String suffix = faker.random().nextDouble() < 0.6 ? "GmbH" : baseCompany.suffix();
+            duoMetadata.invoiceBusinessPartner = baseCompanyName + " " + suffix;
             duoMetadata.invoiceDate = Date.from(faker.timeAndDate().past(3650, TimeUnit.DAYS));
             duoMetadata.invoiceNumber = RANDOM.nextInt(99999) + "/" + RANDOM.nextInt(9999);
 
@@ -246,7 +251,7 @@ public class DuoDocument extends AbstractDocument {
 
             // From Examples
             String intro;
-            int introVariant = faker.number().numberBetween(0, 6);
+            int introVariant = faker.number().numberBetween(0, 7);
             switch (introVariant) {
                 case 0 -> intro = "Für die Lieferung/Leistung berechnen wir Ihnen:";
                 case 1 -> intro = "Gemäß Auftrag stellen wir folgende Positionen in Rechnung:";

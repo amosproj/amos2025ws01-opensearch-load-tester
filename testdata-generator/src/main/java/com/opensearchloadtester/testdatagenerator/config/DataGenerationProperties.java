@@ -23,4 +23,7 @@ public class DataGenerationProperties {
     private String outputPath;
     @Min(1)
     private int count;
+    @Min(1)
+    private int batchSize=1000;
+
 }

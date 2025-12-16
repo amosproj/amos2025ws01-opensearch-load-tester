@@ -1,0 +1,74 @@
+name: Intregration Test
+
+on:
+## Does not work for now bc spring boot doesn't closes exits yet
+#  push:
+#    branches: [ main ]
+#  pull_request:
+#    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      replicas:
+        description: 'Number of load generator replicas'
+        required: false
+        default: '3'
+      records:
+        description: 'Number of test data records'
+        required: false
+        default: '1000'
+
+jobs:
+  integration-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Install Docker Compose
+        run: sudo apt-get update && sudo apt-get install -y docker-compose
+
+      - name: Update values in .env on dispatch
+        run: |
+          replicas="${{ github.event.inputs.replicas || 3 }}"
+          records="${{ github.event.inputs.records || 1000 }}"
+
+          sed -i.bak "s/^LOAD_GENERATOR_REPLICAS=.*/LOAD_GENERATOR_REPLICAS=${replicas}/" .env
+          sed -i.bak "s/^TEST_DATA_GENERATION_COUNT=.*/TEST_DATA_GENERATION_COUNT=${records}/" .env
+
+          cat .env
+
+      - name: delpoy container
+        run: |
+          make build
+          make run
+
+      - name: Wait for test completion
+        timeout-minutes: 15
+        run: |
+          CONTAINER_ID=$(docker ps -aqf "name=metrics-reporter")
+          while ! docker cp ${CONTAINER_ID}:/app/reports/query_results.json ./reports/ 2>/dev/null; do
+            sleep 5
+          done
+          docker cp ${CONTAINER_ID}:/app/reports/. ./reports/
+          docker compose logs >> integration-test-container.log
+
+      - name: Upload generated report
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: reports
+          path: reports/**
+
+      - name: Upload Test Reports
+        uses: actions/upload-artifact@v5
+        with:
+          name: integration-test-container.log
+          path: integration-test-container.log
+
+#####
+# No workflow to tag and push images to Docker Hub or GitHub Container Registry yet
+#####
+     

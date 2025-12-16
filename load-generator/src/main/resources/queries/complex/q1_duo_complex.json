@@ -1,0 +1,133 @@
+{
+  "size": 50,
+  "track_total_hits": true,
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "multi_match": {
+            "query": "{{search_terms}}",
+            "fields": [
+              "customAll"
+            ],
+            "type": "most_fields",
+            "operator": "and",
+            "fuzziness": "AUTO",
+            "slop": 3,
+            "minimum_should_match": "80%"
+          }
+        },
+        {
+          "range": {
+            "dssCustomMetadataDuo.invoiceDate": {
+              "gte": "{{invoice_date_from}}",
+              "lte": "{{invoice_date_to}}"
+            }
+          }
+        }
+      ],
+      "filter": [
+        {
+          "wildcard": {
+            "dssCustomMetadataDuo.invoiceBusinessPartner.raw": "{{business_partner_wildcard}}"
+          }
+        },
+        {
+          "terms": {
+            "dssCustomMetadataDuo.documentCategory.raw": [
+              "{{category_1}}",
+              "{{category_2}}",
+              "{{category_3}}"
+            ]
+          }
+        }
+      ],
+      "should": [
+        {
+          "wildcard": {
+            "dssCustomMetadataDuo.invoiceNumber.raw": "*{{invoice_number_fragment}}*"
+          }
+        },
+        {
+          "match_phrase": {
+            "customAll": {
+              "query": "{{search_terms}}",
+              "slop": 2
+            }
+          }
+        }
+      ],
+      "minimum_should_match": 1
+    }
+  },
+  "highlight": {
+    "fields": {
+      "customAll": {
+        "type": "unified",
+        "fragment_size": 180,
+        "number_of_fragments": 5,
+        "no_match_size": 180
+      }
+    }
+  },
+  "aggs": {
+    "by_dataspace": {
+      "terms": {
+        "field": "dssDataspaceId.raw",
+        "size": 200,
+        "shard_size": 1000
+      },
+      "aggs": {
+        "by_partner": {
+          "terms": {
+            "field": "dssCustomMetadataDuo.invoiceBusinessPartner.raw",
+            "size": 200,
+            "shard_size": 1000
+          },
+          "aggs": {
+            "by_month": {
+              "date_histogram": {
+                "field": "dssCustomMetadataDuo.invoiceDate",
+                "calendar_interval": "month"
+              },
+              "aggs": {
+                "paid_state": {
+                  "terms": {
+                    "field": "dssCustomMetadataDuo.paidStatus.raw",
+                    "size": 5
+                  }
+                },
+                "gross_percentiles": {
+                  "percentiles": {
+                    "field": "dssCustomMetadataDuo.totalGrossAmount",
+                    "percents": [
+                      50,
+                      90,
+                      99
+                    ]
+                  }
+                },
+                "invoice_cardinality": {
+                  "cardinality": {
+                    "field": "dssCustomMetadataDuo.invoiceNumber.raw"
+                  }
+                },
+                "top_docs": {
+                  "top_hits": {
+                    "size": 3,
+                    "_source": [
+                      "dssDocumentName",
+                      "dssDataspaceId",
+                      "dssCustomMetadataDuo.*",
+                      "contentLength"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
