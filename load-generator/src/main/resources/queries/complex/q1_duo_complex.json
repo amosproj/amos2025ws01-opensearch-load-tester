@@ -63,7 +63,7 @@
   "highlight": {
     "fields": {
       "customAll": {
-        "type": "fvh",
+        "type": "unified",
         "fragment_size": 180,
         "number_of_fragments": 5,
         "no_match_size": 180

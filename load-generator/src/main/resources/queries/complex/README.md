@@ -12,7 +12,7 @@
     - `range` on `dss_custom_metadata.duo.invoice_date` (2016–now) → broad time window.
     - `wildcard` on `dss_custom_metadata.duo.invoice_business_partner.raw` with `*holz*` → leading wildcard forces wide term scan; in the sample IP data this field is often null and not a good wildcard target—prefer a populated keyword field instead.
     - `terms` on `document_category.raw` → keeps relevant document types only.
-- Highlight: Fast Vector Highlighter on `custom_all`, 5 fragments of 180 chars → expensive on large OCR text.
+- Highlight: `unified` highlighter on `custom_all` (works with `index_options: offsets`); `fvh` would require `term_vector: with_positions_offsets` → expensive on large OCR text.
 - Aggregations:
     - `terms by_dataspace` (size 5000) → many buckets.
     - Within: `terms by_partner` (size 5000) → many more buckets.
