@@ -1,5 +1,6 @@
 package com.opensearchloadtester.loadgenerator.queries;
 
+import com.opensearchloadtester.common.utils.TimeFormatter;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,8 +37,8 @@ public class DuoComplexQuery extends AbstractQuery {
 
         Map<String, String> queryParams = Map.of(
                 "search_terms", searchTerms,
-                "invoice_date_from", startDate.format(ISO_LOCAL_DATE_FORMATTER),
-                "invoice_date_to", endDate.format(ISO_LOCAL_DATE_FORMATTER),
+                "invoice_date_from", startDate.format(TimeFormatter.ISO_LOCAL_DATE_FORMATTER),
+                "invoice_date_to", endDate.format(TimeFormatter.ISO_LOCAL_DATE_FORMATTER),
                 "business_partner_wildcard", businessPartnerWildcard,
                 "invoice_number_fragment", invoiceNumberFragment,
                 "category_1", categories.get(0),
