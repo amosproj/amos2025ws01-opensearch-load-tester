@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.opensearchloadtester.common.dto.MetricsDto;
-import com.opensearchloadtester.metricsreporter.dto.LoadTestSummary;
+import com.opensearchloadtester.metricsreporter.dto.StatisticsDto;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -193,30 +193,22 @@ public class ReportService {
     }
 
     /**
-     * Finalizes reports by writing a summary JSON without loading all query results into memory.
+     * Finalizes reports by writing the aggregated statistics JSON and building the full query results JSON
+     * without loading all query results into memory.
      */
-    public synchronized LoadTestSummary finalizeReports(Set<String> loadGeneratorInstances) throws IOException {
+    public synchronized StatisticsDto finalizeReports(Set<String> loadGeneratorInstances) throws IOException {
         initializeReportFiles();
 
-        LoadTestSummary.Statistics statistics = stats.toStatistics();
-
-        LoadTestSummary report = new LoadTestSummary(
-                statistics,
-                LocalDateTime.now(),
-                stats.getTotalQueries(),
-                stats.getTotalErrors(),
-                new ArrayList<>(), // omit query_results to stay lean
-                new ArrayList<>(loadGeneratorInstances)
-        );
+        StatisticsDto statistics = stats.toStatistics(LocalDateTime.now(), loadGeneratorInstances);
 
         Path statsPath = Paths.get(outputDirectory, statsFilename);
-        objectMapper.writeValue(statsPath.toFile(), report);
+        objectMapper.writeValue(statsPath.toFile(), statistics);
         Path ndjsonPath = Paths.get(outputDirectory, ndjsonFilename);
         Path fullJsonPath = Paths.get(outputDirectory, fullJsonFilename);
         writeFullJsonReport(ndjsonPath, fullJsonPath);
         deleteNdjsonFile(ndjsonPath);
 
-        log.info("Summary written: queries={}, errors={}, instances={}", report.getTotalQueries(), report.getTotalErrors(), report.getLoadGeneratorInstances().size());
+        log.info("Statistics written: queries={}, errors={}, instances={}", statistics.getTotalQueries(), statistics.getTotalErrors(), statistics.getLoadGeneratorInstances().size());
         log.info("Request duration stats: avg={}ms min={}ms max={}ms | Query duration stats: avg={}ms min={}ms max={}ms",
                 String.format("%.2f", statistics.getRequestDurationMs().getAverage()),
                 statistics.getRequestDurationMs().getMin(),
@@ -225,7 +217,7 @@ public class ReportService {
                 statistics.getQueryDurationMs().getMin(),
                 statistics.getQueryDurationMs().getMax());
 
-        return report;
+        return statistics;
     }
 
     /**
@@ -311,8 +303,8 @@ public class ReportService {
             }
         }
 
-        LoadTestSummary.Statistics toStatistics() {
-            LoadTestSummary.DurationStats requestDuration = new LoadTestSummary.DurationStats();
+        StatisticsDto toStatistics(LocalDateTime generatedAt, Set<String> loadGeneratorInstances) {
+            StatisticsDto.DurationStats requestDuration = new StatisticsDto.DurationStats();
             if (requestDurationCount > 0) {
                 requestDuration.setAverage(requestDurationSum / (double) requestDurationCount);
                 requestDuration.setMin(requestDurationMin);
@@ -323,7 +315,7 @@ public class ReportService {
                 requestDuration.setMax(0L);
             }
 
-            LoadTestSummary.DurationStats queryDuration = new LoadTestSummary.DurationStats();
+            StatisticsDto.DurationStats queryDuration = new StatisticsDto.DurationStats();
             if (queryDurationCount > 0) {
                 queryDuration.setAverage(queryDurationSum / (double) queryDurationCount);
                 queryDuration.setMin(queryDurationMin);
@@ -334,7 +326,14 @@ public class ReportService {
                 queryDuration.setMax(0L);
             }
 
-            return new LoadTestSummary.Statistics(requestDuration, queryDuration);
+            return new StatisticsDto(
+                    generatedAt,
+                    requestDuration,
+                    queryDuration,
+                    totalQueries,
+                    totalErrors,
+                    new ArrayList<>(loadGeneratorInstances)
+            );
         }
     }
 }

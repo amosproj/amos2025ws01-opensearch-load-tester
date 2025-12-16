@@ -1,0 +1,95 @@
+name: Test & Build Load Generator
+
+on:
+  push:
+    paths:
+      - 'load-generator/**'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      LOAD_GENERATOR_REPLICAS:
+        description: 'LOAD_GENERATOR_REPLICAS'
+        required: false
+        default: '2'
+      logging_level:
+        description: 'LOGGING_LEVEL_LOAD_GENERATOR'
+        required: false
+        default: 'INFO'
+
+jobs:
+  load-generator:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Change permissions for report folder
+        run: chmod -R 777 ./reports
+
+      - name: Start opensearch container
+        run: docker compose -f docker-compose.yaml up --wait -d test-target-opensearch
+
+      - name: Start testdata-generator
+        run: docker compose -f docker-compose.yaml up -d testdata-generator
+
+      - name: Start metrics-reporter
+        run: docker compose -f docker-compose.yaml up -d metrics-reporter
+
+      - name: Build load-generator image from Build Stage
+        run: docker build --target build -t load-generator-build -f load-generator/Dockerfile .
+
+      - name: Run unit tests inside Build container
+        env:
+          LOGGING_LEVEL_COM_OPENSEARCHLOADTESTER_LOADGENERATOR: ${{ github.event.inputs.logging_level || 'INFO' }}
+          OPENSEARCH_URL: http://test-target-opensearch:9200
+          METRICS_REPORTER_URL: http://metrics-reporter:8080/api/
+          SCENARIO_CONFIG_PATH: scenarios/default-scenario.yaml
+          LOAD_GENERATOR_REPLICAS: ${{ github.event.inputs.LOAD_GENERATOR_REPLICAS || '2' }}
+        run: |
+          NETWORK=$(docker inspect --format='{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}' test-target-opensearch)
+          echo "Using network: $NETWORK"
+          docker run \
+            --name load-generator-test-runner \
+            --network "$NETWORK" \
+            -e SCENARIO_CONFIG_PATH \
+            -e METRICS_REPORTER_URL \
+            -e OPENSEARCH_URL \
+            -e LOAD_GENERATOR_REPLICAS \
+            -v ./load-generator/scenarios:/app/load-generator/scenarios:ro \
+            -v "$(pwd)/load-generator-test-reports":/out \
+            -v "${{ github.workspace }}":/app:rw \
+            load-generator-build \
+            mvn -f load-generator/pom.xml clean test
+
+      - name: Export Container Logs - Make Directory
+        if: always()
+        run: mkdir -p container-logs
+
+      - name: Export Container Logs - testdata-generator
+        if: always()
+        run: docker compose -f docker-compose.yaml logs testdata-generator > container-logs/testdata-generator.log 2>&1
+
+      - name: Export Container Logs - metrics-reporter
+        if: always()
+        run: docker compose -f docker-compose.yaml logs metrics-reporter > container-logs/metrics-reporter.log 2>&1
+
+      - name: Export Container Logs - test-runner
+        if: always()
+        run: docker logs load-generator-test-runner > container-logs/load-generator-test-runner.log 2>&1
+
+      - name: Upload Container Logs Artifact
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: docker-container-logs
+          path: container-logs/**
+
+      - name: Upload Test Reports
+        uses: actions/upload-artifact@v5
+        with:
+          name: load-generator-test-reports
+          path: load-generator/target/surefire-reports
