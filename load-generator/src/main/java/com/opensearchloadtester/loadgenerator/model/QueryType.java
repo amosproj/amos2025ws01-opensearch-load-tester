@@ -5,25 +5,25 @@ import com.opensearchloadtester.loadgenerator.queries.*;
 import java.util.function.Supplier;
 
 public enum QueryType {
-    ANO_PAYROLL_RANGE(AnoPayrollRangeQuery::new),
-    DUO_INVOICE_CATEGORY(DuoInvoiceCategoryQuery::new),
-    DUO_STATE_LOCATION(DuoStateLocationQuery::new),
-    DUO_BOOKING_BY_CLIENT_AND_STATE(DuoBookingByClientAndStateQuery::new),
-    ANO_CLIENTS_AGGREGATION(AnoClientsAggregationQuery::new),
-    ANO_CLIENT_BY_YEAR(AnoClientByYearQuery::new),
-    DUO_CLIENT_BY_CUSTOMER_NUMBER(DuoClientByCustomerNumberQuery::new),
-    DUO_CLIENT_BY_NAME_AND_STATE(DuoClientByNameAndStateQuery::new),
-    ANO_PAYROLL_TYPE_LANGUAGE(AnoPayrollTypeLanguageQuery::new),
-    DUO_BOOKING_BY_COSTCENTER_AND_DATE(DuoBookingByCostcenterAndDateQuery::new),
-    DUO_BOOKING_BY_AMOUNT_RANGE(DuoBookingByAmountRangeQuery::new);
+    ANO_PAYROLL_RANGE(AnoPayrollRangeQuery::random),
+    DUO_INVOICE_CATEGORY(DuoInvoiceCategoryQuery::random),
+    DUO_STATE_LOCATION(DuoStateLocationQuery::random),
+    DUO_BOOKING_BY_CLIENT_AND_STATE(DuoBookingByClientAndStateQuery::random),
+    ANO_CLIENTS_AGGREGATION(AnoClientsAggregationQuery::random),
+    ANO_CLIENT_BY_YEAR(AnoClientByYearQuery::random),
+    DUO_CLIENT_BY_CUSTOMER_NUMBER(DuoClientByCustomerNumberQuery::random),
+    DUO_CLIENT_BY_NAME_AND_STATE(DuoClientByNameAndStateQuery::random),
+    ANO_PAYROLL_TYPE_LANGUAGE(AnoPayrollTypeLanguageQuery::random),
+    DUO_BOOKING_BY_COSTCENTER_AND_DATE(DuoBookingByCostcenterAndDateQuery::random),
+    DUO_BOOKING_BY_AMOUNT_RANGE(DuoBookingByAmountRangeQuery::random);
 
-    private final Supplier<Query> constructor;
+    private final Supplier<? extends Query> supplier;
 
-    QueryType(Supplier<Query> constructor) {
-        this.constructor = constructor;
+    QueryType(Supplier<? extends Query> supplier) {
+        this.supplier = supplier;
     }
 
-    public Query createInstance() {
-        return constructor.get();
+    public Query createRandomQuery() {
+        return supplier.get();
     }
 }

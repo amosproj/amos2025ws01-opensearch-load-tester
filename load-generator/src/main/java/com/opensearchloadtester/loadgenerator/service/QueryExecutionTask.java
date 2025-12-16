@@ -11,6 +11,8 @@ import org.opensearch.client.opensearch.generic.*;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -22,7 +24,7 @@ public class QueryExecutionTask implements Runnable {
 
     private final String loadGeneratorId;
     private final String index;
-    private final QueryType queryType;
+    private final List<QueryType> queryTypes;
     private final OpenSearchGenericClient openSearchClient;
     private final MetricsCollector metricsCollector;
 
@@ -32,17 +34,19 @@ public class QueryExecutionTask implements Runnable {
     public void run() {
         log.debug("Executing query in thread '{}'", Thread.currentThread().getName());
 
-        Query query = queryType.createInstance();
-        String randomizedQuery = query.generateQuery();
+        int queryTypesCount = queryTypes.size();
+        QueryType selectedQueryType = queryTypes.get(ThreadLocalRandom.current().nextInt(queryTypesCount));
+        Query query = selectedQueryType.createRandomQuery();
+        String queryAsJson = query.toJsonString();
 
-        log.debug("Generated query of type '{}': {}", queryType.name(), randomizedQuery);
+        log.debug("Generated query of type '{}': {}", selectedQueryType.name(), queryAsJson);
 
         try {
             // Send query to OpenSearch and measure end-to-end client-side round-trip time
             Request request = Requests.builder()
                     .endpoint("/" + index + "/_search")
                     .method("POST")
-                    .json(randomizedQuery)
+                    .json(queryAsJson)
                     .build();
 
             long startTime = System.nanoTime();
@@ -54,7 +58,7 @@ public class QueryExecutionTask implements Runnable {
             if (status >= 400) {
                 MetricsDto metricsDto = new MetricsDto(
                         loadGeneratorId,
-                        queryType.name(),
+                        selectedQueryType.name(),
                         requestDurationMillis,
                         null,
                         null,
@@ -80,7 +84,7 @@ public class QueryExecutionTask implements Runnable {
 
             MetricsDto metricsDto = new MetricsDto(
                     loadGeneratorId,
-                    queryType.name(),
+                    selectedQueryType.name(),
                     requestDurationMillis,
                     queryDurationMillis,
                     totalHits,

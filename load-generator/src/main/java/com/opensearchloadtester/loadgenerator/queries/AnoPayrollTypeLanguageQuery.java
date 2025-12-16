@@ -5,33 +5,29 @@ import java.util.Map;
 
 public class AnoPayrollTypeLanguageQuery extends AbstractQuery {
 
-    private static final String QUERY_TEMPLATE_PATH = "queries/q9_ano_payroll_type_language.json";
+    private AnoPayrollTypeLanguageQuery(Map<String, String> queryParams, String queryTemplatePath) {
+        super(queryParams, queryTemplatePath);
+    }
 
-    @Override
-    public String generateQuery() {
-        String queryTemplate = loadQueryTemplate(QUERY_TEMPLATE_PATH);
-
+    public static AnoPayrollTypeLanguageQuery random() {
         List<String> type = List.of("Monthly", "Yearly", "Quarterly");
-        String payrollType = type.get(RANDOM.nextInt(type.size()));
+        String payrollType = type.get(faker().random().nextInt(type.size()));
 
         List<String> lang = List.of("German", "English", "Spanish", "French");
-        String language = lang.get(RANDOM.nextInt(lang.size()));
+        String language = lang.get(faker().random().nextInt(type.size()));
 
-        int startYear = FAKER.number().numberBetween(2015, 2025);
-        String minYear = String.valueOf(startYear);
-        String maxYear = String.valueOf(FAKER.number().numberBetween(startYear, 2025));
+        int startYear = faker().number().numberBetween(2015, 2026);
+        String year_from = String.valueOf(startYear);
+        String year_to = String.valueOf(faker().number().numberBetween(startYear, 2026));
 
         Map<String, String> queryParams = Map.of(
                 "payroll_type", payrollType,
                 "language", language,
-                "min_year", minYear,
-                "max_year", maxYear
+                "year_from", year_from,
+                "year_to", year_to
         );
-        return applyQueryParams(queryTemplate, queryParams);
-    }
 
-    @Override
-    public String getQueryTemplatePath() {
-        return QUERY_TEMPLATE_PATH;
+        return new AnoPayrollTypeLanguageQuery(queryParams,
+                "queries/q9_ano_payroll_type_language.json");
     }
 }
