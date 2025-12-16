@@ -71,7 +71,7 @@ public class TestScenarioInitializer implements CommandLineRunner {
         QueryExecutionTask warmupTask = new QueryExecutionTask(
                 loadGeneratorId,
                 scenarioConfig.getDocumentType().getIndex(),
-                scenarioConfig.getQueryType(),
+                scenarioConfig.getQueryTypes(),
                 openSearchClient,
                 new NoOpMetricsCollector() // warm-up metrics are ignored
         );

@@ -4,4 +4,8 @@ document_type: ANO
 duration: PT10S
 queries_per_second: 25
 enable_warm_up: true
-query_type: ANO_PAYROLL_RANGE
+query_types:
+  - ANO_PAYROLL_RANGE
+  - ANO_CLIENTS_AGGREGATION
+  - ANO_CLIENT_BY_YEAR
+  - ANO_PAYROLL_TYPE_LANGUAGE
