@@ -1,6 +1,6 @@
 package com.opensearchloadtester.metricsreporter.controller;
 
-import com.opensearchloadtester.common.dto.LoadTestSyncStatusDto;
+import com.opensearchloadtester.common.dto.LoadTestStartSyncStatusDto;
 import com.opensearchloadtester.metricsreporter.service.LoadTestStartSyncService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,8 +22,8 @@ public class LoadTestStartSyncController {
     }
 
     @GetMapping("/status")
-    public ResponseEntity<LoadTestSyncStatusDto> status() {
-        LoadTestSyncStatusDto status = syncService.getStatus();
+    public ResponseEntity<LoadTestStartSyncStatusDto> status() {
+        LoadTestStartSyncStatusDto status = syncService.getStatus();
         return ResponseEntity.ok(status);
     }
 }

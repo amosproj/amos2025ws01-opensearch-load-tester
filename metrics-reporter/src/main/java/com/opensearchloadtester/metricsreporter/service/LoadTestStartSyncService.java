@@ -1,6 +1,6 @@
 package com.opensearchloadtester.metricsreporter.service;
 
-import com.opensearchloadtester.common.dto.LoadTestSyncStatusDto;
+import com.opensearchloadtester.common.dto.LoadTestStartSyncStatusDto;
 import com.opensearchloadtester.common.utils.TimeFormatter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,10 +45,10 @@ public class LoadTestStartSyncService {
         }
     }
 
-    public synchronized LoadTestSyncStatusDto getStatus() {
+    public synchronized LoadTestStartSyncStatusDto getStatus() {
         boolean isStartAllowed = readyLoadGenerators.size() == expectedLoadGenerators;
 
-        return new LoadTestSyncStatusDto(
+        return new LoadTestStartSyncStatusDto(
                 expectedLoadGenerators,
                 readyLoadGenerators.size(),
                 isStartAllowed,

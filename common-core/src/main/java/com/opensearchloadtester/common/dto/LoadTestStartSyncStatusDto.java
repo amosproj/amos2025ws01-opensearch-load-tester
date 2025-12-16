@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoadTestSyncStatusDto {
+public class LoadTestStartSyncStatusDto {
 
     private int expectedLoadGenerators;
     private int readyLoadGenerators;

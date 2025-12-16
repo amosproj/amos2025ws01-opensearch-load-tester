@@ -1,7 +1,7 @@
 package com.opensearchloadtester.loadgenerator.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.opensearchloadtester.common.dto.LoadTestSyncStatusDto;
+import com.opensearchloadtester.common.dto.LoadTestStartSyncStatusDto;
 import com.opensearchloadtester.common.utils.TimeFormatter;
 import com.opensearchloadtester.loadgenerator.exception.LoadTestStartSyncException;
 import jakarta.annotation.PreDestroy;
@@ -61,7 +61,7 @@ public class LoadTestStartSyncClient {
         long startTime = System.currentTimeMillis();
 
         while (true) {
-            LoadTestSyncStatusDto status = fetchStatus();
+            LoadTestStartSyncStatusDto status = fetchStatus();
 
             if (status.isStartAllowed()) {
                 long plannedStart = status.getPlannedStartTimeMillis();
@@ -93,7 +93,7 @@ public class LoadTestStartSyncClient {
         }
     }
 
-    private LoadTestSyncStatusDto fetchStatus() {
+    private LoadTestStartSyncStatusDto fetchStatus() {
         String url = syncEndpointUrl + "/status";
 
         try {
@@ -113,7 +113,7 @@ public class LoadTestStartSyncClient {
                 try {
                     return objectMapper.readValue(
                             EntityUtils.toString(response.getEntity()),
-                            LoadTestSyncStatusDto.class
+                            LoadTestStartSyncStatusDto.class
                     );
                 } catch (IOException | ParseException e) {
                     throw new LoadTestStartSyncException("Failed to parse sync status response", e);
