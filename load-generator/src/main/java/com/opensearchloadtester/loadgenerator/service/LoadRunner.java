@@ -15,17 +15,20 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class LoadRunner {
 
     private final String loadGeneratorId;
+    private final int numberLoadGenerators;
     private final OpenSearchGenericClient openSearchClient;
     private final MetricsReporterClient metricsReporterClient;
     private final MetricsCollector metricsCollector;
 
     public LoadRunner(
             @Value("${HOSTNAME}") String loadGeneratorId,
+            @Value("${load.generator.replicas}") int numberLoadGenerators,
             OpenSearchGenericClient openSearchClient,
             MetricsReporterClient metricsReporterClient,
             MetricsCollector metricsCollector
     ) {
         this.loadGeneratorId = loadGeneratorId;
+        this.numberLoadGenerators = numberLoadGenerators;
         this.openSearchClient = openSearchClient;
         this.metricsReporterClient = metricsReporterClient;
         this.metricsCollector = metricsCollector;
@@ -37,13 +40,13 @@ public class LoadRunner {
      * @param scenarioConfig scenario configuration
      */
     public void executeScenario(ScenarioConfig scenarioConfig) {
-        log.info("Started '{}' execution (duration: {} sec)",
+        log.info("Executing '{}' (expected duration: {} sec)",
                 scenarioConfig.getName(), scenarioConfig.getDuration().getSeconds());
 
         QueryExecutionTask query = new QueryExecutionTask(
                 loadGeneratorId,
                 scenarioConfig.getDocumentType().getIndex(),
-                scenarioConfig.getQueryType(),
+                scenarioConfig.getQueryTypes(),
                 openSearchClient,
                 metricsCollector
         );
@@ -58,7 +61,7 @@ public class LoadRunner {
         try {
             long durationNs = scenarioConfig.getDuration().toNanos();
             int qpsTotal = scenarioConfig.getQueriesPerSecond();
-            int qpsPerLoadGen = qpsTotal / Integer.parseInt(System.getenv("LOAD_GENERATOR_REPLICAS"));
+            int qpsPerLoadGen = qpsTotal / numberLoadGenerators;
             long durationPerQuery = 1000_000_000L / qpsPerLoadGen;
             AtomicInteger queryCounter = new AtomicInteger();
             log.debug("Schedule delay:  {} ms  ", durationPerQuery);
@@ -96,7 +99,7 @@ public class LoadRunner {
 
             if (completed) {
                 log.info("Calling MetricsReporterClient");
-                metricsReporterClient.reportMetrics(metricsCollector.getMetricsList());
+                metricsReporterClient.sendMetrics(metricsCollector.getMetricsList());
                 log.info("Scenario '{}' completed successfully. All threads finished.", scenarioConfig.getName());
                 log.info("Test duration - Expected: {} ({}s), Actual: {}s",
                         scenarioConfig.getDuration(),
