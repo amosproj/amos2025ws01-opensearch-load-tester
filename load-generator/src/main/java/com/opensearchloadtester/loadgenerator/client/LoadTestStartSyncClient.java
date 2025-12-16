@@ -20,6 +20,15 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Client for synchronizing the global load test start via the Metrics Reporter.
+ *
+ * <p>
+ * Registers the Load Generator as READY and polls the shared synchronization status
+ * from the Metrics Reporter until all Load Generators are allowed to start simultaneously
+ * or a timeout is reached.
+ * </p>
+ */
 @Slf4j
 @Component
 public class LoadTestStartSyncClient {

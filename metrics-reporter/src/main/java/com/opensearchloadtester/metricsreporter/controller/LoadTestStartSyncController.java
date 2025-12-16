@@ -7,6 +7,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * REST controller for synchronizing the global load test start
+ * across multiple Load Generators.
+ *
+ * <p>
+ * Allows Load Generators to report readiness and fetch the current
+ * start synchronization status.
+ * </p>
+ */
 @Slf4j
 @RestController
 @RequestMapping("/api/load-test")
