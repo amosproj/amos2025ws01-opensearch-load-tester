@@ -9,13 +9,26 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Random;
 
 @Slf4j
 public abstract class AbstractQuery implements Query {
 
-    protected static final Random RANDOM = new Random();
-    protected static final Faker FAKER = new Faker(Locale.GERMAN);
+    protected static final ThreadLocal<Faker> FAKER =
+            ThreadLocal.withInitial(() -> new Faker(Locale.GERMAN));
+
+    protected Map<String, String> queryParams;
+    protected String queryTemplatePath;
+
+    protected AbstractQuery(Map<String, String> queryParams, String queryTemplatePath) {
+        this.queryParams = queryParams;
+        this.queryTemplatePath = queryTemplatePath;
+    }
+
+    @Override
+    public String toJsonString() {
+        String queryTemplate = loadQueryTemplate(queryTemplatePath);
+        return applyQueryParams(queryTemplate, queryParams);
+    }
 
     protected String loadQueryTemplate(String path) {
         ClassPathResource resource = new ClassPathResource(path);
@@ -36,5 +49,9 @@ public abstract class AbstractQuery implements Query {
             result = result.replace("{{" + entry.getKey() + "}}", entry.getValue());
         }
         return result;
+    }
+
+    protected static Faker faker() {
+        return FAKER.get();
     }
 }

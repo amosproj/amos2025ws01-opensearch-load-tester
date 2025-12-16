@@ -4,25 +4,25 @@ import java.util.Map;
 
 public class DuoBookingByAmountRangeQuery extends AbstractQuery {
 
-    private static final String QUERY_TEMPLATE_PATH = "queries/q11_duo_booking_by_amount_range.json";
+    private DuoBookingByAmountRangeQuery(Map<String, String> queryParams, String queryTemplatePath) {
+        super(queryParams, queryTemplatePath);
+    }
 
-    @Override
-    public String generateQuery() {
-        String queryTemplate = loadQueryTemplate(QUERY_TEMPLATE_PATH);
+    public static DuoBookingByAmountRangeQuery random() {
 
-        double startTotalGrossAmount = RANDOM.nextDouble(9999999);
+        double startTotalGrossAmount = faker().number().numberBetween(0, 9_999_999);
         String amountMin = String.format("%.2f", startTotalGrossAmount);
-        String amountMax = String.format("%.2f", startTotalGrossAmount + RANDOM.nextDouble(9999999));
+        String amountMax = String.format(
+                "%.2f",
+                startTotalGrossAmount + faker().number().randomDouble(2, 0, 9_999_999)
+        );
 
         Map<String, String> queryParams = Map.of(
                 "amount_min", amountMin,
                 "amount_max", amountMax
         );
-        return applyQueryParams(queryTemplate, queryParams);
-    }
 
-    @Override
-    public String getQueryTemplatePath() {
-        return QUERY_TEMPLATE_PATH;
+        return new DuoBookingByAmountRangeQuery(queryParams,
+                "queries/q11_duo_booking_by_amount_range.js");
     }
 }

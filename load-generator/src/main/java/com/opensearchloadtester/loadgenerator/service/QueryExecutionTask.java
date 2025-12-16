@@ -32,17 +32,17 @@ public class QueryExecutionTask implements Runnable {
     public void run() {
         log.debug("Executing query in thread '{}'", Thread.currentThread().getName());
 
-        Query query = queryType.createInstance();
-        String randomizedQuery = query.generateQuery();
+        Query query = queryType.createRandomQuery();
+        String queryAsJson = query.toJsonString();
 
-        log.debug("Generated query of type '{}': {}", queryType.name(), randomizedQuery);
+        log.debug("Generated query of type '{}': {}", queryType.name(), queryAsJson);
 
         try {
             // Send query to OpenSearch and measure end-to-end client-side round-trip time
             Request request = Requests.builder()
                     .endpoint("/" + index + "/_search")
                     .method("POST")
-                    .json(randomizedQuery)
+                    .json(queryAsJson)
                     .build();
 
             long startTime = System.nanoTime();
