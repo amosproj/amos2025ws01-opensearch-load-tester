@@ -1,6 +1,5 @@
 package com.opensearchloadtester.testdatagenerator.service;
 
-import com.opensearchloadtester.testdatagenerator.TestdataInitializer;
 import com.opensearchloadtester.testdatagenerator.config.DataGenerationProperties;
 import com.opensearchloadtester.testdatagenerator.model.Document;
 import com.opensearchloadtester.testdatagenerator.model.Index;
@@ -49,9 +48,6 @@ public class TestdataPreloadService {
     //A value is computed based on totalCount and clamped between MIN_BATCH_SIZE and dynamicMaxBatchSize(totalCount).
 
     private int resolveBatchSize(int totalCount) {
-        if (totalCount <= 0) {
-            throw new IllegalArgumentException("totalCount must be > 0, but was " + totalCount);
-        }
 
         int configured = dataGenerationProperties.getBatchSize();
         int maxBatchSize = dynamicMaxBatchSize(totalCount);
@@ -116,13 +112,13 @@ public class TestdataPreloadService {
             if (dynamicLimit < effectiveBatchSize) {
                 int adapted = Math.max(dynamicLimit, MIN_BATCH_SIZE);
                 if (adapted != effectiveBatchSize) {
-                    log.info(
+                    log.debug(
                             "Adapting dynamic batch size from {} to {} based on OpenSearch feedback (remaining={})",
                             effectiveBatchSize,
                             adapted,
                             remaining
                     );
-                    effectiveBatchSize = adapted;  // ⬅️ bleibt jetzt auch in nächsten Iterationen so
+                    effectiveBatchSize = adapted;  // Remains like this also in next iterations
                 }
             }
 
@@ -207,7 +203,7 @@ public class TestdataPreloadService {
         int batchNumber = 0;
         int indexedSoFar = 0;
 
-        // 3) In-memory batching with dynamic adaptation (wie bei DYNAMIC)
+        // 3) In-memory batching with dynamic adaptation (same as DYNAMIC)
         int i = 0;
         while (i < allDocuments.size()) {
             batchNumber++;
