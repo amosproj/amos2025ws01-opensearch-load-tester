@@ -1,7 +1,5 @@
 package com.opensearchloadtester.loadgenerator.queries;
 
-import net.datafaker.Faker;
-
 import java.util.List;
 import java.util.Map;
 
