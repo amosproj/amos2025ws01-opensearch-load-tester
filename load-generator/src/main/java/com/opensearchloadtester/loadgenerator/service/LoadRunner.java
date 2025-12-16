@@ -20,7 +20,7 @@ public class LoadRunner {
     private final MetricsCollector metricsCollector;
 
     public LoadRunner(
-            @Value("${HOSTNAME:local-load-generator}") String loadGeneratorId,
+            @Value("${HOSTNAME}") String loadGeneratorId,
             OpenSearchGenericClient openSearchClient,
             MetricsReporterClient metricsReporterClient,
             MetricsCollector metricsCollector
@@ -58,7 +58,7 @@ public class LoadRunner {
         try {
             long durationNs = scenarioConfig.getDuration().toNanos();
             int qpsTotal = scenarioConfig.getQueriesPerSecond();
-            int replicas = Integer.parseInt(System.getenv().getOrDefault("LOAD_GENERATOR_REPLICAS", "1"));
+            int replicas = Integer.parseInt(System.getenv("LOAD_GENERATOR_REPLICAS"));
             int qpsPerLoadGen = qpsTotal / replicas;
             long durationPerQuery = 1000_000_000L / qpsPerLoadGen;
             AtomicInteger queryCounter = new AtomicInteger();
