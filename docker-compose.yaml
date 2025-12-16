@@ -120,16 +120,6 @@ services:
       retries: 20
       start_period: 10s
 
-  curl:
-    image: alpine/curl
-    container_name: curl
-    restart: unless-stopped
-    profiles:
-      - curl
-    command: ["sleep", "infinity"]
-    networks:
-      - opensearch-loadtester-network
-
 networks:
   opensearch-loadtester-network:
     driver: bridge

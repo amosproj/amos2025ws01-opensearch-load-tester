@@ -1,4 +1,4 @@
-.PHONY: run stop logs clean loadtest status help build curl
+.PHONY: run stop logs clean loadtest status help build
 
 help:
 	@echo "Available make commands:"
@@ -9,7 +9,6 @@ help:
 	@echo "    make logs testdata-generator  -> logs for testdata-generator"
 	@echo "    make logs load-generator      -> logs for load-generator"
 	@echo "    make logs metrics-reporter    -> logs for metrics-reporter"
-	@echo "  make curl         - Starts a shell in the Curl debug container"
 	@echo "  make loadtest     - Interactive load test setup"
 	@echo "  make status       - Shows resource usage of containers"
 	@echo "  make clean        - Stops containers and removes volumes/images"
@@ -50,7 +49,7 @@ build:
 	@echo "All images have been successfully built!"
 run:
 	@echo "Containers are starting..."
-	@docker-compose --profile curl up -d
+	@docker-compose up -d
 	@echo ""
 	@echo "Containers successfully started!"
 	@echo ""
@@ -84,11 +83,7 @@ status:
 	@echo "Resource Usage:"
 	@docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}"
 
-curl:
-	@echo "Attach Curl Container..."
-	@docker exec -it curl sh
-
 clean:
 	@echo "If any old containers are still running, they will be removed"
-	@docker-compose --profile curl down --volumes --rmi local --remove-orphans
+	@docker-compose down --volumes --rmi local --remove-orphans
 	@echo "All Containers, Volumes and Images removed"
