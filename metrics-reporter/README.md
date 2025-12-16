@@ -19,7 +19,7 @@ The metrics-reporter exposes a REST endpoint (`/api/addmetrics`) that receives b
 
 Adjust filenames/paths via properties (defaults in parentheses):
 
-- `report.output.directory` (`./reports`)
+- `report.output.directory` (`../reports`)
 - `report.ndjson.filename` (`tmp_query_results.ndjson`)
 - `report.csv.filename` (`query_results.csv`)
 - `report.fulljson.filename` (`query_results.json`)

@@ -70,6 +70,7 @@ services:
     environment:
       - SPRING_APPLICATION_NAME=metrics-reporter
       - LOAD_GENERATOR_REPLICAS=${LOAD_GENERATOR_REPLICAS:-1}
+      - REPORT_OUTPUT_DIRECTORY=${REPORT_OUTPUT_DIRECTORY:-./reports}
       - LOGGING_LEVEL_ROOT=${LOGGING_LVL_ROOT:-ERROR}
       - LOGGING_LEVEL_ORG_ELASTICSEARCH=${LOGGING_LVL_ELASTIC:-ERROR}
       - LOGGING_LEVEL_COM_OPENSEARCHLOADTESTER_METRICSREPORTER=${LOGGING_LVL_METRICS_REPORTER:-INFO}
@@ -118,16 +119,6 @@ services:
       timeout: 5s
       retries: 20
       start_period: 10s
-
-  curl:
-    image: alpine/curl
-    container_name: curl
-    restart: unless-stopped
-    profiles:
-      - curl
-    command: ["sleep", "infinity"]
-    networks:
-      - opensearch-loadtester-network
 
 networks:
   opensearch-loadtester-network:

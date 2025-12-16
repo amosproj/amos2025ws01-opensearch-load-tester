@@ -118,6 +118,10 @@ public class ReportController {
                     message.append("CSV report: ").append(reportService.getCsvReportPath()).append("\n");
                 }
 
+                // Prepare for the next run without requiring a service restart.
+                reportedInstances.clear();
+                reportService.resetForNewRun();
+
                 return ResponseEntity.ok(message.toString());
 
             } catch (IOException e) {

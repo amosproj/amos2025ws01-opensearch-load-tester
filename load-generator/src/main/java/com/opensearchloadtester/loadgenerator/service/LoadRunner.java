@@ -64,7 +64,7 @@ public class LoadRunner {
             int qpsPerLoadGen = qpsTotal / numberLoadGenerators;
             long durationPerQuery = 1000_000_000L / qpsPerLoadGen;
             AtomicInteger queryCounter = new AtomicInteger();
-            log.debug("Schedule delay:  {} ms  ", durationPerQuery);
+            log.debug("Schedule delay:  {} ns  ", durationPerQuery);
 
             // Start scheduled query execution
             ScheduledFuture<?> future = executorService.scheduleAtFixedRate(() -> {
@@ -84,7 +84,7 @@ public class LoadRunner {
             // TODO: Wait for all threads to complete
             log.info("Waiting for all threads to complete");
             boolean completed = true;
-            executorService.awaitTermination(durationNs + 2000_000_000L, TimeUnit.NANOSECONDS);
+            executorService.awaitTermination(durationNs + 10_000_000_000L, TimeUnit.NANOSECONDS);
             // TODO: Set a timeout per queryExecution
             // boolean completed = latch.await(10, TimeUnit.MINUTES);
 

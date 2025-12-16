@@ -13,6 +13,8 @@ public class TimeFormatter {
             .ofPattern("yyyy-MM-dd HH:mm:ss 'UTC'")
             .withZone(ZoneOffset.UTC);
 
+    public static final DateTimeFormatter ISO_LOCAL_DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
+
     public static String formatEpochMillisToUtcString(long epochMillis) {
         Instant instant = Instant.ofEpochMilli(epochMillis);
         return UTC_FORMATTER.format(instant);
