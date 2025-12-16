@@ -1,6 +1,5 @@
 package com.opensearchloadtester.testdatagenerator;
 
-import com.opensearchloadtester.testdatagenerator.config.DataGenerationProperties;
 import com.opensearchloadtester.testdatagenerator.service.TestdataPreloadService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +11,6 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class TestdataInitializer implements CommandLineRunner {
 
-    private final DataGenerationProperties dataGenerationProperties;
     private final TestdataPreloadService preloadService;
 
     @Override

@@ -11,11 +11,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-/**
- * Batch pre-loading job for ANO / DUO test data.
- * This service is responsible for generating test data (either dynamically or
- * from a persistent data set) and indexing it into OpenSearch in batches.
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -28,79 +23,75 @@ public class TestdataPreloadService {
     private final DataGenerator dataGenerator;
     private final OpenSearchDataService openSearchDataService;
 
-    private int dynamicMaxBatchSize(int totalCount) {
-        if (totalCount <= 200_000) {
-            return 10_000;        // small
-        } else if (totalCount <= 1_000_000) {
-            return 15_000;        // mid-size
-        } else {
-            return 35_000;        // bigger dataset
-        }
-    }
-
     public void preloadTestdata() {
+        // Defensive: @Min(1) should guarantee this, but keep it safe for tests/miswiring
+        int totalCount = dataGenerationProperties.getCount();
+        if (totalCount <= 0) {
+            throw new IllegalArgumentException("data.generation.count must be > 0, but was " + totalCount);
+        }
+
         switch (dataGenerationProperties.getMode()) {
-            case DYNAMIC -> preloadDynamic();
-            case PERSISTENT -> preloadPersistent();
+            case DYNAMIC -> preloadDynamic(totalCount);
+            case PERSISTENT -> preloadPersistent(totalCount);
         }
     }
 
-    //A value is computed based on totalCount and clamped between MIN_BATCH_SIZE and dynamicMaxBatchSize(totalCount).
+    private Index resolveIndex() {
+        return switch (dataGenerationProperties.getDocumentType()) {
+            case ANO -> AnoIndex.getInstance();
+            case DUO -> DuoIndex.getInstance();
+        };
+    }
 
+    private int dynamicMaxBatchSize(int totalCount) {
+        if (totalCount <= 200_000) return 10_000;
+        if (totalCount <= 1_000_000) return 15_000;
+        return 35_000;
+    }
+
+    /**
+     * Computes a batch size from totalCount aiming for ~TARGET_BATCHES batches,
+     * clamped to [min(totalCount, MIN_BATCH_SIZE), dynamicMaxBatchSize(totalCount)].
+     */
     private int resolveBatchSize(int totalCount) {
-
-        int configured = dataGenerationProperties.getBatchSize();
         int maxBatchSize = dynamicMaxBatchSize(totalCount);
 
-        // We get roughly TARGET_BATCHES batches, clamped to [MIN, MAX].
         int computed = (int) Math.ceil((double) totalCount / TARGET_BATCHES);
 
-        if (computed < MIN_BATCH_SIZE) {
-            // For small datasets, we don't want super tiny batches.
-            computed = Math.min(MIN_BATCH_SIZE, totalCount);
-        }
-        if (computed > maxBatchSize) {
-            computed = maxBatchSize;
-        }
+        // Clamp to at least MIN_BATCH_SIZE, but never exceed totalCount (small datasets)
+        int minBatch = Math.min(MIN_BATCH_SIZE, totalCount);
+        if (computed < minBatch) computed = minBatch;
 
-        log.info(
-                "Auto-computed batchSize={} for totalCount={} (configured={})",
+        // Clamp to dynamic max
+        if (computed > maxBatchSize) computed = maxBatchSize;
+
+        log.debug(
+                "Auto-computed batchSize={} for totalCount={} (configuredBatchSize={})",
                 computed,
                 totalCount,
-                configured
+                dataGenerationProperties.getBatchSize()
         );
 
         return computed;
     }
 
-    private void preloadDynamic() {
-        // 1) Select ANO / DUO index
-        final Index index = switch (dataGenerationProperties.getDocumentType()) {
-            case ANO -> AnoIndex.getInstance();
-            case DUO -> DuoIndex.getInstance();
-        };
-
-        final int totalCount = dataGenerationProperties.getCount();
+    private void preloadDynamic(int totalCount) {
+        final Index index = resolveIndex();
         final int initialBatchSize = resolveBatchSize(totalCount);
 
-        log.info(
+        log.debug(
                 "Starting DYNAMIC batch pre-loading. documentType={}, totalCount={}, batchSize={}",
                 dataGenerationProperties.getDocumentType(),
                 totalCount,
                 initialBatchSize
         );
 
-        // 2) Create index if needed
-        openSearchDataService.createIndex(
-                index.getName(),
-                index.getSettings(),
-                index.getMapping()
-        );
+        openSearchDataService.createIndex(index.getName(), index.getSettings(), index.getMapping());
 
         int batchNumber = 0;
         int generatedSoFar = 0;
 
-        // 3) Generate and index in batches
+        // Batch size can adapt across iterations
         int effectiveBatchSize = initialBatchSize;
 
         while (generatedSoFar < totalCount) {
@@ -118,7 +109,7 @@ public class TestdataPreloadService {
                             adapted,
                             remaining
                     );
-                    effectiveBatchSize = adapted;  // Remains like this also in next iterations
+                    effectiveBatchSize = adapted;
                 }
             }
 
@@ -137,16 +128,13 @@ public class TestdataPreloadService {
             );
 
             if (batchDocuments.size() != currentBatchSize) {
-                log.warn(
-                        "Generator returned {} documents for batch {} but expected {} (DYNAMIC)",
-                        batchDocuments.size(),
-                        batchNumber,
-                        currentBatchSize
-                );
+                throw new IllegalStateException(String.format(
+                        "Generator returned %d documents for batch %d but expected %d (DYNAMIC). Aborting preload.",
+                        batchDocuments.size(), batchNumber, currentBatchSize
+                ));
             }
 
             openSearchDataService.bulkIndexDocuments(index.getName(), batchDocuments);
-
             generatedSoFar += currentBatchSize;
 
             log.debug(
@@ -157,19 +145,14 @@ public class TestdataPreloadService {
             );
         }
 
-        // 4) Refresh index at the end
         openSearchDataService.refreshIndex(index.getName());
 
-        log.info("Finished DYNAMIC batch pre-loading successfully for index='{}'", index.getName());
+        log.info("Finished DYNAMIC batch pre-loading successfully for index='{}' (count={})",
+                index.getName(), totalCount);
     }
 
-    private void preloadPersistent() {
-        final Index index = switch (dataGenerationProperties.getDocumentType()) {
-            case ANO -> AnoIndex.getInstance();
-            case DUO -> DuoIndex.getInstance();
-        };
-
-        final int totalCount = dataGenerationProperties.getCount();
+    private void preloadPersistent(int totalCount) {
+        final Index index = resolveIndex();
         final int initialBatchSize = resolveBatchSize(totalCount);
 
         log.info(
@@ -179,43 +162,37 @@ public class TestdataPreloadService {
                 initialBatchSize
         );
 
-        // 1) Create index if needed
-        openSearchDataService.createIndex(
-                index.getName(),
-                index.getSettings(),
-                index.getMapping()
-        );
+        openSearchDataService.createIndex(index.getName(), index.getSettings(), index.getMapping());
 
-        // 2) Obtain the full set of documents from PersistentDataGenerator.
         List<Document> allDocuments = dataGenerator.generateData(
                 dataGenerationProperties.getDocumentType(),
                 totalCount
         );
 
         if (allDocuments.size() != totalCount) {
-            log.warn(
-                    "Persistent dataset size ({}) does not match configured count ({})",
-                    allDocuments.size(),
-                    totalCount
-            );
+            throw new IllegalStateException(String.format(
+                    "Persistent dataset size (%d) does not match configured count (%d). Aborting preload.",
+                    allDocuments.size(), totalCount
+            ));
         }
 
         int batchNumber = 0;
         int indexedSoFar = 0;
 
-        // 3) In-memory batching with dynamic adaptation (same as DYNAMIC)
+        // Must persist across batches
+        int effectiveBatchSize = initialBatchSize;
+
         int i = 0;
         while (i < allDocuments.size()) {
             batchNumber++;
 
             int remaining = allDocuments.size() - i;
-            int effectiveBatchSize = initialBatchSize;
 
             int dynamicLimit = openSearchDataService.getDynamicBatchLimit();
             if (dynamicLimit < effectiveBatchSize) {
                 int adapted = Math.max(dynamicLimit, MIN_BATCH_SIZE);
                 if (adapted != effectiveBatchSize) {
-                    log.info(
+                    log.debug(
                             "Adapting persistent batch size from {} to {} based on OpenSearch feedback (remaining={})",
                             effectiveBatchSize,
                             adapted,
@@ -239,17 +216,25 @@ public class TestdataPreloadService {
             );
 
             openSearchDataService.bulkIndexDocuments(index.getName(), batch);
+
             indexedSoFar += batch.size();
             i = end;
         }
 
-        // 4) Final refresh
         openSearchDataService.refreshIndex(index.getName());
 
+        if (indexedSoFar != totalCount) {
+
+            throw new IllegalStateException(String.format(
+                    "Indexed count mismatch (PERSISTENT): indexedSoFar=%d, expected=%d",
+                    indexedSoFar, totalCount
+            ));
+        }
+
         log.info(
-                "Finished PERSISTENT batch pre-loading successfully for index='{}'. indexedSoFar={}",
+                "Finished PERSISTENT batch pre-loading successfully for index='{}' (count={})",
                 index.getName(),
-                indexedSoFar
+                totalCount
         );
     }
 }
