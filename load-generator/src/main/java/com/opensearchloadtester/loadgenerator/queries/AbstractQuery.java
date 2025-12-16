@@ -7,6 +7,7 @@ import org.springframework.core.io.ClassPathResource;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.Map;
 
@@ -15,6 +16,8 @@ public abstract class AbstractQuery implements Query {
 
     protected static final ThreadLocal<Faker> FAKER =
             ThreadLocal.withInitial(() -> new Faker(Locale.GERMAN));
+
+    protected static final DateTimeFormatter ISO_LOCAL_DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
 
     protected Map<String, String> queryParams;
     protected String queryTemplatePath;
