@@ -12,7 +12,7 @@ import org.opensearch.client.opensearch.generic.*;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.List;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -35,7 +35,7 @@ public class QueryExecutionTask implements Runnable {
         log.debug("Executing query in thread '{}'", Thread.currentThread().getName());
 
         int queryTypesCount = queryTypes.size();
-        QueryType selectedQueryType = queryTypes.get(new Random().nextInt(queryTypesCount));
+        QueryType selectedQueryType = queryTypes.get(ThreadLocalRandom.current().nextInt(queryTypesCount));
         Query query = selectedQueryType.createRandomQuery();
         String queryAsJson = query.toJsonString();
 

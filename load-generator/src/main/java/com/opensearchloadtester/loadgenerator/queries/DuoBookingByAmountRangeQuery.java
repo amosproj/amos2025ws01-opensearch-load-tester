@@ -1,5 +1,6 @@
 package com.opensearchloadtester.loadgenerator.queries;
 
+import java.util.Locale;
 import java.util.Map;
 
 public class DuoBookingByAmountRangeQuery extends AbstractQuery {
@@ -9,10 +10,10 @@ public class DuoBookingByAmountRangeQuery extends AbstractQuery {
     }
 
     public static DuoBookingByAmountRangeQuery random() {
-
         double startTotalGrossAmount = faker().number().numberBetween(0, 9_999_999);
-        String amountMin = String.format("%.2f", startTotalGrossAmount);
+        String amountMin = String.format(Locale.ROOT, "%.2f", startTotalGrossAmount);
         String amountMax = String.format(
+                Locale.ROOT,
                 "%.2f",
                 startTotalGrossAmount + faker().number().randomDouble(2, 0, 9_999_999)
         );
@@ -23,6 +24,6 @@ public class DuoBookingByAmountRangeQuery extends AbstractQuery {
         );
 
         return new DuoBookingByAmountRangeQuery(queryParams,
-                "queries/q11_duo_booking_by_amount_range.js");
+                "queries/q11_duo_booking_by_amount_range.json");
     }
 }
