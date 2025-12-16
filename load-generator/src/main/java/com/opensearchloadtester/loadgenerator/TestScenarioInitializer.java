@@ -1,6 +1,7 @@
 package com.opensearchloadtester.loadgenerator;
 
 import com.opensearchloadtester.common.dto.MetricsDto;
+import com.opensearchloadtester.loadgenerator.client.LoadTestStartSyncClient;
 import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
 import com.opensearchloadtester.loadgenerator.service.LoadRunner;
 import com.opensearchloadtester.loadgenerator.service.MetricsCollector;
@@ -19,47 +20,50 @@ public class TestScenarioInitializer implements CommandLineRunner {
     private static final long MIN_WARMUP_DURATION_MS = 10_000L;
 
     private final String loadGeneratorId;
+    private final int numberLoadGenerators;
     private final ScenarioConfig scenarioConfig;
     private final LoadRunner loadRunner;
     private final OpenSearchGenericClient openSearchClient;
+    private final LoadTestStartSyncClient loadTestStartSyncClient;
 
     public TestScenarioInitializer(
             @Value("${HOSTNAME}") String loadGeneratorId,
+            @Value("${load.generator.replicas}") int numberLoadGenerators,
             ScenarioConfig scenarioConfig,
             LoadRunner loadRunner,
-            OpenSearchGenericClient openSearchClient
+            OpenSearchGenericClient openSearchClient,
+            LoadTestStartSyncClient loadTestStartSyncClient
     ) {
         this.loadGeneratorId = loadGeneratorId;
+        this.numberLoadGenerators = numberLoadGenerators;
         this.scenarioConfig = scenarioConfig;
         this.loadRunner = loadRunner;
         this.openSearchClient = openSearchClient;
+        this.loadTestStartSyncClient = loadTestStartSyncClient;
     }
 
     @Override
     public void run(String... args) {
-        log.info("Initializing test scenario: {}", scenarioConfig.getName());
-        try {
-            // 1) Optional warm-up phase
-            if (scenarioConfig.isWarmUpEnabled()) {
-                log.info("Warm-up is enabled for this scenario.");
-                runWarmUp();
-                log.info("Warm-up completed. Starting main load test...");
-            } else {
-                log.info("Warm-up is disabled. Starting main load test directly...");
-            }
+        log.info("Initializing load test with scenario {}", scenarioConfig.getName());
 
-            // 2) Real load test execution
-            loadRunner.executeScenario(scenarioConfig);
-            log.info("Finished load test successfully");
-        } catch (Exception e) {
-            // Only one log line with stacktrace – no duplicate
-            log.error("Unexpected error while executing load test", e);
-            throw new RuntimeException("Failed to execute load test", e);
+        // 1) Optional warm-up
+        if (scenarioConfig.isWarmUpEnabled()) {
+            runWarmUp();
         }
+
+        // 2) Sync load test start with other Load Generators
+        if (numberLoadGenerators > 1) {
+            synchronizeStart();
+        }
+
+        // 3) Execute load test
+        log.info("Starting load test");
+        loadRunner.executeScenario(scenarioConfig);
+        log.info("Finished load test successfully");
     }
 
     private void runWarmUp() {
-        log.info("Warm-up: running until at least {} requests AND at least {} ms",
+        log.info("Running warm-up until at least {} requests executed AND at least {} ms elapsed",
                 WARMUP_REQUEST_COUNT, MIN_WARMUP_DURATION_MS);
 
         long warmupStart = System.currentTimeMillis();
@@ -99,14 +103,21 @@ public class TestScenarioInitializer implements CommandLineRunner {
 
         // Define "warm-up successful": at least one successful OpenSearch query.
         if (successCount == 0) {
-            log.error("Warm-up failed: 0 successful requests out of {} ({} ms total)",
-                    totalRequests, elapsedMs);
             throw new IllegalStateException(
-                    "Warm-up failed: no successful OpenSearch queries during warm-up");
+                    String.format("Warm-up failed: 0 successful requests out of %s (%s ms total)",
+                            totalRequests, elapsedMs)
+            );
         }
 
         log.info("Warm-up completed in {} ms: {} successful, {} failed ({} total)",
                 elapsedMs, successCount, failureCount, totalRequests);
+    }
+
+    private void synchronizeStart() {
+        log.info("Synchronizing global start with other Load Generators");
+
+        loadTestStartSyncClient.registerReady(loadGeneratorId);
+        loadTestStartSyncClient.awaitStartPermission();
     }
 
     /**
