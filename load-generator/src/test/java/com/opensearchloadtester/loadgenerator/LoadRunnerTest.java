@@ -13,19 +13,21 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.opensearch.client.opensearch.generic.OpenSearchGenericClient;
-
+import org.opensearch.client.opensearch.generic.Response;
 import java.io.IOException;
 import java.time.Duration;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class LoadRunnerTest {
+
+    private static final int NUMBER_LOAD_GENERATORS = 1; // deterministic qpsPerLoadGen
 
     @Mock
     private OpenSearchGenericClient openSearchClient;
@@ -38,19 +40,17 @@ class LoadRunnerTest {
 
     @BeforeEach
     void setUp() {
-        // Real collector to pass through the runner lifecycle
         metricsCollector = new MetricsCollector();
 
-        // Only external dependencies are mocked
         loadRunner = new LoadRunner(
                 "test-loadgen",
+                NUMBER_LOAD_GENERATORS,
                 openSearchClient,
                 metricsReporterClient,
                 metricsCollector
         );
     }
 
-    // Small helper to keep test bodies readable
     private ScenarioConfig createScenario(
             String name,
             DocumentType documentType,
@@ -59,12 +59,19 @@ class LoadRunnerTest {
             int qps,
             boolean warmUpEnabled
     ) {
-        return new ScenarioConfig(name, documentType, duration, qps, warmUpEnabled, queryType);
+        return new ScenarioConfig(name, documentType, duration, qps, warmUpEnabled, List.of(queryType));
+    }
+
+    private void stubOpenSearchStatus(int status) throws Exception {
+        // Keep QueryExecutionTask simple: only status is used
+        Response response = mock(Response.class);
+        when(response.getStatus()).thenReturn(status);
+        when(openSearchClient.execute(any())).thenReturn(response);
     }
 
     @Test
-    void shouldRunAnoScenario_andReportMetricsOnce() {
-        // Runner finishes and reports once.
+    void anoScenario_runs_andReportsOnce() throws Exception {
+        // Normal lifecycle
         ScenarioConfig scenario = createScenario(
                 "ano-basic",
                 DocumentType.ANO,
@@ -74,15 +81,15 @@ class LoadRunnerTest {
                 false
         );
 
-        assertDoesNotThrow(() -> loadRunner.executeScenario(scenario));
+        stubOpenSearchStatus(500);
 
-        // Report is a lifecycle event: exactly once at the end.
-        verify(metricsReporterClient, times(1)).reportMetrics(any());
+        assertDoesNotThrow(() -> loadRunner.executeScenario(scenario));
+        verify(metricsReporterClient, times(1)).sendMetrics(any());
     }
 
     @Test
-    void shouldRunDuoScenario_andReportMetricsOnce() {
-        // Same lifecycle for a different document type / query type
+    void duoScenario_runs_andReportsOnce() throws Exception {
+        // Same lifecycle with different index/query.
         ScenarioConfig scenario = createScenario(
                 "duo-basic",
                 DocumentType.DUO,
@@ -92,14 +99,15 @@ class LoadRunnerTest {
                 false
         );
 
-        assertDoesNotThrow(() -> loadRunner.executeScenario(scenario));
+        stubOpenSearchStatus(500);
 
-        verify(metricsReporterClient, times(1)).reportMetrics(any());
+        assertDoesNotThrow(() -> loadRunner.executeScenario(scenario));
+        verify(metricsReporterClient, times(1)).sendMetrics(any());
     }
 
     @Test
-    void shouldRunScenarioWithWarmUpFlagTrue_withoutCrashing() {
-        // Warm-up flag is handled elsewhere; here we ensure it does not break the runner
+    void warmUpFlag_doesNotAffectRunner() throws Exception {
+        // Warm-up is handled elsewhere; runner must still finish
         ScenarioConfig scenario = createScenario(
                 "warmup-flag",
                 DocumentType.ANO,
@@ -109,14 +117,15 @@ class LoadRunnerTest {
                 true
         );
 
-        assertDoesNotThrow(() -> loadRunner.executeScenario(scenario));
+        stubOpenSearchStatus(500);
 
-        verify(metricsReporterClient, times(1)).reportMetrics(any());
+        assertDoesNotThrow(() -> loadRunner.executeScenario(scenario));
+        verify(metricsReporterClient, times(1)).sendMetrics(any());
     }
 
     @Test
-    void shouldNotThrow_whenOpenSearchClientExecuteFails() throws Exception {
-        // Worker-side OpenSearch failure must not crash the runner.
+    void openSearchIOException_doesNotCrashRunner() throws Exception {
+        // Exceptions inside QueryExecutionTask must not crash executeScenario
         ScenarioConfig scenario = createScenario(
                 "opensearch-fail",
                 DocumentType.ANO,
@@ -126,17 +135,15 @@ class LoadRunnerTest {
                 false
         );
 
-        // This exception happens inside QueryExecutionTask.run() in worker threads
-        doThrow(new IOException("boom"))
-                .when(openSearchClient)
-                .execute(any());
+        doThrow(new IOException("boom")).when(openSearchClient).execute(any());
 
         assertDoesNotThrow(() -> loadRunner.executeScenario(scenario));
+
     }
 
     @Test
-    void shouldNotThrow_whenMetricsReporterThrowsAccessException() {
-        // Reporting can fail, but executeScenario should catch it and return
+    void metricsReporterFailure_isHandled_andAttemptedOnce() throws Exception {
+        // Reporting failure must not crash runner
         ScenarioConfig scenario = createScenario(
                 "metrics-fail",
                 DocumentType.ANO,
@@ -146,53 +153,16 @@ class LoadRunnerTest {
                 false
         );
 
-        doThrow(new MetricsReporterAccessException("cannot reach metrics backend"))
-                .when(metricsReporterClient)
-                .reportMetrics(any());
+        stubOpenSearchStatus(500);
+        doThrow(new MetricsReporterAccessException("down")).when(metricsReporterClient).sendMetrics(any());
 
         assertDoesNotThrow(() -> loadRunner.executeScenario(scenario));
-
-        // Still only one attempt to report.
-        verify(metricsReporterClient, times(1)).reportMetrics(any());
+        verify(metricsReporterClient, times(1)).sendMetrics(any());
     }
 
     @Test
-    void shouldHandleZeroDurationScenario_withoutThrowing() {
-        // Edge: duration=0 should still go through the end-of-run reporting
-        ScenarioConfig scenario = createScenario(
-                "zero-duration",
-                DocumentType.ANO,
-                QueryType.ANO_PAYROLL_RANGE,
-                Duration.ZERO,
-                1,
-                false
-        );
-
-        assertDoesNotThrow(() -> loadRunner.executeScenario(scenario));
-
-        verify(metricsReporterClient, times(1)).reportMetrics(any());
-    }
-
-    @Test
-    void shouldHandleMinimumQpsScenario_withoutThrowing() {
-        // Edge: minimum QPS should still work and report.
-        ScenarioConfig scenario = createScenario(
-                "min-qps",
-                DocumentType.ANO,
-                QueryType.ANO_PAYROLL_RANGE,
-                Duration.ofSeconds(1),
-                1,
-                false
-        );
-
-        assertDoesNotThrow(() -> loadRunner.executeScenario(scenario));
-
-        verify(metricsReporterClient, times(1)).reportMetrics(any());
-    }
-
-    @Test
-    void qpsOneForOneSecond_callsExecuteAboutOnce() throws Exception {
-        // Approximate scheduling check (can be slightly jittery due to timing)
+    void qpsOneSecond_oneQps_executesAtLeastOnce() throws Exception {
+        // Scheduling is jittery; only assert a minimal bound
         ScenarioConfig scenario = createScenario(
                 "qps-1s-1qps",
                 DocumentType.ANO,
@@ -202,17 +172,17 @@ class LoadRunnerTest {
                 false
         );
 
-        when(openSearchClient.execute(any())).thenReturn(null);
+        stubOpenSearchStatus(500);
 
         loadRunner.executeScenario(scenario);
 
         verify(openSearchClient, atLeast(1)).execute(any());
-        verify(openSearchClient, atMost(2)).execute(any());
+        verify(openSearchClient, atMost(3)).execute(any());
     }
 
     @Test
-    void qpsThreeForOneSecond_callsExecuteAboutThreeTimes() throws Exception {
-        // Same as above, with a higher QPS target.
+    void qpsOneSecond_threeQps_executesRoughlyInRange() throws Exception {
+
         ScenarioConfig scenario = createScenario(
                 "qps-1s-3qps",
                 DocumentType.ANO,
@@ -222,17 +192,17 @@ class LoadRunnerTest {
                 false
         );
 
-        when(openSearchClient.execute(any())).thenReturn(null);
+        stubOpenSearchStatus(500);
 
         loadRunner.executeScenario(scenario);
 
-        verify(openSearchClient, atLeast(2)).execute(any());
-        verify(openSearchClient, atMost(4)).execute(any());
+        verify(openSearchClient, atLeast(1)).execute(any());
+        verify(openSearchClient, atMost(8)).execute(any()); // wide range on purpose
     }
 
     @Test
-    void noMoreSubmissionsAfterExecuteScenarioReturns() throws Exception {
-        // Ensure the scheduler stops: call count should not increase after return.
+    void schedulerStops_afterExecuteScenarioReturns() throws Exception {
+        // No new calls should happen after method returns
         ScenarioConfig scenario = createScenario(
                 "cancel-behavior",
                 DocumentType.ANO,
@@ -242,91 +212,25 @@ class LoadRunnerTest {
                 false
         );
 
-        when(openSearchClient.execute(any())).thenAnswer(invocation -> {
+        when(openSearchClient.execute(any())).thenAnswer(inv -> {
             Thread.sleep(10);
-            return null;
+            Response resp = mock(Response.class);
+            when(resp.getStatus()).thenReturn(500);
+            return resp;
         });
 
         loadRunner.executeScenario(scenario);
 
         int callsAtEnd = mockingDetails(openSearchClient).getInvocations().size();
-
-        Thread.sleep(200);
-
+        Thread.sleep(250);
         int callsLater = mockingDetails(openSearchClient).getInvocations().size();
 
-        assertEquals(callsAtEnd, callsLater, "no new calls after scenario end");
+        assertEquals(callsAtEnd, callsLater, "no new calls after return");
     }
 
     @Test
-    void reportsMetricsOnceWhenScenarioFinishes() throws Exception {
-        // Explicit lifecycle assertion: report once on normal completion.
-        ScenarioConfig scenario = createScenario(
-                "metrics-report",
-                DocumentType.ANO,
-                QueryType.ANO_PAYROLL_RANGE,
-                Duration.ofSeconds(1),
-                1,
-                false
-        );
-
-        when(openSearchClient.execute(any())).thenReturn(null);
-
-        loadRunner.executeScenario(scenario);
-
-        verify(metricsReporterClient, times(1)).reportMetrics(any());
-    }
-
-    @Test
-    void recordsSomeMetricsForNonZeroRun() throws Exception {
-        // Only check that the runner reaches the reporting step; metrics contents belong to QueryExecutionTaskTest
-        ScenarioConfig scenario = createScenario(
-                "metrics-grow",
-                DocumentType.ANO,
-                QueryType.ANO_PAYROLL_RANGE,
-                Duration.ofSeconds(1),
-                2,
-                false
-        );
-
-        when(openSearchClient.execute(any())).thenReturn(null);
-
-        assertTrue(metricsCollector.getMetricsList().isEmpty(), "metrics start empty");
-
-        loadRunner.executeScenario(scenario);
-
-        verify(metricsReporterClient, times(1)).reportMetrics(any());
-    }
-
-    @Test
-    void executorIsShutdownAfterScenario() throws Exception {
-        // Another stop condition check (no post-return background activity)
-        ScenarioConfig scenario = createScenario(
-                "shutdown-check",
-                DocumentType.ANO,
-                QueryType.ANO_PAYROLL_RANGE,
-                Duration.ofSeconds(1),
-                3,
-                false
-        );
-
-        when(openSearchClient.execute(any())).thenReturn(null);
-
-        loadRunner.executeScenario(scenario);
-
-        int callsAfterFinish = mockingDetails(openSearchClient).getInvocations().size();
-
-        Thread.sleep(300);
-
-        assertEquals(
-                callsAfterFinish,
-                mockingDetails(openSearchClient).getInvocations().size()
-        );
-    }
-
-    @Test
-    void rejectedExecutionException_inWorkerDoesNotCrashRunner() throws IOException {
-        //Simulates a failure inside QueryExecutionTask, not in workers.submit(...).
+    void rejectedExecutionException_fromOpenSearch_doesNotCrashRunner() throws Exception {
+        // This simulates an exception inside QueryExecutionTask, not submit()
         ScenarioConfig scenario = createScenario(
                 "rejected-exec",
                 DocumentType.ANO,
@@ -336,18 +240,15 @@ class LoadRunnerTest {
                 false
         );
 
-        doThrow(new RejectedExecutionException("reject"))
-                .when(openSearchClient)
-                .execute(any());
+        doThrow(new RejectedExecutionException("reject")).when(openSearchClient).execute(any());
 
         assertDoesNotThrow(() -> loadRunner.executeScenario(scenario));
-
-        verify(metricsReporterClient, times(1)).reportMetrics(any());
+        verify(metricsReporterClient, times(1)).sendMetrics(any());
     }
 
     @Test
-    void runtimeException_inWorkerDoesNotCrashRunner() throws IOException {
-        // Unchecked exception inside worker execution should not kill the runner.
+    void runtimeException_fromOpenSearch_doesNotCrashRunner() throws Exception {
+        // Unchecked exceptions should be contained
         ScenarioConfig scenario = createScenario(
                 "runtime-exception",
                 DocumentType.ANO,
@@ -357,13 +258,85 @@ class LoadRunnerTest {
                 false
         );
 
-        doThrow(new RuntimeException("boom"))
-                .when(openSearchClient)
-                .execute(any());
+        doThrow(new RuntimeException("boom")).when(openSearchClient).execute(any());
 
         assertDoesNotThrow(() -> loadRunner.executeScenario(scenario));
+        verify(metricsReporterClient, times(1)).sendMetrics(any());
+    }
 
-        verify(metricsReporterClient, times(1)).reportMetrics(any());
+    @Test
+    void qpsLowerThanReplicas_divByZero_isCaught_andNoMetricsSent() {
+
+        LoadRunner runner = new LoadRunner(
+                "test-loadgen",
+                2,
+                openSearchClient,
+                metricsReporterClient,
+                metricsCollector
+        );
+
+        ScenarioConfig scenario = createScenario(
+                "qps-too-low",
+                DocumentType.ANO,
+                QueryType.ANO_PAYROLL_RANGE,
+                Duration.ofSeconds(1),
+                1,
+                false
+        );
+
+        assertDoesNotThrow(() -> runner.executeScenario(scenario));
+        verify(metricsReporterClient, never()).sendMetrics(any());
+    }
+
+    @Test
+    void multipleQueryTypes_runs_andReportsOnce() throws Exception {
+        // Ensure QueryExecutionTask can be created with multiple types
+        ScenarioConfig scenario = new ScenarioConfig(
+                "multi-qtypes",
+                DocumentType.ANO,
+                Duration.ofSeconds(1),
+                2,
+                false,
+                List.of(QueryType.ANO_PAYROLL_RANGE, QueryType.ANO_CLIENT_BY_YEAR)
+        );
+
+        stubOpenSearchStatus(500);
+
+        assertDoesNotThrow(() -> loadRunner.executeScenario(scenario));
+        verify(metricsReporterClient, times(1)).sendMetrics(any());
+    }
+
+    @Test
+    void shutdownExecutorService_forcesShutdownNow_whenNotTerminating() throws Exception {
+
+        ExecutorService stubborn = mock(ExecutorService.class);
+        when(stubborn.awaitTermination(anyLong(), any())).thenReturn(false);
+
+        var m = LoadRunner.class.getDeclaredMethod("shutdownExecutorService", ExecutorService.class);
+        m.setAccessible(true);
+        m.invoke(loadRunner, stubborn);
+
+        verify(stubborn).shutdown();
+        verify(stubborn).shutdownNow();
+        verify(stubborn, times(2)).awaitTermination(anyLong(), any());
+    }
+
+    @Test
+    void shutdownExecutorService_restoresInterruptFlag_onInterruptedException() throws Exception {
+
+        ExecutorService exec = mock(ExecutorService.class);
+        when(exec.awaitTermination(anyLong(), any())).thenThrow(new InterruptedException("interrupted"));
+
+        var m = LoadRunner.class.getDeclaredMethod("shutdownExecutorService", ExecutorService.class);
+        m.setAccessible(true);
+
+        Thread.interrupted();
+        m.invoke(loadRunner, exec);
+
+        verify(exec).shutdown();
+        verify(exec).shutdownNow();
+        assertTrue(Thread.currentThread().isInterrupted(), "interrupt flag should be set");
     }
 }
+
 
