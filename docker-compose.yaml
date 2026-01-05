@@ -120,6 +120,63 @@ services:
       retries: 20
       start_period: 10s
 
+  loki:
+    image: grafana/loki:3.6.3
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/loki-config.yaml
+    networks:
+      - opensearch-loadtester-network
+
+  alloy:
+    image: grafana/alloy:latest
+    restart: unless-stopped
+    command: run --server.http.listen-addr=0.0.0.0:12345 /etc/alloy/config.alloy
+    ports:
+      - 127.0.0.1:12345:12345
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./reports:/app:ro
+      - ./deploy/config.alloy:/etc/alloy/config.alloy:ro
+    networks:
+      - opensearch-loadtester-network
+
+  # http://localhost:3000
+  # login: admin
+  # passwd: admin
+  grafana:
+    environment:
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_FEATURE_TOGGLES_ENABLE=alertingSimplifiedRouting,alertingQueryAndExpressionsStepMode
+    entrypoint:
+      - sh
+      - -euc
+      - |
+        mkdir -p /etc/grafana/provisioning/datasources
+        cat <<EOF > /etc/grafana/provisioning/datasources/ds.yaml
+        apiVersion: 1
+        datasources:
+        - name: Loki
+          type: loki
+          access: proxy
+          orgId: 1
+          url: http://loki:3100
+          basicAuth: false
+          isDefault: true
+          version: 1
+          editable: false
+        EOF
+        /run.sh
+    image: grafana/grafana:12.3.1
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    networks:
+      - opensearch-loadtester-network
+
 networks:
   opensearch-loadtester-network:
     driver: bridge
@@ -127,6 +184,8 @@ networks:
 volumes:
   testdata:
     driver: local
+#  reports:
+#    driver: local
 #  opensearch-data:
 #    driver: local
 
