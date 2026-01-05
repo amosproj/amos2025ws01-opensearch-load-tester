@@ -1,6 +1,6 @@
 local.file_match "opensearch_load_tester" {
   path_targets = [{
-    __path__ = "/app/reports/query_results.json",
+    __path__ = "/app/tmp_query_results.ndjson",
     job      = "opensearch-load-tester",
   }]
 }
@@ -12,6 +12,6 @@ loki.source.file "opensearch_load_tester" {
 
 loki.write "default" {
   endpoint {
-  url = "http://loki:3100/loki/api/v1/push"
+    url = "http://loki:3100/loki/api/v1/push"
   }
 }

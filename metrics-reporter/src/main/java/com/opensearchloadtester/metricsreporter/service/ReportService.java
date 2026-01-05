@@ -229,7 +229,7 @@ public class ReportService {
         Path ndjsonPath = Paths.get(outputDirectory, ndjsonFilename);
         Path fullJsonPath = Paths.get(outputDirectory, fullJsonFilename);
         writeFullJsonReport(ndjsonPath, fullJsonPath);
-        deleteNdjsonFile(ndjsonPath);
+        //deleteNdjsonFile(ndjsonPath);
 
         log.info("Statistics written: queries={}, errors={}, instances={}", statistics.getTotalQueries(), statistics.getTotalErrors(), statistics.getLoadGeneratorInstances().size());
         log.info("Request duration stats: avg={}ms min={}ms max={}ms | Query duration stats: avg={}ms min={}ms max={}ms",
