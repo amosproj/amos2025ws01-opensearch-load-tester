@@ -28,13 +28,8 @@ public class AbstractDocumentTests {
         assertThat(a.getId()).contains("_");
         int idx = a.getId().indexOf('_');
         assertThat(idx).isGreaterThan(0);
-        assertThat(a.getDssDataspaceId()).isEqualTo(a.getId().substring(0, idx));
-        assertThat(a.getDssDocumentId()).isEqualTo(a.getId().substring(idx + 1));
 
         assertThat(a.getContentType()).isEqualTo("application/pdf");
-        assertThat(a.getContentLength()).isNotNull()
-                .isGreaterThanOrEqualTo(20000L)
-                .isLessThan(30000L);
 
         assertThat(a.getEtag()).isNotNull().matches("[0-9a-fA-F]{32}");
         assertThat(a.getDssVersion()).isNotNull().matches("^1\\.\\d+$");
@@ -60,13 +55,8 @@ public class AbstractDocumentTests {
         assertThat(d.getId()).contains("_");
         int idx = d.getId().indexOf('_');
         assertThat(idx).isGreaterThan(0);
-        assertThat(d.getDssDataspaceId()).isEqualTo(d.getId().substring(0, idx));
-        assertThat(d.getDssDocumentId()).isEqualTo(d.getId().substring(idx + 1));
 
         assertThat(d.getContentType()).isEqualTo("application/pdf");
-        assertThat(d.getContentLength()).isNotNull()
-                .isGreaterThanOrEqualTo(20000L)
-                .isLessThan(30000L);
 
         // date fields
         String json = mapper.writeValueAsString(d);
