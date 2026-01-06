@@ -67,9 +67,11 @@ services:
       context: .
       dockerfile: metrics-reporter/Dockerfile
     container_name: metrics-reporter
+    user: "0:0"
     environment:
       - SPRING_APPLICATION_NAME=metrics-reporter
       - LOAD_GENERATOR_REPLICAS=${LOAD_GENERATOR_REPLICAS:-1}
+      - REPORT_OUTPUT_DIRECTORY=${REPORT_OUTPUT_DIRECTORY:-./reports}
       - LOGGING_LEVEL_ROOT=${LOGGING_LVL_ROOT:-ERROR}
       - LOGGING_LEVEL_ORG_ELASTICSEARCH=${LOGGING_LVL_ELASTIC:-ERROR}
       - LOGGING_LEVEL_COM_OPENSEARCHLOADTESTER_METRICSREPORTER=${LOGGING_LVL_METRICS_REPORTER:-INFO}
@@ -78,7 +80,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./reports:/app/reports
+      - reports:/app/reports
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O
             - http://metrics-reporter:8080/api/health
@@ -119,13 +121,53 @@ services:
       retries: 20
       start_period: 10s
 
-  curl:
-    image: alpine/curl
-    container_name: curl
+  loki:
+    image: grafana/loki:3.6.3
+    container_name: loki
     restart: unless-stopped
-    profiles:
-      - curl
-    command: ["sleep", "infinity"]
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/loki-config.yaml
+    volumes:
+      - ./deploy/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+    networks:
+      - opensearch-loadtester-network
+
+  alloy:
+    image: grafana/alloy:latest
+    restart: unless-stopped
+    command: run --server.http.listen-addr=0.0.0.0:12345 /etc/alloy/config.alloy
+    ports:
+      - 127.0.0.1:12345:12345
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - reports:/app:ro
+      - ./deploy/config.alloy:/etc/alloy/config.alloy:ro
+    networks:
+      - opensearch-loadtester-network
+
+  # http://localhost:3000
+  # login: admin
+  # passwd: admin
+  # {job="opensearch-load-tester"}
+  grafana:
+    environment:
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_FEATURE_TOGGLES_ENABLE=alertingSimplifiedRouting,alertingQueryAndExpressionsStepMode
+    entrypoint:
+      - sh
+      - -euc
+      - /run.sh
+    image: grafana/grafana:12.3.1
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./deploy/grafana-dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml:ro
+      - ./deploy/Load-Test-Results-Dashboard.json:/etc/grafana/provisioning/dashboards/opensearch-dashboard.json:ro
+      - ./deploy/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
     networks:
       - opensearch-loadtester-network
 
@@ -135,6 +177,8 @@ networks:
 
 volumes:
   testdata:
+    driver: local
+  reports:
     driver: local
 #  opensearch-data:
 #    driver: local

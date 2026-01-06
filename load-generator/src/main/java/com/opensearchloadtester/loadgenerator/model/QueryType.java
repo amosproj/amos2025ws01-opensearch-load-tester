@@ -15,7 +15,8 @@ public enum QueryType {
     DUO_CLIENT_BY_NAME_AND_STATE(DuoClientByNameAndStateQuery::random),
     ANO_PAYROLL_TYPE_LANGUAGE(AnoPayrollTypeLanguageQuery::random),
     DUO_BOOKING_BY_COSTCENTER_AND_DATE(DuoBookingByCostcenterAndDateQuery::random),
-    DUO_BOOKING_BY_AMOUNT_RANGE(DuoBookingByAmountRangeQuery::random);
+    DUO_BOOKING_BY_AMOUNT_RANGE(DuoBookingByAmountRangeQuery::random),
+    DUO_COMPLEX(DuoComplexQuery::random);
 
     private final Supplier<? extends Query> supplier;
 
