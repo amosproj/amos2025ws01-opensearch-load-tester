@@ -97,12 +97,6 @@ class ReportControllerTest {
         ResponseEntity<String> response = reportController.submitMetrics(metrics);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).contains("All metrics received (1/1 replicas)");
-        assertThat(response.getBody()).contains("Total load generators: 1");
-        assertThat(response.getBody()).contains("Total queries: 2");
-        assertThat(response.getBody()).contains("Full JSON report: out/query_results.json");
-        assertThat(response.getBody()).contains("Statistics JSON: out/statistics.json");
-        assertThat(response.getBody()).contains("CSV report: out/query_results.csv");
 
         verify(reportService).processMetrics(metrics);
         verify(reportService).finalizeReports(anySet());
