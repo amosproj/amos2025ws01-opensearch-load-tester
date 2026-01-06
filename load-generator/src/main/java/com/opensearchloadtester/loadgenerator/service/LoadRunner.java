@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @Component
@@ -62,9 +63,15 @@ public class LoadRunner {
             long durationNs = scenarioConfig.getDuration().toNanos();
             int qpsTotal = scenarioConfig.getQueriesPerSecond();
             int qpsPerLoadGen = qpsTotal / numberLoadGenerators;
-            long durationPerQuery = 1000_000_000L / qpsPerLoadGen;
+            //prevent division by zero
+            if (qpsPerLoadGen <= 0) {
+                throw new IllegalStateException(
+                        "queriesPerSecond must be >= load.generator.replicas (otherwise qpsPerLoadGen=0)"
+                );
+            }
+            long durationPerQuery = 1_000_000_000L / qpsPerLoadGen;
             AtomicInteger queryCounter = new AtomicInteger();
-            log.debug("Schedule delay:  {} ns  ", durationPerQuery);
+            log.debug("Schedule delay: {} ns", durationPerQuery);
 
             // Start scheduled query execution
             ScheduledFuture<?> future = executorService.scheduleAtFixedRate(() -> {
@@ -81,12 +88,9 @@ public class LoadRunner {
                     TimeUnit.NANOSECONDS);
             executorService.schedule(() -> future.cancel(false), durationNs, TimeUnit.NANOSECONDS);
 
-            // TODO: Wait for all threads to complete
             log.info("Waiting for all threads to complete");
             boolean completed = true;
             executorService.awaitTermination(durationNs + 10_000_000_000L, TimeUnit.NANOSECONDS);
-            // TODO: Set a timeout per queryExecution
-            // boolean completed = latch.await(10, TimeUnit.MINUTES);
 
             // Check if QPS fulfilled
             if (queryCounter.get() != qpsPerLoadGen * scenarioConfig.getDuration().toSeconds()) {
@@ -99,7 +103,6 @@ public class LoadRunner {
 
             if (completed) {
                 log.info("Calling MetricsReporterClient");
-                metricsReporterClient.sendMetrics(metricsCollector.getMetricsList());
                 log.info("Scenario '{}' completed successfully. All threads finished.", scenarioConfig.getName());
                 log.info("Test duration - Expected: {} ({}s), Actual: {}s",
                         scenarioConfig.getDuration(),
@@ -114,7 +117,11 @@ public class LoadRunner {
         } catch (Exception e) {
             log.error("Error executing queries:", e);
         } finally {
+            try { metricsCollector.flush(); } catch (Exception ignored) {}
+            try { metricsReporterClient.finish(loadGeneratorId); } catch (Exception ignored) {}
+
             shutdownExecutorService(executorService);
+            shutdownExecutorService(workers);
         }
     }
 

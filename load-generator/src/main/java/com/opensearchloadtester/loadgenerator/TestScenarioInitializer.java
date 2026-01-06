@@ -1,6 +1,5 @@
 package com.opensearchloadtester.loadgenerator;
 
-import com.opensearchloadtester.common.dto.MetricsDto;
 import com.opensearchloadtester.loadgenerator.client.LoadTestStartSyncClient;
 import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
 import com.opensearchloadtester.loadgenerator.service.LoadRunner;
@@ -11,6 +10,7 @@ import org.opensearch.client.opensearch.generic.OpenSearchGenericClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import com.opensearchloadtester.loadgenerator.client.MetricsReporterClient;
 
 @Slf4j
 @Component
@@ -25,6 +25,7 @@ public class TestScenarioInitializer implements CommandLineRunner {
     private final LoadRunner loadRunner;
     private final OpenSearchGenericClient openSearchClient;
     private final LoadTestStartSyncClient loadTestStartSyncClient;
+    private final MetricsReporterClient metricsReporterClient;
 
     public TestScenarioInitializer(
             @Value("${HOSTNAME}") String loadGeneratorId,
@@ -32,7 +33,8 @@ public class TestScenarioInitializer implements CommandLineRunner {
             ScenarioConfig scenarioConfig,
             LoadRunner loadRunner,
             OpenSearchGenericClient openSearchClient,
-            LoadTestStartSyncClient loadTestStartSyncClient
+            LoadTestStartSyncClient loadTestStartSyncClient,
+            MetricsReporterClient metricsReporterClient
     ) {
         this.loadGeneratorId = loadGeneratorId;
         this.numberLoadGenerators = numberLoadGenerators;
@@ -40,6 +42,7 @@ public class TestScenarioInitializer implements CommandLineRunner {
         this.loadRunner = loadRunner;
         this.openSearchClient = openSearchClient;
         this.loadTestStartSyncClient = loadTestStartSyncClient;
+        this.metricsReporterClient = metricsReporterClient;
     }
 
     @Override
@@ -68,12 +71,15 @@ public class TestScenarioInitializer implements CommandLineRunner {
 
         long warmupStart = System.currentTimeMillis();
 
+        MetricsCollector warmupCollector = new MetricsCollector(metricsReporterClient, 1, false);
+
         QueryExecutionTask warmupTask = new QueryExecutionTask(
                 loadGeneratorId,
                 scenarioConfig.getDocumentType().getIndex(),
                 scenarioConfig.getQueryTypes(),
                 openSearchClient,
-                new NoOpMetricsCollector() // warm-up metrics are ignored
+                warmupCollector
+                // warm-up metrics are ignored
         );
 
         int successCount = 0;
@@ -91,7 +97,6 @@ public class TestScenarioInitializer implements CommandLineRunner {
                 successCount++;
             } catch (RuntimeException ex) {
                 // Count failed warm-up executions, but do not stop the warm-up.
-                // Failures are logged only at debug level.
                 failureCount++;
                 log.debug("Warm-up request {} failed: {}", totalRequests, ex.getMessage());
             }
@@ -120,14 +125,4 @@ public class TestScenarioInitializer implements CommandLineRunner {
         loadTestStartSyncClient.awaitStartPermission();
     }
 
-    /**
-     * MetricsCollector implementation that intentionally ignores all metrics.
-     * This ensures that warm-up traffic does not appear in the final reports.
-     */
-    static class NoOpMetricsCollector extends MetricsCollector {
-        @Override
-        public synchronized void appendMetrics(MetricsDto metricsDto) {
-            // Intentionally left blank: no metrics are collected during warm-up.
-        }
-    }
 }
