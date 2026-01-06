@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @Component
@@ -55,7 +54,7 @@ public class LoadRunner {
         // Track overall test start time
         long testStartTime = System.currentTimeMillis();
 
-        ScheduledExecutorService executorService = Executors
+        ScheduledExecutorService scheduler = Executors
                 .newSingleThreadScheduledExecutor();
         ExecutorService workers = Executors.newCachedThreadPool();
 
@@ -71,10 +70,13 @@ public class LoadRunner {
             }
             long durationPerQuery = 1_000_000_000L / qpsPerLoadGen;
             AtomicInteger queryCounter = new AtomicInteger();
-            log.debug("Schedule delay: {} ns", durationPerQuery);
+            log.debug("Schedule delay:  {} ns  ", durationPerQuery);
+
+            // Signals when we have stopped scheduling new query submissions.
+            CountDownLatch schedulingStopped = new CountDownLatch(1);
 
             // Start scheduled query execution
-            ScheduledFuture<?> future = executorService.scheduleAtFixedRate(() -> {
+            ScheduledFuture<?> future = scheduler.scheduleAtFixedRate(() -> {
                         try {
                             workers.submit(query);
                             queryCounter.getAndIncrement();
@@ -86,14 +88,28 @@ public class LoadRunner {
                     durationPerQuery / 2,
                     durationPerQuery,
                     TimeUnit.NANOSECONDS);
-            executorService.schedule(() -> future.cancel(false), durationNs, TimeUnit.NANOSECONDS);
+            // After the scenario duration, stop the periodic scheduling (already submitted tasks may still run).
+            scheduler.schedule(() -> {
+                try {
+                    future.cancel(false);
+                } finally {
+                    // Always unblock the main thread
+                    schedulingStopped.countDown();
+                }
+            }, durationNs, TimeUnit.NANOSECONDS);
 
-            log.info("Waiting for all threads to complete");
-            boolean completed = true;
-            executorService.awaitTermination(durationNs + 10_000_000_000L, TimeUnit.NANOSECONDS);
+            // Wait until the "stop scheduling" task has executed on main thread.
+            schedulingStopped.await();
+
+            // No new tasks from here: shutdown scheduler and let workers finish queued tasks.
+            scheduler.shutdown();
+            workers.shutdown();
+
+            log.info("Waiting for all worker threads to complete");
+            boolean completed = awaitExecutorServiceTermination(workers, "worker threads");
 
             // Check if QPS fulfilled
-            if (queryCounter.get() != qpsPerLoadGen * scenarioConfig.getDuration().toSeconds()) {
+            if (queryCounter.get() < qpsPerLoadGen * scenarioConfig.getDuration().toSeconds()) {
                 log.warn("Load Generator can't keep up with QPS... please increase REPLICA amount!");
             }
 
@@ -109,18 +125,20 @@ public class LoadRunner {
                         scenarioConfig.getDuration().getSeconds(),
                         String.format("%.2f", actualDurationSeconds));
             } else {
-                log.warn("Timeout waiting for execution threads to complete");
-                log.warn("Scenario '{}' did not complete within expected duration. Actual runtime: {}s",
+                log.warn("Scenario '{}' was interrupted while waiting for worker threads to finish. Actual runtime: {}s",
                         scenarioConfig.getName(), String.format("%.2f", actualDurationSeconds));
             }
 
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.warn("Interrupted while executing scenario '{}'", scenarioConfig.getName(), e);
         } catch (Exception e) {
             log.error("Error executing queries:", e);
         } finally {
             try { metricsCollector.flush(); } catch (Exception ignored) {}
             try { metricsReporterClient.finish(loadGeneratorId); } catch (Exception ignored) {}
 
-            shutdownExecutorService(executorService);
+            shutdownExecutorService(scheduler);
             shutdownExecutorService(workers);
         }
     }
@@ -144,6 +162,19 @@ public class LoadRunner {
             log.error("Interrupted while shutting down executor service", e);
             executorService.shutdownNow();
             Thread.currentThread().interrupt();
+        }
+    }
+
+    private boolean awaitExecutorServiceTermination(ExecutorService executorService, String executorName) {
+        try {
+            while (!executorService.awaitTermination(30, TimeUnit.SECONDS)) {
+                log.info("Still waiting for {} to complete...", executorName);
+            }
+            return true;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.warn("Interrupted while waiting for {} to complete", executorName, e);
+            return false;
         }
     }
 }
