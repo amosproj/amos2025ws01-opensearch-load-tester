@@ -1,0 +1,10 @@
+{
+  "query": {
+    "regexp": {
+      "dssDocumentName.sort": {
+        "value": ".*(ab.*re.*ch.*nu.*ng.*)+.*2024.*\\.pdf",
+        "max_determinized_states": 100000
+      }
+    }
+  }
+}
