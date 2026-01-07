@@ -62,12 +62,6 @@ public class LoadRunner {
             long durationNs = scenarioConfig.getDuration().toNanos();
             int qpsTotal = scenarioConfig.getQueriesPerSecond();
             int qpsPerLoadGen = qpsTotal / numberLoadGenerators;
-            //prevent division by zero
-            if (qpsPerLoadGen <= 0) {
-                throw new IllegalStateException(
-                        "queriesPerSecond must be >= load.generator.replicas (otherwise qpsPerLoadGen=0)"
-                );
-            }
             long durationPerQuery = 1_000_000_000L / qpsPerLoadGen;
             AtomicInteger queryCounter = new AtomicInteger();
             log.debug("Schedule delay:  {} ns  ", durationPerQuery);
