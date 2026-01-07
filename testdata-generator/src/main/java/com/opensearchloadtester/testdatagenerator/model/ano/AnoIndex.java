@@ -84,7 +84,7 @@ public final class AnoIndex implements Index {
 
         Map<String, Property> props = new HashMap<>();
 
-        props.put("customAll", Property.of(p -> p.text(t -> t
+        props.put("custom_all", Property.of(p -> p.text(t -> t
                 .analyzer("german")
                 .store(true)
         )));

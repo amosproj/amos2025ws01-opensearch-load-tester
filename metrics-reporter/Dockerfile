@@ -3,13 +3,9 @@ FROM maven:3.9-eclipse-temurin-25 AS build
 
 WORKDIR /app
 
-# Copy parent POM + module POMs first (dependency download layer)
-COPY pom.xml pom.xml
+# Copy poms first (dependency download layer)
 COPY common-core/pom.xml common-core/pom.xml
 COPY metrics-reporter/pom.xml metrics-reporter/pom.xml
-
-# Install parent POM into local repo so Maven can resolve it later
-RUN mvn -f pom.xml -N install -DskipTests
 
 # Pre-fetch deps for common-core
 RUN mvn -f common-core/pom.xml dependency:go-offline -B

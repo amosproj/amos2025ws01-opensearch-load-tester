@@ -28,11 +28,7 @@ public class MetricsReporterClient {
 
     public MetricsReporterClient(@Value("${metrics-reporter.url}") String metricsReporterBaseUrl) {
         this.metricsEndpointUrl = metricsReporterBaseUrl + "/metrics";
-        try {
-            this.httpClient = HttpClients.createDefault();
-        } catch (RuntimeException e) {
-            throw new MetricsReporterAccessException(e.getMessage());
-        }
+        this.httpClient = HttpClients.createDefault();
     }
 
     /**

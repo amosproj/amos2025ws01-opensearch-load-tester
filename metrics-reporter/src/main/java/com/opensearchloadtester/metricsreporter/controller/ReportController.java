@@ -1,10 +1,8 @@
 package com.opensearchloadtester.metricsreporter.controller;
 
 import com.opensearchloadtester.common.dto.MetricsDto;
-import com.opensearchloadtester.metricsreporter.config.ShutdownAfterResponseInterceptor;
 import com.opensearchloadtester.metricsreporter.dto.StatisticsDto;
 import com.opensearchloadtester.metricsreporter.service.ReportService;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,8 +44,7 @@ public class ReportController {
      * @return ResponseEntity with status message
      */
     @PostMapping("/metrics")
-    public synchronized ResponseEntity<String> submitMetrics(@RequestBody List<MetricsDto> metricsList,
-                                                             HttpServletRequest request) {
+    public synchronized ResponseEntity<String> submitMetrics(@RequestBody List<MetricsDto> metricsList) {
         Set<String> loadGeneratorIds = new HashSet<>();
 
         // Validate payload (empty payload is invalid)
@@ -98,7 +95,7 @@ public class ReportController {
                 metricsList.size());
 
         // Check if all replicas have reported
-        if (currentCount == expectedReplicas) {
+        if (currentCount >= expectedReplicas) {
             log.info("All {} replicas have reported. Generating reports...", expectedReplicas);
 
             try {
@@ -121,8 +118,9 @@ public class ReportController {
                     message.append("CSV report: ").append(reportService.getCsvReportPath()).append("\n");
                 }
 
-                // Mark request for application shutdown AFTER response completed
-                request.setAttribute(ShutdownAfterResponseInterceptor.SHUTDOWN_AFTER_RESPONSE, true);
+                // Prepare for the next run without requiring a service restart.
+                reportedInstances.clear();
+                reportService.resetForNewRun();
 
                 return ResponseEntity.ok(message.toString());
 
