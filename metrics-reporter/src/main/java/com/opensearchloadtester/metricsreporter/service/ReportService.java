@@ -36,7 +36,7 @@ public class ReportService {
     private final ObjectMapper objectMapper;
     private final ObjectWriter ndjsonWriter;
 
-    @Value("${report.output.directory:./reports}")
+    @Value("${report.output.directory}")
     private String outputDirectory;
 
     @Value("${report.stats.filename:statistics.json}")
@@ -93,23 +93,36 @@ public class ReportService {
 
         Path csvPath = Paths.get(outputDirectory, csvFilename);
         Path ndjsonPath = Paths.get(outputDirectory, ndjsonFilename);
+        Path statsPath = Paths.get(outputDirectory, statsFilename);
+        Path fullJsonPath = Paths.get(outputDirectory, fullJsonFilename);
+
+        // Start a fresh run: remove leftover report files from a previous run (e.g., when reports are volume-mounted).
+        deleteReportFileIfExists(csvPath);
+        deleteReportFileIfExists(ndjsonPath);
+        deleteReportFileIfExists(statsPath);
+        deleteReportFileIfExists(fullJsonPath);
 
         // Create CSV file with headers
-        if (!Files.exists(csvPath)) {
-            String csvHeaders = "Load Generator ID,Query Type,Request Duration (ms),Query Duration (ms),Total Hits,HTTP Status Code\n";
-            Files.writeString(csvPath, csvHeaders);
-            log.info("Created initial CSV report file: {}", csvPath.toAbsolutePath());
-        }
+        String csvHeaders = "Load Generator ID,Query Type,Request Duration (ms),Query Duration (ms),Total Hits,HTTP Status Code\n";
+        Files.writeString(csvPath, csvHeaders);
+        log.info("Created initial CSV report file: {}", csvPath.toAbsolutePath());
 
         // Create NDJSON file placeholder
-        if (!Files.exists(ndjsonPath)) {
-            Files.createFile(ndjsonPath);
-            log.info("Created NDJSON report file: {}", ndjsonPath.toAbsolutePath());
-        }
+        Files.createFile(ndjsonPath);
+        log.info("Created NDJSON report file: {}", ndjsonPath.toAbsolutePath());
 
         filesInitialized = true;
     }
 
+    private void deleteReportFileIfExists(Path path) {
+        try {
+            if (Files.deleteIfExists(path)) {
+                log.info("Deleted previous report file {}", path.toAbsolutePath());
+            }
+        } catch (IOException e) {
+            log.warn("Failed to delete previous report file {}: {}", path.toAbsolutePath(), e.getMessage());
+        }
+    }
 
     private void appendToCsvReport(List<MetricsDto> metricsList) throws IOException {
         Path csvPath = Paths.get(outputDirectory, csvFilename);
@@ -206,7 +219,7 @@ public class ReportService {
         Path ndjsonPath = Paths.get(outputDirectory, ndjsonFilename);
         Path fullJsonPath = Paths.get(outputDirectory, fullJsonFilename);
         writeFullJsonReport(ndjsonPath, fullJsonPath);
-        deleteNdjsonFile(ndjsonPath);
+        //deleteNdjsonFile(ndjsonPath);
 
         log.info("Statistics written: queries={}, errors={}, instances={}", statistics.getTotalQueries(), statistics.getTotalErrors(), statistics.getLoadGeneratorInstances().size());
         log.info("Request duration stats: avg={}ms min={}ms max={}ms | Query duration stats: avg={}ms min={}ms max={}ms",
