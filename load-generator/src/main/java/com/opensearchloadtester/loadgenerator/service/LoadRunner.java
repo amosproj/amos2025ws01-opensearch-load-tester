@@ -62,7 +62,7 @@ public class LoadRunner {
             long durationNs = scenarioConfig.getDuration().toNanos();
             int qpsTotal = scenarioConfig.getQueriesPerSecond();
             int qpsPerLoadGen = qpsTotal / numberLoadGenerators;
-            long durationPerQuery = 1000_000_000L / qpsPerLoadGen;
+            long durationPerQuery = 1_000_000_000L / qpsPerLoadGen;
             AtomicInteger queryCounter = new AtomicInteger();
             log.debug("Schedule delay:  {} ns  ", durationPerQuery);
 
@@ -113,7 +113,6 @@ public class LoadRunner {
 
             if (completed) {
                 log.info("Calling MetricsReporterClient");
-                metricsReporterClient.sendMetrics(metricsCollector.getMetricsList());
                 log.info("Scenario '{}' completed successfully. All threads finished.", scenarioConfig.getName());
                 log.info("Test duration - Expected: {} ({}s), Actual: {}s",
                         scenarioConfig.getDuration(),
@@ -130,6 +129,9 @@ public class LoadRunner {
         } catch (Exception e) {
             log.error("Error executing queries:", e);
         } finally {
+            try { metricsCollector.flush(); } catch (Exception ignored) {}
+            try { metricsReporterClient.finish(loadGeneratorId); } catch (Exception ignored) {}
+
             shutdownExecutorService(scheduler);
             shutdownExecutorService(workers);
         }

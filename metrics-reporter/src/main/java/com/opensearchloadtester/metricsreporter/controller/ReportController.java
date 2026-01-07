@@ -21,8 +21,12 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequestMapping("/api")
 public class ReportController {
 
-    // Track unique reporting instances without keeping full metrics in memory
+    // Load generators that have sent at least one metrics batch
     private final Set<String> reportedInstances = ConcurrentHashMap.newKeySet();
+
+    // Load generators that have completed sending all batches
+    private final Set<String> finishedInstances = ConcurrentHashMap.newKeySet();
+    private boolean finalized = false;
 
     @Value("${load.generator.replicas:1}")
     private int expectedReplicas;
@@ -38,7 +42,8 @@ public class ReportController {
 
     /**
      * This Post request saves the received metrics to thread-safe storage.
-     * When all expected load generator replicas have reported, it triggers report generation.
+     * Stores incoming metrics batches. Does not finalize the run.
+     * Finalization happens only after all replicas call /finish/{loadGeneratorId}.
      *
      * @param metrics DTO for metrics data
      * @return ResponseEntity with status message
@@ -46,6 +51,12 @@ public class ReportController {
     @PostMapping("/metrics")
     public synchronized ResponseEntity<String> submitMetrics(@RequestBody List<MetricsDto> metricsList) {
         Set<String> loadGeneratorIds = new HashSet<>();
+
+        // Reject late batches after finalization
+        if (finalized) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("Run already finalized; metrics batch rejected\n");
+        }
 
         // Validate payload (empty payload is invalid)
         if (metricsList == null || metricsList.isEmpty()) {
@@ -84,28 +95,65 @@ public class ReportController {
                     .body("Failed to persist metrics: " + e.getMessage() + "\n");
         }
 
-        // Count unique reporting instances
+// Track that this load generator has reported at least one batch
         reportedInstances.addAll(loadGeneratorIds);
-        int currentCount = reportedInstances.size();
+        int reportedCount = reportedInstances.size();
 
-        log.info("Stored metrics from {}. Received {}/{} replicas. Query count: {}",
+        log.info("Stored metrics from {}. Reported {}/{} replicas. Batch size: {}",
                 loadGeneratorIds,
-                currentCount,
+                reportedCount,
                 expectedReplicas,
                 metricsList.size());
 
-        // Check if all replicas have reported
-        if (currentCount >= expectedReplicas) {
-            log.info("All {} replicas have reported. Generating reports...", expectedReplicas);
+// Finalization happens only after all replicas call /finish/{id}.
+        return ResponseEntity.ok(
+                String.format("Metrics stored successfully. Reported replicas (%d/%d). Waiting for finish signals.\n",
+                        reportedCount, expectedReplicas)
+        );
+
+    }
+    /**
+     * Called by each load generator when it has finished sending all metrics batches.
+     * Generates reports only once all expected replicas have finished.
+     */
+    @PostMapping("/finish/{loadGeneratorId}")
+    public synchronized ResponseEntity<String> finish(@PathVariable String loadGeneratorId) {
+        if (loadGeneratorId == null || loadGeneratorId.isBlank()) {
+            return ResponseEntity.badRequest().body("Invalid loadGeneratorId\n");
+        }
+
+        // If the run is already finalized, finish is idempotent: return 200 (OK)
+        if (finalized) {
+            log.info("Finish received from {} but run is already finalized - returning 200 OK", loadGeneratorId);
+            return ResponseEntity.ok("Run already finalized\n");
+        }
+
+        // If this load generator already finished before, return 200 OK (idempotent)
+        if (finishedInstances.contains(loadGeneratorId)) {
+            log.info("Duplicate finish received from {} - returning 200 OK", loadGeneratorId);
+            return ResponseEntity.ok("Finish already received\n");
+        }
+
+        finishedInstances.add(loadGeneratorId);
+        int finishedCount = finishedInstances.size();
+
+        log.info("Received finish from {}. Finished {}/{}",
+                loadGeneratorId, finishedCount, expectedReplicas);
+
+        // Only finalize once all replicas have explicitly finished sending batches
+        if (finishedCount >= expectedReplicas) {
+            log.info("All {} replicas finished. Generating reports...", expectedReplicas);
+
+            finalized = true; // idempotency guard: prevent double-finalize
 
             try {
                 StatisticsDto summary = reportService.finalizeReports(reportedInstances);
 
                 StringBuilder message = new StringBuilder(String.format(
-                        "All metrics received (%d/%d replicas). Reports generated successfully!\n" +
+                        "All load generators finished (%d/%d). Reports generated successfully!\n" +
                                 "Total load generators: %d\n" +
                                 "Total queries: %d\n",
-                        currentCount, expectedReplicas,
+                        finishedCount, expectedReplicas,
                         summary.getLoadGeneratorInstances().size(),
                         summary.getTotalQueries()
                 ));
@@ -118,25 +166,27 @@ public class ReportController {
                     message.append("CSV report: ").append(reportService.getCsvReportPath()).append("\n");
                 }
 
-                // Prepare for the next run without requiring a service restart.
+                // Reset in-memory state for next run
                 reportedInstances.clear();
+                finishedInstances.clear();
                 reportService.resetForNewRun();
+                finalized = false;
 
                 return ResponseEntity.ok(message.toString());
 
             } catch (IOException e) {
                 log.error("Failed to generate reports", e);
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body("Metrics received but failed to generate reports: " + e.getMessage() + "\n");
+                        .body("Finish received but failed to generate reports: " + e.getMessage() + "\n");
             }
-        } else {
-            // Not all replicas reported yet
-            return ResponseEntity.ok(
-                    String.format("Metrics stored successfully. Waiting for remaining replicas (%d/%d)\n",
-                            currentCount, expectedReplicas)
-            );
         }
+
+        return ResponseEntity.ok(
+                String.format("Finish stored. Waiting for remaining load generators (%d/%d)\n",
+                        finishedCount, expectedReplicas)
+        );
     }
+
 
     /**
      * Health check endpoint.
