@@ -3,6 +3,7 @@ package com.opensearchloadtester.metricsreporter.controller;
 import com.opensearchloadtester.common.dto.MetricsDto;
 import com.opensearchloadtester.metricsreporter.dto.StatisticsDto;
 import com.opensearchloadtester.metricsreporter.service.ReportService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,7 +46,8 @@ class ReportControllerTest {
                 new MetricsDto("", "query_type_test", 10L, 10L, 3, 200)
         );
 
-        ResponseEntity<String> response = reportController.submitMetrics(metrics);
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        ResponseEntity<String> response = reportController.submitMetrics(metrics, request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).isEqualTo("Invalid metrics payload\n");
@@ -60,13 +62,13 @@ class ReportControllerTest {
                 new MetricsDto(LOAD_GENERATOR_ID, "query_type_test", 120L, 80L, 5, 200)
         );
 
-        ResponseEntity<String> response = reportController.submitMetrics(metrics);
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        ResponseEntity<String> response = reportController.submitMetrics(metrics, request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).contains("Waiting for remaining replicas (1/2)");
         verify(reportService).processMetrics(metrics);
         verify(reportService, never()).finalizeReports(anySet());
-        verify(reportService, never()).resetForNewRun();
     }
 
     @Test
@@ -94,12 +96,12 @@ class ReportControllerTest {
         when(reportService.getStatisticsReportPath()).thenReturn(Path.of("out/statistics.json"));
         when(reportService.getCsvReportPath()).thenReturn(Path.of("out/query_results.csv"));
 
-        ResponseEntity<String> response = reportController.submitMetrics(metrics);
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        ResponseEntity<String> response = reportController.submitMetrics(metrics, request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         verify(reportService).processMetrics(metrics);
         verify(reportService).finalizeReports(anySet());
-        verify(reportService).resetForNewRun();
     }
 }
