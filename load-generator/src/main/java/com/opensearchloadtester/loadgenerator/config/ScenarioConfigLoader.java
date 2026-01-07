@@ -35,19 +35,7 @@ public class ScenarioConfigLoader {
                 .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
 
         try {
-            ScenarioConfig config =
-                    yamlMapper.readValue(path.toFile(), ScenarioConfig.class);
-
-            if (numberLoadGenerators <= 0) {
-                throw new IllegalStateException("Invalid configuration: load generator replicas must be > 0.");
-            }
-            if (config.getQueriesPerSecond() < numberLoadGenerators) {
-                throw new IllegalStateException(
-                        "Invalid scenario configuration: queriesPerSecond must be >= load generator replicas."
-                );
-            }
-
-            return config;
+            return yamlMapper.readValue(path.toFile(), ScenarioConfig.class);
         } catch (IOException e) {
             log.error("Failed to read or parse from file '{}': {}", path.toAbsolutePath(), e.getMessage());
             throw new RuntimeException(String.format("Failed to read or parse from file '%s'", path), e);
