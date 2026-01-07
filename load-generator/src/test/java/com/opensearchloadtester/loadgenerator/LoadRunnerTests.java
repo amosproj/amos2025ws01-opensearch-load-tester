@@ -25,9 +25,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class LoadRunnerTest {
+class LoadRunnerTests {
 
-    private static final int NUMBER_LOAD_GENERATORS = 1; // deterministic qpsPerLoadGen
+    private static final int NUMBER_LOAD_GENERATORS = 1;
 
     @Mock
     private OpenSearchGenericClient openSearchClient;
@@ -63,7 +63,6 @@ class LoadRunnerTest {
     }
 
     private void stubOpenSearchStatus(int status) throws Exception {
-        // Keep QueryExecutionTask simple: only status is used
         Response response = mock(Response.class);
         when(response.getStatus()).thenReturn(status);
         when(openSearchClient.execute(any())).thenReturn(response);
@@ -71,7 +70,6 @@ class LoadRunnerTest {
 
     @Test
     void anoScenario_runs_andReportsOnce() throws Exception {
-        // Normal lifecycle
         ScenarioConfig scenario = createScenario(
                 "ano-basic",
                 DocumentType.ANO,
@@ -107,7 +105,6 @@ class LoadRunnerTest {
 
     @Test
     void warmUpFlag_doesNotAffectRunner() throws Exception {
-        // Warm-up is handled elsewhere; runner must still finish
         ScenarioConfig scenario = createScenario(
                 "warmup-flag",
                 DocumentType.ANO,
@@ -138,7 +135,7 @@ class LoadRunnerTest {
         doThrow(new IOException("boom")).when(openSearchClient).execute(any());
 
         assertDoesNotThrow(() -> loadRunner.executeScenario(scenario));
-
+        verify(metricsReporterClient, times(1)).sendMetrics(any());
     }
 
     @Test
@@ -161,13 +158,12 @@ class LoadRunnerTest {
     }
 
     @Test
-    void qpsOneSecond_oneQps_executesAtLeastOnce() throws Exception {
-        // Scheduling is jittery; only assert a minimal bound
+    void qpsThreeSeconds_oneQps_executesCloseToExpected() throws Exception {
         ScenarioConfig scenario = createScenario(
-                "qps-1s-1qps",
+                "qps-3s-1qps",
                 DocumentType.ANO,
                 QueryType.ANO_PAYROLL_RANGE,
-                Duration.ofSeconds(1),
+                Duration.ofSeconds(3),
                 1,
                 false
         );
@@ -176,18 +172,19 @@ class LoadRunnerTest {
 
         loadRunner.executeScenario(scenario);
 
-        verify(openSearchClient, atLeast(1)).execute(any());
-        verify(openSearchClient, atMost(3)).execute(any());
+        // expected = qps * seconds, allow +1 tick due to scheduler startup/cancel
+        int expected = (int) (scenario.getDuration().toSeconds() * scenario.getQueriesPerSecond());
+        verify(openSearchClient, atLeast(expected)).execute(any());
+        verify(openSearchClient, atMost(expected + 1)).execute(any());
     }
 
     @Test
-    void qpsOneSecond_threeQps_executesRoughlyInRange() throws Exception {
-
+    void qpsThreeSeconds_threeQps_executesCloseToExpected() throws Exception {
         ScenarioConfig scenario = createScenario(
-                "qps-1s-3qps",
+                "qps-3s-3qps",
                 DocumentType.ANO,
                 QueryType.ANO_PAYROLL_RANGE,
-                Duration.ofSeconds(1),
+                Duration.ofSeconds(3),
                 3,
                 false
         );
@@ -196,8 +193,9 @@ class LoadRunnerTest {
 
         loadRunner.executeScenario(scenario);
 
-        verify(openSearchClient, atLeast(1)).execute(any());
-        verify(openSearchClient, atMost(8)).execute(any()); // wide range on purpose
+        int expected = (int) (scenario.getDuration().toSeconds() * scenario.getQueriesPerSecond());
+        verify(openSearchClient, atLeast(expected)).execute(any());
+        verify(openSearchClient, atMost(expected + 1)).execute(any());
     }
 
     @Test
@@ -229,8 +227,8 @@ class LoadRunnerTest {
     }
 
     @Test
-    void rejectedExecutionException_fromOpenSearch_doesNotCrashRunner() throws Exception {
-        // This simulates an exception inside QueryExecutionTask, not submit()
+    void rejectedExecutionException_insideQueryTask_doesNotCrashRunner() throws Exception  {
+        // This simulates an exception inside QueryExecutionTask
         ScenarioConfig scenario = createScenario(
                 "rejected-exec",
                 DocumentType.ANO,
