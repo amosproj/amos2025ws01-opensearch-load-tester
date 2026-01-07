@@ -20,6 +20,9 @@ public class ScenarioConfigLoader {
     @Value("${scenario.config.path}")
     private String scenarioConfigPath;
 
+    @Value("${load.generator.replicas}")
+    private int numberLoadGenerators;
+
     @Bean
     public ScenarioConfig scenarioConfig() {
         Path path = Path.of(scenarioConfigPath);
@@ -32,7 +35,19 @@ public class ScenarioConfigLoader {
                 .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
 
         try {
-            return yamlMapper.readValue(path.toFile(), ScenarioConfig.class);
+            ScenarioConfig config =
+                    yamlMapper.readValue(path.toFile(), ScenarioConfig.class);
+
+            if (numberLoadGenerators <= 0) {
+                throw new IllegalStateException("Invalid configuration: load generator replicas must be > 0.");
+            }
+            if (config.getQueriesPerSecond() < numberLoadGenerators) {
+                throw new IllegalStateException(
+                        "Invalid scenario configuration: queriesPerSecond must be >= load generator replicas."
+                );
+            }
+
+            return config;
         } catch (IOException e) {
             log.error("Failed to read or parse from file '{}': {}", path.toAbsolutePath(), e.getMessage());
             throw new RuntimeException(String.format("Failed to read or parse from file '%s'", path), e);
