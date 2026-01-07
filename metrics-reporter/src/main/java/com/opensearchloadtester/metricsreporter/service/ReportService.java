@@ -124,16 +124,6 @@ public class ReportService {
         }
     }
 
-    /**
-     * Resets in-memory state so a new load test can be executed without restarting the service.
-     * Report files are cleaned up lazily on the next incoming metrics batch.
-     */
-    public synchronized void resetForNewRun() {
-        stats.reset();
-        filesInitialized = false;
-    }
-
-
     private void appendToCsvReport(List<MetricsDto> metricsList) throws IOException {
         Path csvPath = Paths.get(outputDirectory, csvFilename);
 
@@ -229,7 +219,7 @@ public class ReportService {
         Path ndjsonPath = Paths.get(outputDirectory, ndjsonFilename);
         Path fullJsonPath = Paths.get(outputDirectory, fullJsonFilename);
         writeFullJsonReport(ndjsonPath, fullJsonPath);
-        deleteNdjsonFile(ndjsonPath);
+        //deleteNdjsonFile(ndjsonPath);
 
         log.info("Statistics written: queries={}, errors={}, instances={}", statistics.getTotalQueries(), statistics.getTotalErrors(), statistics.getLoadGeneratorInstances().size());
         log.info("Request duration stats: avg={}ms min={}ms max={}ms | Query duration stats: avg={}ms min={}ms max={}ms",
@@ -299,21 +289,6 @@ public class ReportService {
         private long queryDurationSum = 0;
         private long queryDurationMin = Long.MAX_VALUE;
         private long queryDurationMax = Long.MIN_VALUE;
-
-        void reset() {
-            totalQueries = 0;
-            totalErrors = 0;
-
-            requestDurationCount = 0;
-            requestDurationSum = 0;
-            requestDurationMin = Long.MAX_VALUE;
-            requestDurationMax = Long.MIN_VALUE;
-
-            queryDurationCount = 0;
-            queryDurationSum = 0;
-            queryDurationMin = Long.MAX_VALUE;
-            queryDurationMax = Long.MIN_VALUE;
-        }
 
         void update(List<MetricsDto> results) {
             for (MetricsDto result : results) {
