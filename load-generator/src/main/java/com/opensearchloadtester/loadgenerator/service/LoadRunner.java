@@ -41,7 +41,7 @@ public class LoadRunner {
      */
     public void executeScenario(ScenarioConfig scenarioConfig) {
         log.info("Executing '{}' (expected duration: {} sec)",
-                scenarioConfig.getName(), scenarioConfig.getDuration().getSeconds());
+                scenarioConfig.getName(), scenarioConfig.getScheduleDuration().getSeconds());
 
         QueryExecutionTask query = new QueryExecutionTask(
                 loadGeneratorId,
@@ -59,7 +59,7 @@ public class LoadRunner {
         ExecutorService workers = Executors.newCachedThreadPool();
 
         try {
-            long durationNs = scenarioConfig.getDuration().toNanos();
+            long durationNs = scenarioConfig.getScheduleDuration().toNanos();
             int qpsTotal = scenarioConfig.getQueriesPerSecond();
             int qpsPerLoadGen = qpsTotal / numberLoadGenerators;
             long durationPerQuery = 1000_000_000L / qpsPerLoadGen;
@@ -103,7 +103,7 @@ public class LoadRunner {
             boolean completed = awaitExecutorServiceTermination(workers, "worker threads");
 
             // Check if QPS fulfilled
-            if (queryCounter.get() < qpsPerLoadGen * scenarioConfig.getDuration().toSeconds()) {
+            if (queryCounter.get() < qpsPerLoadGen * scenarioConfig.getScheduleDuration().toSeconds()) {
                 log.warn("Load Generator can't keep up with QPS... please increase REPLICA amount!");
             }
 
@@ -115,9 +115,8 @@ public class LoadRunner {
                 log.info("Calling MetricsReporterClient");
                 metricsReporterClient.sendMetrics(metricsCollector.getMetricsList());
                 log.info("Scenario '{}' completed successfully. All threads finished.", scenarioConfig.getName());
-                log.info("Test duration - Expected: {} ({}s), Actual: {}s",
-                        scenarioConfig.getDuration(),
-                        scenarioConfig.getDuration().getSeconds(),
+                log.info("Schedule duration: {}s, Total duration: {}s",
+                        scenarioConfig.getScheduleDuration().getSeconds(),
                         String.format("%.2f", actualDurationSeconds));
             } else {
                 log.warn("Scenario '{}' was interrupted while waiting for worker threads to finish. Actual runtime: {}s",
@@ -130,6 +129,7 @@ public class LoadRunner {
         } catch (Exception e) {
             log.error("Error executing queries:", e);
         } finally {
+            // TODO: check if still necessary?
             shutdownExecutorService(scheduler);
             shutdownExecutorService(workers);
         }
