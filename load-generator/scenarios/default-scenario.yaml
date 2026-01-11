@@ -4,6 +4,6 @@ document_type: ANO
 schedule_duration: PT5S
 queries_per_second: 50
 query_response_timeout: PT1S
-enable_warm_up: true
+enable_warm_up: false
 query_types:
   - ANO_MULTI_REGEX
