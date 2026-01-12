@@ -43,12 +43,15 @@ public class LoadRunner {
         log.info("Executing '{}' (expected duration: {} sec)",
                 scenarioConfig.getName(), scenarioConfig.getScheduleDuration().getSeconds());
 
+        log.info("Timout {}s", scenarioConfig.getQueryResponseTimeout().toSeconds());
+
         QueryExecutionTask query = new QueryExecutionTask(
                 loadGeneratorId,
                 scenarioConfig.getDocumentType().getIndex(),
                 scenarioConfig.getQueryTypes(),
                 openSearchClient,
-                metricsCollector
+                metricsCollector,
+                scenarioConfig.getQueryResponseTimeout()
         );
 
         // Track overall test start time
