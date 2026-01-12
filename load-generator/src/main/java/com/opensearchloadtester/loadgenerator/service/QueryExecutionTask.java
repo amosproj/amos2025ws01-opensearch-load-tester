@@ -74,6 +74,12 @@ public class QueryExecutionTask implements Runnable {
         long requestDurationMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
 
         if (status >= 400) {
+            if (response != null) {
+                String responseBody = response.getBody()
+                        .map(Body::bodyAsString)
+                        .orElse("no body");
+                log.debug("Status: {}, reason: {}, body: {}", status, response.getReason(), responseBody);
+            }
             MetricsDto metricsDto = new MetricsDto(
                     loadGeneratorId,
                     selectedQueryType.name(),
