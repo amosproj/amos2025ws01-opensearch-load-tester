@@ -4,7 +4,7 @@
     "regexp": {
       "dssDocumentName.sort": {
         "value": ".*(ab.*re.*ch.*nu.*ng.*)+.*{{year}}.*\\.pdf",
-        "max_determinized_states": 100000
+        "max_determinized_states": 1000
       }
     }
   }
