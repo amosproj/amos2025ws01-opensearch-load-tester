@@ -2,8 +2,8 @@ package com.opensearchloadtester.loadgenerator.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.opensearchloadtester.loadgenerator.model.QueryType;
 import com.opensearchloadtester.common.dto.MetricsDto;
+import com.opensearchloadtester.loadgenerator.model.QueryType;
 import com.opensearchloadtester.loadgenerator.queries.Query;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +11,7 @@ import org.opensearch.client.opensearch.generic.*;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.net.SocketTimeoutException;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -39,7 +40,7 @@ public class QueryExecutionTask implements Runnable {
         Query query = selectedQueryType.createRandomQuery();
         String queryAsJson = query.toJsonString();
 
-        log.debug("Generated query of type '{}': {}", selectedQueryType.name(), queryAsJson);
+        // log.debug("Generated query of type '{}': {}", selectedQueryType.name(), queryAsJson);
 
         try {
             // Send query to OpenSearch and measure end-to-end client-side round-trip time
@@ -50,10 +51,15 @@ public class QueryExecutionTask implements Runnable {
                     .build();
 
             long startTime = System.nanoTime();
-            Response response = openSearchClient.execute(request);
+            Response response = null;
+            int status;
+            try {
+                response = openSearchClient.execute(request);
+                status = response.getStatus();
+            } catch (SocketTimeoutException timeoutException) {
+                status = 408;
+            }
             long requestDurationMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
-
-            int status = response.getStatus();
 
             if (status >= 400) {
                 MetricsDto metricsDto = new MetricsDto(
