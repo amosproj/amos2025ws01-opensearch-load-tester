@@ -1,7 +1,8 @@
 package com.opensearchloadtester.loadgenerator.config;
 
-import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
+import org.apache.hc.client5.http.config.ConnectionConfig;
 import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.impl.nio.PoolingAsyncClientConnectionManagerBuilder;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.util.Timeout;
 import org.opensearch.client.opensearch.OpenSearchClient;
@@ -14,21 +15,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
 import java.net.URI;
-import java.util.concurrent.TimeUnit;
 
 @Configuration
 public class OpenSearchClientConfig {
 
-    private final String openSearchUrl;
-    private final ScenarioConfig scenarioConfig;
+    private static final int QUERY_TIMEOUT_SECONDS = 30;
 
-    public OpenSearchClientConfig(
-            @Value("${opensearch.url}") String openSearchUrl,
-            ScenarioConfig scenarioConfig
-    ) {
-        this.openSearchUrl = openSearchUrl;
-        this.scenarioConfig = scenarioConfig;
-    }
+    @Value("${opensearch.url}")
+    private String openSearchUrl;
 
     @Bean
     @Primary
@@ -36,15 +30,29 @@ public class OpenSearchClientConfig {
         URI uri = URI.create(openSearchUrl);
         HttpHost host = new HttpHost(uri.getScheme(), uri.getHost(), uri.getPort());
 
-        RequestConfig requestConfig = RequestConfig.custom()
-                .setResponseTimeout(Timeout.of(scenarioConfig.getQueryResponseTimeout().toSeconds(), TimeUnit.SECONDS))
-                .build();
-
         OpenSearchTransport transport = ApacheHttpClient5TransportBuilder
                 .builder(host)
-                .setHttpClientConfigCallback(httpClientBuilder ->
-                        httpClientBuilder.setDefaultRequestConfig(requestConfig)
-                )
+                .setHttpClientConfigCallback(httpClientBuilder -> {
+                    // Socket timeout - ensures read operations timeout after 30 seconds
+                    ConnectionConfig connectionConfig = ConnectionConfig.custom()
+                            .setSocketTimeout(Timeout.ofSeconds(QUERY_TIMEOUT_SECONDS))
+                            .setConnectTimeout(Timeout.ofSeconds(QUERY_TIMEOUT_SECONDS))
+                            .build();
+
+                    var connectionManager = PoolingAsyncClientConnectionManagerBuilder.create()
+                            .setDefaultConnectionConfig(connectionConfig)
+                            .build();
+
+                    // Response timeout - ensures waiting for response times out after 30 seconds
+                    RequestConfig requestConfig = RequestConfig.custom()
+                            .setResponseTimeout(Timeout.ofSeconds(QUERY_TIMEOUT_SECONDS))
+                            .setConnectionRequestTimeout(Timeout.ofSeconds(QUERY_TIMEOUT_SECONDS))
+                            .build();
+
+                    return httpClientBuilder
+                            .setConnectionManager(connectionManager)
+                            .setDefaultRequestConfig(requestConfig);
+                })
                 .build();
 
         return new OpenSearchClient(transport);
