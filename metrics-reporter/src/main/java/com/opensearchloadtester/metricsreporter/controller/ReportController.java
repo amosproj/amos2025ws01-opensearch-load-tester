@@ -47,12 +47,9 @@ public class ReportController {
      * Stores incoming metrics batches. Does not finalize the run.
      * Finalization happens only after all replicas call /finish/{loadGeneratorId}.
      *
-     * @param metrics DTO for metrics data
-     * @return ResponseEntity with status message
      */
     @PostMapping("/metrics")
-    public synchronized ResponseEntity<String> submitMetrics(@RequestBody List<MetricsDto> metricsList,
-                                                             HttpServletRequest request) {
+    public synchronized ResponseEntity<String> submitMetrics(@RequestBody List<MetricsDto> metricsList) {
         Set<String> loadGeneratorIds = new HashSet<>();
 
         // Reject late batches after finalization
@@ -98,7 +95,7 @@ public class ReportController {
                     .body("Failed to persist metrics: " + e.getMessage() + "\n");
         }
 
-// Track that this load generator has reported at least one batch
+        // Track that this load generator has reported at least one batch
         reportedInstances.addAll(loadGeneratorIds);
         int reportedCount = reportedInstances.size();
 
@@ -108,7 +105,7 @@ public class ReportController {
                 expectedReplicas,
                 metricsList.size());
 
-// Finalization happens only after all replicas call /finish/{id}.
+        // Finalization happens only after all replicas call /finish/{id}.
         return ResponseEntity.ok(
                 String.format("Metrics stored successfully. Reported replicas (%d/%d). Waiting for finish signals.\n",
                         reportedCount, expectedReplicas)
@@ -120,7 +117,8 @@ public class ReportController {
      * Generates reports only once all expected replicas have finished.
      */
     @PostMapping("/finish/{loadGeneratorId}")
-    public synchronized ResponseEntity<String> finish(@PathVariable String loadGeneratorId) {
+    public synchronized ResponseEntity<String> finish(@PathVariable String loadGeneratorId,
+                                                      HttpServletRequest request) {
         if (loadGeneratorId == null || loadGeneratorId.isBlank()) {
             return ResponseEntity.badRequest().body("Invalid loadGeneratorId\n");
         }
@@ -131,27 +129,25 @@ public class ReportController {
             return ResponseEntity.ok("Run already finalized\n");
         }
 
-        // If this load generator already finished before, return 200 OK (idempotent)
-        if (finishedInstances.contains(loadGeneratorId)) {
-            log.info("Duplicate finish received from {} - returning 200 OK", loadGeneratorId);
-            return ResponseEntity.ok("Finish already received\n");
+        boolean alreadyFinished = finishedInstances.contains(loadGeneratorId);
+        if (!alreadyFinished) {
+            finishedInstances.add(loadGeneratorId);
         }
-
-        finishedInstances.add(loadGeneratorId);
         int finishedCount = finishedInstances.size();
 
-        log.info("Received finish from {}. Finished {}/{}",
-                loadGeneratorId, finishedCount, expectedReplicas);
+        if (alreadyFinished) {
+            log.info("Duplicate finish received from {}. Finished {}/{}",
+                    loadGeneratorId, finishedCount, expectedReplicas);
+        } else {
+            log.info("Received finish from {}. Finished {}/{}",
+                    loadGeneratorId, finishedCount, expectedReplicas);
+        }
 
         // Only finalize once all replicas have explicitly finished sending batches
         if (finishedCount >= expectedReplicas) {
             log.info("All {} replicas finished. Generating reports...", expectedReplicas);
 
             finalized = true; // idempotency guard: prevent double-finalize
-        // Check if all replicas have reported
-        if (currentCount == expectedReplicas) {
-            log.info("All {} replicas have reported. Generating reports...", expectedReplicas);
-
             try {
                 StatisticsDto summary = reportService.finalizeReports(reportedInstances);
 
@@ -184,9 +180,14 @@ public class ReportController {
 
             } catch (IOException e) {
                 log.error("Failed to generate reports", e);
+                finalized = false;
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body("Finish received but failed to generate reports: " + e.getMessage() + "\n");
             }
+        }
+
+        if (alreadyFinished) {
+            return ResponseEntity.ok("Finish already received\n");
         }
 
         return ResponseEntity.ok(
