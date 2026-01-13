@@ -1,8 +1,10 @@
 package com.opensearchloadtester.metricsreporter.controller;
 
 import com.opensearchloadtester.common.dto.MetricsDto;
+import com.opensearchloadtester.metricsreporter.config.ShutdownAfterResponseInterceptor;
 import com.opensearchloadtester.metricsreporter.dto.StatisticsDto;
 import com.opensearchloadtester.metricsreporter.service.ReportService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -49,7 +51,8 @@ public class ReportController {
      * @return ResponseEntity with status message
      */
     @PostMapping("/metrics")
-    public synchronized ResponseEntity<String> submitMetrics(@RequestBody List<MetricsDto> metricsList) {
+    public synchronized ResponseEntity<String> submitMetrics(@RequestBody List<MetricsDto> metricsList,
+                                                             HttpServletRequest request) {
         Set<String> loadGeneratorIds = new HashSet<>();
 
         // Reject late batches after finalization
@@ -145,6 +148,9 @@ public class ReportController {
             log.info("All {} replicas finished. Generating reports...", expectedReplicas);
 
             finalized = true; // idempotency guard: prevent double-finalize
+        // Check if all replicas have reported
+        if (currentCount == expectedReplicas) {
+            log.info("All {} replicas have reported. Generating reports...", expectedReplicas);
 
             try {
                 StatisticsDto summary = reportService.finalizeReports(reportedInstances);
@@ -171,6 +177,8 @@ public class ReportController {
                 finishedInstances.clear();
                 reportService.resetForNewRun();
                 finalized = false;
+                // Mark request for application shutdown AFTER response completed
+                request.setAttribute(ShutdownAfterResponseInterceptor.SHUTDOWN_AFTER_RESPONSE, true);
 
                 return ResponseEntity.ok(message.toString());
 
@@ -186,7 +194,6 @@ public class ReportController {
                         finishedCount, expectedReplicas)
         );
     }
-
 
     /**
      * Health check endpoint.

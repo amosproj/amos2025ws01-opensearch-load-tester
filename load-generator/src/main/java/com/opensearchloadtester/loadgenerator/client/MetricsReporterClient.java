@@ -30,7 +30,11 @@ public class MetricsReporterClient {
     public MetricsReporterClient(@Value("${metrics-reporter.url}") String metricsReporterBaseUrl) {
         this.metricsEndpointUrl = metricsReporterBaseUrl + "/metrics";
         this.finishEndpointBaseUrl = metricsReporterBaseUrl + "/finish";
-        this.httpClient = HttpClients.createDefault();
+        try {
+            this.httpClient = HttpClients.createDefault();
+        } catch (RuntimeException e) {
+            throw new MetricsReporterAccessException(e.getMessage());
+        }
     }
 
     /**
@@ -57,7 +61,7 @@ public class MetricsReporterClient {
                 int status = httpClient.execute(postRequest, HttpResponse::getCode);
 
                 if (status >= 200 && status < 300) {
-                    log.debug("Sent metrics successfully");
+                    log.info("Sent metrics successfully");
                     return;
                 }
 
