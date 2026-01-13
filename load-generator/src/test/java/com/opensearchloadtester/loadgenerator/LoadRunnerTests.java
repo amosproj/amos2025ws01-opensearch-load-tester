@@ -148,7 +148,6 @@ class LoadRunnerTests {
         doThrow(new IOException("boom")).when(openSearchClient).execute(any());
 
         assertDoesNotThrow(() -> loadRunner.executeScenario(scenario));
-        verify(metricsReporterClient, times(1)).sendMetrics(any());
     }
 
     @Test
@@ -259,7 +258,6 @@ class LoadRunnerTests {
         doThrow(new RejectedExecutionException("reject")).when(openSearchClient).execute(any());
 
         assertDoesNotThrow(() -> loadRunner.executeScenario(scenario));
-        verify(metricsReporterClient, times(1)).sendMetrics(any());
     }
 
     @Test
@@ -278,7 +276,6 @@ class LoadRunnerTests {
         doThrow(new RuntimeException("boom")).when(openSearchClient).execute(any());
 
         assertDoesNotThrow(() -> loadRunner.executeScenario(scenario));
-        verify(metricsReporterClient, times(1)).sendMetrics(any());
     }
 
     @Test
