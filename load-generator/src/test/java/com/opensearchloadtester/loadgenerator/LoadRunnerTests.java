@@ -28,6 +28,7 @@ import static org.mockito.Mockito.*;
 class LoadRunnerTests {
 
     private static final int NUMBER_LOAD_GENERATORS = 1;
+    private static final int METRICS_BATCH_SIZE = 100;
 
     @Mock
     private OpenSearchGenericClient openSearchClient;
@@ -40,7 +41,7 @@ class LoadRunnerTests {
 
     @BeforeEach
     void setUp() {
-        metricsCollector = new MetricsCollector();
+        metricsCollector = new MetricsCollector(metricsReporterClient, METRICS_BATCH_SIZE, true);
 
         loadRunner = new LoadRunner(
                 "test-loadgen",
@@ -356,5 +357,3 @@ class LoadRunnerTests {
         assertTrue(Thread.currentThread().isInterrupted(), "interrupt flag should be set");
     }
 }
-
-
