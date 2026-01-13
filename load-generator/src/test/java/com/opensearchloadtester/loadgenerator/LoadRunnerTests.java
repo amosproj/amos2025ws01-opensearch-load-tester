@@ -55,11 +55,19 @@ class LoadRunnerTests {
             String name,
             DocumentType documentType,
             QueryType queryType,
-            Duration duration,
+            Duration scheduleDuration,
+            Duration queryResponseTimeout,
             int qps,
             boolean warmUpEnabled
     ) {
-        return new ScenarioConfig(name, documentType, duration, qps, warmUpEnabled, List.of(queryType));
+        return new ScenarioConfig(
+                name,
+                documentType,
+                scheduleDuration,
+                queryResponseTimeout,
+                qps, warmUpEnabled,
+                List.of(queryType)
+        );
     }
 
     private void stubOpenSearchStatus(int status) throws Exception {
@@ -75,6 +83,7 @@ class LoadRunnerTests {
                 DocumentType.ANO,
                 QueryType.ANO_PAYROLL_RANGE,
                 Duration.ofSeconds(1),
+                Duration.ofMinutes(3),
                 1,
                 false
         );
@@ -93,6 +102,7 @@ class LoadRunnerTests {
                 DocumentType.DUO,
                 QueryType.DUO_CLIENT_BY_CUSTOMER_NUMBER,
                 Duration.ofSeconds(1),
+                Duration.ofMinutes(3),
                 1,
                 false
         );
@@ -110,6 +120,7 @@ class LoadRunnerTests {
                 DocumentType.ANO,
                 QueryType.ANO_CLIENT_BY_YEAR,
                 Duration.ofSeconds(1),
+                Duration.ofMinutes(3),
                 1,
                 true
         );
@@ -128,6 +139,7 @@ class LoadRunnerTests {
                 DocumentType.ANO,
                 QueryType.ANO_PAYROLL_RANGE,
                 Duration.ofSeconds(1),
+                Duration.ofMinutes(3),
                 1,
                 false
         );
@@ -146,6 +158,7 @@ class LoadRunnerTests {
                 DocumentType.ANO,
                 QueryType.ANO_PAYROLL_RANGE,
                 Duration.ofSeconds(1),
+                Duration.ofMinutes(3),
                 1,
                 false
         );
@@ -164,6 +177,7 @@ class LoadRunnerTests {
                 DocumentType.ANO,
                 QueryType.ANO_PAYROLL_RANGE,
                 Duration.ofSeconds(3),
+                Duration.ofMinutes(3),
                 1,
                 false
         );
@@ -173,7 +187,7 @@ class LoadRunnerTests {
         loadRunner.executeScenario(scenario);
 
         // expected = qps * seconds, allow +1 tick due to scheduler startup/cancel
-        int expected = (int) (scenario.getDuration().toSeconds() * scenario.getQueriesPerSecond());
+        int expected = (int) (scenario.getScheduleDuration().toSeconds() * scenario.getQueriesPerSecond());
         verify(openSearchClient, atLeast(expected)).execute(any());
         verify(openSearchClient, atMost(expected + 1)).execute(any());
     }
@@ -185,6 +199,7 @@ class LoadRunnerTests {
                 DocumentType.ANO,
                 QueryType.ANO_PAYROLL_RANGE,
                 Duration.ofSeconds(3),
+                Duration.ofMinutes(3),
                 3,
                 false
         );
@@ -193,7 +208,7 @@ class LoadRunnerTests {
 
         loadRunner.executeScenario(scenario);
 
-        int expected = (int) (scenario.getDuration().toSeconds() * scenario.getQueriesPerSecond());
+        int expected = (int) (scenario.getScheduleDuration().toSeconds() * scenario.getQueriesPerSecond());
         verify(openSearchClient, atLeast(expected)).execute(any());
         verify(openSearchClient, atMost(expected + 1)).execute(any());
     }
@@ -206,6 +221,7 @@ class LoadRunnerTests {
                 DocumentType.ANO,
                 QueryType.ANO_PAYROLL_RANGE,
                 Duration.ofSeconds(1),
+                Duration.ofMinutes(3),
                 5,
                 false
         );
@@ -234,6 +250,7 @@ class LoadRunnerTests {
                 DocumentType.ANO,
                 QueryType.ANO_PAYROLL_RANGE,
                 Duration.ofSeconds(1),
+                Duration.ofMinutes(3),
                 10,
                 false
         );
@@ -252,6 +269,7 @@ class LoadRunnerTests {
                 DocumentType.ANO,
                 QueryType.ANO_PAYROLL_RANGE,
                 Duration.ofSeconds(1),
+                Duration.ofMinutes(3),
                 1,
                 false
         );
@@ -278,6 +296,7 @@ class LoadRunnerTests {
                 DocumentType.ANO,
                 QueryType.ANO_PAYROLL_RANGE,
                 Duration.ofSeconds(1),
+                Duration.ofMinutes(3),
                 1,
                 false
         );
@@ -293,6 +312,7 @@ class LoadRunnerTests {
                 "multi-qtypes",
                 DocumentType.ANO,
                 Duration.ofSeconds(1),
+                Duration.ofMinutes(3),
                 2,
                 false,
                 List.of(QueryType.ANO_PAYROLL_RANGE, QueryType.ANO_CLIENT_BY_YEAR)

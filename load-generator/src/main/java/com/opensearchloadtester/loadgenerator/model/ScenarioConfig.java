@@ -19,7 +19,8 @@ public class ScenarioConfig {
 
     private String name;
     private DocumentType documentType;
-    private Duration duration;
+    private Duration scheduleDuration;
+    private Duration queryResponseTimeout;
 
     @Min(1)
     private int queriesPerSecond;

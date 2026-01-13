@@ -1,11 +1,9 @@
 ---
 name: default-scenario
 document_type: ANO
-duration: PT10S
-queries_per_second: 25
+schedule_duration: PT5S
+queries_per_second: 20
+query_response_timeout: PT30M
 enable_warm_up: true
 query_types:
-  - ANO_PAYROLL_RANGE
-  - ANO_CLIENTS_AGGREGATION
-  - ANO_CLIENT_BY_YEAR
-  - ANO_PAYROLL_TYPE_LANGUAGE
+  - ANO_MULTI_REGEX
