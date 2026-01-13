@@ -140,7 +140,7 @@ public class LoadRunner {
 
             try { if (future != null) future.cancel(false); } catch (Exception ignored) {}
 
-            // TODO: check if still necessary?
+            // Fallback cleanup if an exception skipped the normal shutdown path.
             shutdownExecutorService(scheduler);
             shutdownExecutorService(workers);
         }
