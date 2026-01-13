@@ -168,11 +168,6 @@ public class ReportController {
                     message.append("CSV report: ").append(reportService.getCsvReportPath()).append("\n");
                 }
 
-                // Reset in-memory state for next run
-                reportedInstances.clear();
-                finishedInstances.clear();
-                reportService.resetForNewRun();
-                finalized = false;
                 // Mark request for application shutdown AFTER response completed
                 request.setAttribute(ShutdownAfterResponseInterceptor.SHUTDOWN_AFTER_RESPONSE, true);
 
