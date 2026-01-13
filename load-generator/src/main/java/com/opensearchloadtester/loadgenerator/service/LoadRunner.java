@@ -41,14 +41,17 @@ public class LoadRunner {
      */
     public void executeScenario(ScenarioConfig scenarioConfig) {
         log.info("Executing '{}' (expected duration: {} sec)",
-                scenarioConfig.getName(), scenarioConfig.getDuration().getSeconds());
+                scenarioConfig.getName(), scenarioConfig.getScheduleDuration().getSeconds());
+
+        log.info("Timout {}s", scenarioConfig.getQueryResponseTimeout().toSeconds());
 
         QueryExecutionTask query = new QueryExecutionTask(
                 loadGeneratorId,
                 scenarioConfig.getDocumentType().getIndex(),
                 scenarioConfig.getQueryTypes(),
                 openSearchClient,
-                metricsCollector
+                metricsCollector,
+                scenarioConfig.getQueryResponseTimeout()
         );
 
         // Track overall test start time
@@ -61,7 +64,7 @@ public class LoadRunner {
         ScheduledFuture<?> future = null;
 
         try {
-            long durationNs = scenarioConfig.getDuration().toNanos();
+            long durationNs = scenarioConfig.getScheduleDuration().toNanos();
             int qpsTotal = scenarioConfig.getQueriesPerSecond();
             int qpsPerLoadGen = qpsTotal / numberLoadGenerators;
             long durationPerQuery = 1_000_000_000L / qpsPerLoadGen;
@@ -109,7 +112,7 @@ public class LoadRunner {
             }
 
             // Check if QPS fulfilled
-            if (queryCounter.get() < qpsPerLoadGen * scenarioConfig.getDuration().toSeconds()) {
+            if (queryCounter.get() < qpsPerLoadGen * scenarioConfig.getScheduleDuration().toSeconds()) {
                 log.warn("Load Generator can't keep up with QPS... please increase REPLICA amount!");
             }
 
@@ -124,9 +127,8 @@ public class LoadRunner {
                 try { metricsReporterClient.finish(loadGeneratorId); } catch (Exception ignored) {}
 
                 log.info("Scenario '{}' completed successfully. All threads finished.", scenarioConfig.getName());
-                log.info("Test duration - Expected: {} ({}s), Actual: {}s",
-                        scenarioConfig.getDuration(),
-                        scenarioConfig.getDuration().getSeconds(),
+                log.info("Schedule duration: {}s, Total duration: {}s",
+                        scenarioConfig.getScheduleDuration().getSeconds(),
                         String.format("%.2f", actualDurationSeconds));
             } else {
                 log.warn("Scenario '{}' was interrupted while waiting for worker threads to finish. Actual runtime: {}s",
@@ -138,6 +140,7 @@ public class LoadRunner {
 
             try { if (future != null) future.cancel(false); } catch (Exception ignored) {}
 
+            // TODO: check if still necessary?
             shutdownExecutorService(scheduler);
             shutdownExecutorService(workers);
         }

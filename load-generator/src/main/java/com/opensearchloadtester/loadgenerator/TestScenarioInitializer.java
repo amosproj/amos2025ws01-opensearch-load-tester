@@ -78,8 +78,8 @@ public class TestScenarioInitializer implements CommandLineRunner {
                 scenarioConfig.getDocumentType().getIndex(),
                 scenarioConfig.getQueryTypes(),
                 openSearchClient,
-                warmupCollector
-                // warm-up metrics are ignored
+                warmupCollector,// warm-up metrics are ignored
+                scenarioConfig.getQueryResponseTimeout()
         );
 
         int successCount = 0;
