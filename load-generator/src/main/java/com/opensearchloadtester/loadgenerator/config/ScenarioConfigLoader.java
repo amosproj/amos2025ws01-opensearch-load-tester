@@ -22,9 +22,6 @@ public class ScenarioConfigLoader {
     @Value("${load.generator.replicas}")
     private int numberLoadGenerators;
 
-    @Value("${load.generator.replicas}")
-    private int numberLoadGenerators;
-
     @Bean
     public ScenarioConfig scenarioConfig() {
         Path path = Path.of(scenarioConfigPath);
