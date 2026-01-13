@@ -61,7 +61,7 @@ public class LoadRunner {
                 .newSingleThreadScheduledExecutor();
         ExecutorService workers = Executors.newCachedThreadPool();
 
-        ScheduledFuture<?> future = null;
+        ScheduledFuture<?> scheduledTaskForCleanup = null;
 
         try {
             long durationNs = scenarioConfig.getScheduleDuration().toNanos();
@@ -72,7 +72,7 @@ public class LoadRunner {
             log.debug("Schedule delay:  {} ns  ", durationPerQuery);
 
             // Start scheduled query execution
-            future = scheduler.scheduleAtFixedRate(() -> {
+            final ScheduledFuture<?> scheduledTask = scheduler.scheduleAtFixedRate(() -> {
                         try {
                             workers.submit(query);
                             queryCounter.getAndIncrement();
@@ -84,32 +84,30 @@ public class LoadRunner {
                     durationPerQuery / 2,
                     durationPerQuery,
                     TimeUnit.NANOSECONDS);
+            scheduledTaskForCleanup = scheduledTask;
             // After the scenario duration, stop the periodic scheduling (already submitted tasks may still run).
-            ScheduledFuture<?> finalFuture = future;
             scheduler.schedule(() -> {
-                try {
-                    finalFuture.cancel(false);
-                } finally {
-                    scheduler.shutdown();
-                }
+                scheduledTask.cancel(false);
+                scheduler.shutdown();
             }, durationNs, TimeUnit.NANOSECONDS);
 
-            // shutdown scheduler and wait (bounded)
-            boolean schedulerStopped = awaitExecutorServiceTermination(scheduler, "scheduler", durationNs + TimeUnit.SECONDS.toNanos(10), TimeUnit.NANOSECONDS);
-            if (!schedulerStopped) {
-                log.warn("Scheduler did not stop in time; forcing shutdownNow()");
-                scheduler.shutdownNow();
-                schedulerStopped = awaitExecutorServiceTermination(scheduler, "scheduler", 10, TimeUnit.SECONDS);
+            boolean schedulerStopped = false;
+            try {
+                // Wait for the scheduler to stop because it populates worker threads
+                schedulerStopped = scheduler.awaitTermination(
+                        durationNs + TimeUnit.SECONDS.toNanos(10),
+                        TimeUnit.NANOSECONDS);
+                if (!schedulerStopped) {
+                    log.warn("Scheduler did not stop in time; proceeding with worker shutdown");
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.warn("Interrupted while waiting for scheduler to stop", e);
             }
 
-            // Now stop workers and wait for in-flight tasks (bounded)
+            // Now stop workers
             workers.shutdown();
-            boolean workersStopped = awaitExecutorServiceTermination(workers, "workers", 60, TimeUnit.SECONDS);
-            if (!workersStopped) {
-                log.warn("Workers did not terminate in time; forcing shutdownNow()");
-                workers.shutdownNow();
-                workersStopped = awaitExecutorServiceTermination(workers, "workers", 10, TimeUnit.SECONDS);
-            }
+            boolean workersStopped = awaitExecutorServiceTermination(workers, "workers");
 
             // Check if QPS fulfilled
             if (queryCounter.get() < qpsPerLoadGen * scenarioConfig.getScheduleDuration().toSeconds()) {
@@ -120,12 +118,14 @@ public class LoadRunner {
             long actualDurationMs = testEndTime - testStartTime;
             double actualDurationSeconds = actualDurationMs / 1000.0;
 
-            if (schedulerStopped && workersStopped) {
+            if (workersStopped) {
                 log.info("Calling MetricsReporterClient");
 
-                try { metricsCollector.flush(); } catch (Exception ignored) {}
-                try { metricsReporterClient.finish(loadGeneratorId); } catch (Exception ignored) {}
-
+                try {
+                    metricsCollector.flush();
+                    metricsReporterClient.finish(loadGeneratorId);
+                } catch (Exception ignored) {
+                }
                 log.info("Scenario '{}' completed successfully. All threads finished.", scenarioConfig.getName());
                 log.info("Schedule duration: {}s, Total duration: {}s",
                         scenarioConfig.getScheduleDuration().getSeconds(),
@@ -137,10 +137,8 @@ public class LoadRunner {
         } catch (Exception e) {
             log.error("Error executing queries:", e);
         } finally {
-
-            try { if (future != null) future.cancel(false); } catch (Exception ignored) {}
-
             // Fallback cleanup if an exception skipped the normal shutdown path.
+            if (scheduledTaskForCleanup != null) scheduledTaskForCleanup.cancel(false);
             shutdownExecutorService(scheduler);
             shutdownExecutorService(workers);
         }
@@ -168,18 +166,17 @@ public class LoadRunner {
         }
     }
 
-    private boolean awaitExecutorServiceTermination(ExecutorService executorService, String executorName, long totalTimeout, TimeUnit unit) {
-        long deadline = System.nanoTime() + unit.toNanos(totalTimeout);
+    private boolean awaitExecutorServiceTermination(ExecutorService executorService, String executorName) {
         try {
-            while (System.nanoTime() < deadline) {
-                if (executorService.awaitTermination(30, TimeUnit.SECONDS)) return true;
+            while (!executorService.awaitTermination(30, TimeUnit.SECONDS)) {
                 log.info("Still waiting for {} to complete...", executorName);
             }
-            return false;
+            return true;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             log.warn("Interrupted while waiting for {} to complete", executorName, e);
             return false;
         }
     }
+
 }
