@@ -1,6 +1,7 @@
 package com.opensearchloadtester.loadgenerator.config;
 
-import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
@@ -19,12 +20,14 @@ public class ScenarioConfigLoader {
 
     @Value("${scenario.config.path}")
     private String scenarioConfigPath;
+    @Value("${scenario.config}")
+    private String scenarioConfig;
     @Value("${load.generator.replicas}")
     private int numberLoadGenerators;
 
     @Bean
     public ScenarioConfig scenarioConfig() {
-        Path path = Path.of(scenarioConfigPath);
+        Path path = Path.of(scenarioConfigPath + scenarioConfig);
         if (!Files.exists(path)) {
             throw new IllegalStateException("Test scenario config file not found at: " + path.toAbsolutePath());
         }
