@@ -25,9 +25,11 @@ public class MetricsReporterClient {
     private final String metricsEndpointUrl;
     private final CloseableHttpClient httpClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final String finishEndpointBaseUrl;
 
     public MetricsReporterClient(@Value("${metrics-reporter.url}") String metricsReporterBaseUrl) {
         this.metricsEndpointUrl = metricsReporterBaseUrl + "/metrics";
+        this.finishEndpointBaseUrl = metricsReporterBaseUrl + "/finish";
         try {
             this.httpClient = HttpClients.createDefault();
         } catch (RuntimeException e) {
@@ -97,4 +99,21 @@ public class MetricsReporterClient {
             log.warn("Failed to close HTTP client", e);
         }
     }
+
+    public void finish(String loadGeneratorId) {
+        String url = finishEndpointBaseUrl + "/" + loadGeneratorId;
+        HttpPost postRequest = new HttpPost(url);
+
+        log.info("Sending finish signal to Metrics Reporter at '{}'", url);
+
+        try {
+            int status = httpClient.execute(postRequest, HttpResponse::getCode);
+            if (status < 200 || status >= 300) {
+                throw new MetricsReporterAccessException("Finish call failed (HTTP: " + status + ")");
+            }
+        } catch (IOException e) {
+            throw new MetricsReporterAccessException("Failed to call finish endpoint", e);
+        }
+    }
+
 }

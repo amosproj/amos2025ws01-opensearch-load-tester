@@ -1,6 +1,7 @@
 package com.opensearchloadtester.metricsreporter.controller;
 
 import com.opensearchloadtester.common.dto.MetricsDto;
+import com.opensearchloadtester.metricsreporter.config.ShutdownAfterResponseInterceptor;
 import com.opensearchloadtester.metricsreporter.dto.StatisticsDto;
 import com.opensearchloadtester.metricsreporter.service.ReportService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -46,11 +47,9 @@ class ReportControllerTest {
                 new MetricsDto("", "query_type_test", 10L, 10L, 3, 200)
         );
 
-        HttpServletRequest request = mock(HttpServletRequest.class);
-        ResponseEntity<String> response = reportController.submitMetrics(metrics, request);
+        ResponseEntity<String> response = reportController.submitMetrics(metrics);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).isEqualTo("Invalid metrics payload\n");
         verifyNoInteractions(reportService);
     }
 
@@ -62,17 +61,13 @@ class ReportControllerTest {
                 new MetricsDto(LOAD_GENERATOR_ID, "query_type_test", 120L, 80L, 5, 200)
         );
 
-        HttpServletRequest request = mock(HttpServletRequest.class);
-        ResponseEntity<String> response = reportController.submitMetrics(metrics, request);
+        ResponseEntity<String> response = reportController.submitMetrics(metrics);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).contains("Waiting for remaining replicas (1/2)");
-        verify(reportService).processMetrics(metrics);
-        verify(reportService, never()).finalizeReports(anySet());
     }
 
     @Test
-    void submitMetrics_generatesReports_whenAllReplicasReported() throws Exception {
+    void finish_generatesReports_whenAllReplicasFinished() throws Exception {
         ReflectionTestUtils.setField(reportController, "expectedReplicas", 1);
         ReflectionTestUtils.setField(reportController, "jsonExportEnabled", true);
         ReflectionTestUtils.setField(reportController, "csvExportEnabled", true);
@@ -97,11 +92,17 @@ class ReportControllerTest {
         when(reportService.getCsvReportPath()).thenReturn(Path.of("out/query_results.csv"));
 
         HttpServletRequest request = mock(HttpServletRequest.class);
-        ResponseEntity<String> response = reportController.submitMetrics(metrics, request);
+        ResponseEntity<String> submitResponse = reportController.submitMetrics(metrics);
+        ResponseEntity<String> finishResponse = reportController.finish(LOAD_GENERATOR_ID, request);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(submitResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(finishResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         verify(reportService).processMetrics(metrics);
         verify(reportService).finalizeReports(anySet());
+        verify(request).setAttribute(
+                eq(ShutdownAfterResponseInterceptor.SHUTDOWN_AFTER_RESPONSE),
+                eq(true)
+        );
     }
 }

@@ -28,6 +28,7 @@ import static org.mockito.Mockito.*;
 class LoadRunnerTests {
 
     private static final int NUMBER_LOAD_GENERATORS = 1;
+    private static final int METRICS_BATCH_SIZE = 100;
 
     @Mock
     private OpenSearchGenericClient openSearchClient;
@@ -40,7 +41,7 @@ class LoadRunnerTests {
 
     @BeforeEach
     void setUp() {
-        metricsCollector = new MetricsCollector();
+        metricsCollector = new MetricsCollector(metricsReporterClient, METRICS_BATCH_SIZE, true);
 
         loadRunner = new LoadRunner(
                 "test-loadgen",
@@ -147,7 +148,6 @@ class LoadRunnerTests {
         doThrow(new IOException("boom")).when(openSearchClient).execute(any());
 
         assertDoesNotThrow(() -> loadRunner.executeScenario(scenario));
-        verify(metricsReporterClient, times(1)).sendMetrics(any());
     }
 
     @Test
@@ -258,7 +258,6 @@ class LoadRunnerTests {
         doThrow(new RejectedExecutionException("reject")).when(openSearchClient).execute(any());
 
         assertDoesNotThrow(() -> loadRunner.executeScenario(scenario));
-        verify(metricsReporterClient, times(1)).sendMetrics(any());
     }
 
     @Test
@@ -277,7 +276,6 @@ class LoadRunnerTests {
         doThrow(new RuntimeException("boom")).when(openSearchClient).execute(any());
 
         assertDoesNotThrow(() -> loadRunner.executeScenario(scenario));
-        verify(metricsReporterClient, times(1)).sendMetrics(any());
     }
 
     @Test
@@ -356,5 +354,3 @@ class LoadRunnerTests {
         assertTrue(Thread.currentThread().isInterrupted(), "interrupt flag should be set");
     }
 }
-
-
