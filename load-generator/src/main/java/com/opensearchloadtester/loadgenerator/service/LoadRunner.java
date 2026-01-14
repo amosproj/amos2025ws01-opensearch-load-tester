@@ -123,8 +123,13 @@ public class LoadRunner {
 
                 try {
                     metricsCollector.flush();
+                } catch (Exception e) {
+                    log.warn("Failed to flush metrics for {}", loadGeneratorId, e);
+                }
+                try {
                     metricsReporterClient.finish(loadGeneratorId);
-                } catch (Exception ignored) {
+                } catch (Exception e) {
+                    log.warn("Failed to finish metrics reporting for {}", loadGeneratorId, e);
                 }
                 log.info("Scenario '{}' completed successfully. All threads finished.", scenarioConfig.getName());
                 log.info("Schedule duration: {}s, Total duration: {}s",
