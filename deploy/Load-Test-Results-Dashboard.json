@@ -7,508 +7,331 @@
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
-        "name": "Results",
+        "name": "Annotations",
         "type": "dashboard"
       }
     ]
   },
   "editable": true,
-  "gnetId": null,
+  "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": null,
   "links": [],
-  "refresh": "5s",
+  "liveNow": false,
   "panels": [
     {
-      "datasource": {
-        "type": "loki",
-        "name": "Loki",
-        "uid": ""
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue",
-                "value": null
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 8,
-        "x": 0,
-        "y": 0
-      },
-      "id": 1,
+      "gridPos": { "h": 3, "w": 24, "x": 0, "y": 0 },
+      "id": 105,
       "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "orientation": "auto",
-        "reduceOptions": {
-          "values": false,
-          "calcs": ["lastNotNull"],
-          "fields": ""
-        },
-        "text": {},
-        "textMode": "auto"
+        "content": "# 🚀 OpenSearch Load Tester\nDashboard for analyzing latency, database performance, and error rates.",
+        "mode": "markdown"
       },
-      "pluginVersion": "11.3.1",
+      "title": "",
+      "type": "text",
+      "transparent": true
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 3 },
+      "id": 100,
+      "panels": [],
+      "title": "Key Performance Indicators",
+      "type": "row"
+    },
+    {
+      "title": "Total Requests",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 4 },
+      "datasource": { "type": "loki", "name": "Loki", "uid": "" },
       "targets": [
         {
-          "expr": "sum(count_over_time({job=\"opensearch-load-tester\"} | json | query_type =~ \"${query_type}\" [$__range]))",
+          "expr": "sum(count_over_time({job=\"opensearch-load-tester\"} |= \"${search}\" | json | query_type =~ \"${query_type:regex}\" [$__range]))",
           "refId": "A"
         }
       ],
-      "title": "Total Count",
-      "type": "stat"
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "fixed", "fixedColor": "blue" }, "unit": "short" }
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center" }
     },
     {
-      "datasource": {
-        "type": "loki",
-        "name": "Loki",
-        "uid": ""
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 8,
-        "x": 8,
-        "y": 0
-      },
-      "id": 2,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "orientation": "auto",
-        "reduceOptions": {
-          "values": false,
-          "calcs": ["lastNotNull"],
-          "fields": ""
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "11.3.1",
+      "title": "HTTP Status Distribution",
+      "type": "piechart",
+      "gridPos": { "h": 4, "w": 6, "x": 4, "y": 4 },
+      "datasource": { "type": "loki", "name": "Loki", "uid": "" },
       "targets": [
         {
-          "expr": "sum(count_over_time({job=\"opensearch-load-tester\"} | json | query_type =~ \"${query_type}\" | http_status_code = 200 [$__range]))",
+          "expr": "sum by (http_status_code) (count_over_time({job=\"opensearch-load-tester\"} |= \"${search}\" | json | query_type =~ \"${query_type:regex}\" [$__range]))",
+          "legendFormat": "{{http_status_code}}",
           "refId": "A"
         }
       ],
-      "title": "Count 200",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "name": "Loki",
-        "uid": ""
+      "options": {
+        "legend": { "displayMode": "table", "placement": "right", "values": ["value", "percent"] },
+        "pieType": "donut",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "" },
+        "displayLabels": ["percent"],
+        "tooltip": { "mode": "single" }
       },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 8,
-        "x": 16,
-        "y": 0
-      },
-      "id": 3,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "orientation": "auto",
-        "reduceOptions": {
-          "values": false,
-          "calcs": ["lastNotNull"],
-          "fields": ""
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "11.3.1",
+          "unit": "short",
+          "overrides": [
+            { "matcher": { "id": "byRegexp", "options": "^2.*" }, "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }] },
+            { "matcher": { "id": "byRegexp", "options": "^3.*" }, "properties": [{ "id": "color", "value": { "fixedColor": "blue", "mode": "fixed" } }] },
+            { "matcher": { "id": "byRegexp", "options": "^4.*" }, "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }] },
+            { "matcher": { "id": "byRegexp", "options": "^5.*" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] }
+          ]
+        }
+      }
+    },
+    {
+      "title": "Avg Hits / Query",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 10, "y": 4 },
+      "datasource": { "type": "loki", "name": "Loki", "uid": "" },
       "targets": [
         {
-          "expr": "sum(count_over_time({job=\"opensearch-load-tester\"} | json | query_type =~ \"${query_type}\" | http_status_code != 200 [$__range]))",
+          "expr": "avg(avg_over_time({job=\"opensearch-load-tester\"} |= \"${search}\" | json | query_type =~ \"${query_type:regex}\" | unwrap total_hits [$__range]))",
           "refId": "A"
         }
       ],
-      "title": "Error Count",
-      "type": "stat"
+      "fieldConfig": {
+        "defaults": { "unit": "short", "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "purple", "value": null }] } }
+      },
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "center" }
     },
     {
-      "datasource": {
-        "type": "loki",
-        "name": "Loki",
-        "uid": ""
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "request_duration_millis",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 20,
-            "gradientMode": "opacity",
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
-            },
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "ms"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 4
-      },
-      "id": 4,
-      "options": {
-        "legend": {
-          "calcs": ["mean", "max", "min"],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "11.3.1",
+      "title": "Avg Request Time (Total)",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 5, "x": 14, "y": 4 },
+      "datasource": { "type": "loki", "name": "Loki", "uid": "" },
       "targets": [
         {
-          "expr": "avg_over_time({job=\"opensearch-load-tester\"} | json | unwrap request_duration_millis [1m])",
-          "legendFormat": "Avg Request Duration",
+          "expr": "avg(avg_over_time({job=\"opensearch-load-tester\"} |= \"${search}\" | json | query_type =~ \"${query_type:regex}\" | unwrap request_duration_millis [$__range]))",
           "refId": "A"
         }
       ],
-      "title": "Timeline: request_duration_millis",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "name": "Loki",
-        "uid": ""
-      },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "query_duration_millis",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 20,
-            "gradientMode": "opacity",
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
-            },
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "ms"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 4
-      },
-      "id": 5,
-      "options": {
-        "legend": {
-          "calcs": ["mean", "max", "min"],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
+          "unit": "ms",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1000 }] }
         }
       },
-      "pluginVersion": "11.3.1",
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "center" }
+    },
+    {
+      "title": "Avg DB Time (Internal)",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 5, "x": 19, "y": 4 },
+      "datasource": { "type": "loki", "name": "Loki", "uid": "" },
       "targets": [
         {
-          "expr": "avg_over_time({job=\"opensearch-load-tester\"} | json | unwrap query_duration_millis [1m])",
-          "legendFormat": "Avg Query Duration",
+          "expr": "avg(avg_over_time({job=\"opensearch-load-tester\"} |= \"${search}\" | json | query_type =~ \"${query_type:regex}\" | unwrap query_duration_millis [$__range]))",
           "refId": "A"
         }
       ],
-      "title": "Timeline: query_duration_millis",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "name": "Loki",
-        "uid": ""
-      },
       "fieldConfig": {
         "defaults": {
-          "custom": {
-            "align": "left",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
+          "unit": "ms",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 500 }] }
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "center" }
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 8 },
+      "id": 101,
+      "panels": [],
+      "title": "Performance Deep Dive",
+      "type": "row"
+    },
+    {
+      "title": "DB Time Distribution",
+      "type": "histogram",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 9 },
+      "datasource": { "type": "loki", "name": "Loki", "uid": "" },
+      "targets": [
+        {
+          "expr": "{job=\"opensearch-load-tester\"} |= \"${search}\" | json | query_type =~ \"${query_type:regex}\"",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "extractFields",
+          "options": {
+            "source": "Line",
+            "format": "json",
+            "replace": false
           }
         },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 12
-      },
-      "id": 6,
-      "options": {
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": ["sum"],
-          "show": false
+        {
+          "id": "convertFieldType",
+          "options": {
+            "fields": { "query_duration_millis": "number" },
+            "conversions": [{ "targetField": "query_duration_millis", "destinationType": "number" }]
+          }
         },
-        "showHeader": true,
-        "sortBy": []
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Line": true,
+              "tsNs": true,
+              "id": true,
+              "traceID": true,
+              "load_generator_id": true,
+              "http_status_code": true,
+              "request_duration_millis": true,
+              "total_hits": true,
+              "query_type": true,
+              "labels": true
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "ms" }
       },
-      "pluginVersion": "11.3.1",
+      "options": {
+        "bucketSize": 5,
+        "combine": true
+      }
+    },
+    {
+      "title": "Hits Distribution",
+      "type": "histogram",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 9 },
+      "datasource": { "type": "loki", "name": "Loki", "uid": "" },
       "targets": [
         {
-          "expr": "{job=\"opensearch-load-tester\"} | json",
+          "expr": "{job=\"opensearch-load-tester\"} |= \"${search}\" | json | query_type =~ \"${query_type:regex}\"",
+          "format": "table",
           "refId": "A"
         }
       ],
-      "title": "Requests by Query Type",
-      "type": "table"
+      "transformations": [
+        {
+          "id": "extractFields",
+          "options": {
+            "source": "Line",
+            "format": "json",
+            "replace": false
+          }
+        },
+        {
+          "id": "convertFieldType",
+          "options": {
+            "fields": { "total_hits": "number" },
+            "conversions": [{ "targetField": "total_hits", "destinationType": "number" }]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Line": true,
+              "tsNs": true,
+              "id": true,
+              "traceID": true,
+              "load_generator_id": true,
+              "http_status_code": true,
+              "request_duration_millis": true,
+              "query_duration_millis": true,
+              "query_type": true,
+              "labels": true
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short" }
+      },
+      "options": {
+        "bucketSize": 10,
+        "combine": true
+      }
+    },
+    {
+      "title": "Legend",
+      "type": "text",
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 17 },
+      "options": {
+        "mode": "markdown",
+        "content": "### 📊 Dashboard Legend\n\n#### ⏱️ DB Time Distribution\nThis graph shows the **latency distribution** of your queries.\n* **X-Axis:** Duration in **ms** (milliseconds).\n* **Y-Axis:** **Count** of requests (how many queries were this fast/slow).\n* **Insight:** Look for a \"long tail\" to the right, which indicates outliers (slow queries).\n\n---\n\n#### 📦 Hits Distribution (Histogram)\nThis graph shows the **result set size** (how many documents were found).\n* **X-Axis:** Number of **Total Hits**.\n* **Y-Axis:** **Count** of requests.\n* **Insight:** Helps identify if performance issues are caused by queries returning massive amounts of data."
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 25 },
+      "id": 102,
+      "panels": [],
+      "title": "Pure Logs",
+      "type": "row"
+    },
+    {
+      "title": "Pure Logs",
+      "type": "logs",
+      "gridPos": { "h": 16, "w": 24, "x": 0, "y": 26 },
+      "datasource": { "type": "loki", "name": "Loki", "uid": "" },
+      "targets": [
+        {
+          "expr": "{job=\"opensearch-load-tester\"} |= \"${search}\" | json | query_type =~ \"${query_type:regex}\"",
+          "refId": "A"
+        }
+      ],
+      "options": { "showTime": true, "enableLogDetails": true, "sortOrder": "Descending", "wrapLogLines": true }
     }
-
   ],
   "schemaVersion": 39,
-  "style": "dark",
-  "tags": [
-    "opensearch",
-    "load-testing",
-    "performance"
-  ],
   "templating": {
     "list": [
       {
-        "allValue": null,
-        "current": {
-          "selected": true,
-          "text": "all",
-          "value": ".*"
-        },
+        "current": { "selected": false, "text": "", "value": "" },
+        "hide": 0,
+        "label": "🔍 Log Search",
+        "name": "search",
+        "options": [],
+        "query": "",
+        "skipUrlSync": false,
+        "type": "textbox"
+      },
+      {
+        "allValue": ".*",
+        "current": { "selected": true, "text": "All", "value": ".*" },
         "hide": 0,
         "includeAll": true,
         "label": "Query Type",
-        "multi": false,
+        "multi": true,
         "name": "query_type",
         "options": [
-          {
-            "selected": true,
-            "text": "all",
-            "value": "*"
-          },
-          {
-            "selected": false,
-            "text": "ANO_PAYROLL_RANGE",
-            "value": "ANO_PAYROLL_RANGE"
-          },
-          {
-            "selected": false,
-            "text": "ANO_CLIENTS_AGGREGATION",
-            "value": "ANO_CLIENTS_AGGREGATION"
-          },
-          {
-            "selected": false,
-            "text": "ANO_CLIENT_BY_YEAR",
-            "value": "ANO_CLIENT_BY_YEAR"
-          },
-          {
-            "selected": false,
-            "text": "ANO_PAYROLL_TYPE_LANGUAGE",
-            "value": "ANO_PAYROLL_TYPE_LANGUAGE"
-          },
-          {
-            "selected": false,
-            "text": "DUO_INVOICE_CATEGORY",
-            "value": "DUO_INVOICE_CATEGORY"
-          },
-          {
-            "selected": false,
-            "text": "DUO_STATE_LOCATION",
-            "value": "DUO_STATE_LOCATION"
-          },
-          {
-            "selected": false,
-            "text": "DUO_BOOKING_BY_CLIENT_AND_STATE",
-            "value": "DUO_BOOKING_BY_CLIENT_AND_STATE"
-          },
-          {
-            "selected": false,
-            "text": "DUO_CLIENT_BY_CUSTOMER_NUMBER",
-            "value": "DUO_CLIENT_BY_CUSTOMER_NUMBER"
-          },
-          {
-            "selected": false,
-            "text": "DUO_CLIENT_BY_NAME_AND_STATE",
-            "value": "DUO_CLIENT_BY_NAME_AND_STATE"
-          },
-          {
-            "selected": false,
-            "text": "DUO_BOOKING_BY_COSTCENTER_AND_DATE",
-            "value": "DUO_BOOKING_BY_COSTCENTER_AND_DATE"
-          },
-          {
-            "selected": false,
-            "text": "DUO_BOOKING_BY_AMOUNT_RANGE",
-            "value": "DUO_BOOKING_BY_AMOUNT_RANGE"
-          }
+          { "selected": true, "text": "All", "value": ".*" },
+          { "selected": false, "text": "ANO_PAYROLL_RANGE", "value": "ANO_PAYROLL_RANGE" },
+          { "selected": false, "text": "ANO_CLIENTS_AGGREGATION", "value": "ANO_CLIENTS_AGGREGATION" },
+          { "selected": false, "text": "ANO_CLIENT_BY_YEAR", "value": "ANO_CLIENT_BY_YEAR" },
+          { "selected": false, "text": "ANO_PAYROLL_TYPE_LANGUAGE", "value": "ANO_PAYROLL_TYPE_LANGUAGE" },
+          { "selected": false, "text": "DUO_INVOICE_CATEGORY", "value": "DUO_INVOICE_CATEGORY" },
+          { "selected": false, "text": "DUO_STATE_LOCATION", "value": "DUO_STATE_LOCATION" },
+          { "selected": false, "text": "DUO_BOOKING_BY_CLIENT_AND_STATE", "value": "DUO_BOOKING_BY_CLIENT_AND_STATE" },
+          { "selected": false, "text": "DUO_CLIENT_BY_CUSTOMER_NUMBER", "value": "DUO_CLIENT_BY_CUSTOMER_NUMBER" },
+          { "selected": false, "text": "DUO_CLIENT_BY_NAME_AND_STATE", "value": "DUO_CLIENT_BY_NAME_AND_STATE" },
+          { "selected": false, "text": "DUO_BOOKING_BY_COSTCENTER_AND_DATE", "value": "DUO_BOOKING_BY_COSTCENTER_AND_DATE" },
+          { "selected": false, "text": "DUO_BOOKING_BY_AMOUNT_RANGE", "value": "DUO_BOOKING_BY_AMOUNT_RANGE" },
+          { "selected": false, "text": "DUO_COMPLEX", "value": "DUO_COMPLEX" },
+          { "selected": false, "text": "DOCNAME_REGEX", "value": "DOCNAME_REGEX" },
+          { "selected": false, "text": "ANO_MULTI_REGEX", "value": "ANO_MULTI_REGEX" },
+          { "selected": false, "text": "DUO_MULTI_REGEX", "value": "DUO_MULTI_REGEX" }
         ],
-        "query": "ANO_PAYROLL_RANGE, ANO_CLIENTS_AGGREGATION, ANO_CLIENT_BY_YEAR, ANO_PAYROLL_TYPE_LANGUAGE, DUO_INVOICE_CATEGORY, DUO_STATE_LOCATION, DUO_BOOKING_BY_CLIENT_AND_STATE, DUO_CLIENT_BY_CUSTOMER_NUMBER, DUO_CLIENT_BY_NAME_AND_STATE, DUO_BOOKING_BY_COSTCENTER_AND_DATE, DUO_BOOKING_BY_AMOUNT_RANGE",
-        "queryValue": "",
-        "skipUrlSync": false,
-        "sort": 0,
+        "query": "ANO_PAYROLL_RANGE, ANO_CLIENTS_AGGREGATION, ANO_CLIENT_BY_YEAR, ANO_PAYROLL_TYPE_LANGUAGE, DUO_INVOICE_CATEGORY, DUO_STATE_LOCATION, DUO_BOOKING_BY_CLIENT_AND_STATE, DUO_CLIENT_BY_CUSTOMER_NUMBER, DUO_CLIENT_BY_NAME_AND_STATE, DUO_BOOKING_BY_COSTCENTER_AND_DATE, DUO_BOOKING_BY_AMOUNT_RANGE, DUO_COMPLEX, DOCNAME_REGEX, ANO_MULTI_REGEX, DUO_MULTI_REGEX",
         "type": "custom"
       }
     ]
   },
-  "time": {
-    "from": "now-24h",
-    "to": "now"
-  },
-  "timepicker": {},
-  "timezone": "",
-  "title": "OpenSearch Load Test Dashboard",
-  "uid": "opensearch-load-test",
-  "version": 0
+  "time": { "from": "now-15m", "to": "now" },
+  "title": "OpenSearch Load Test",
+  "uid": "os-load-test"
 }
