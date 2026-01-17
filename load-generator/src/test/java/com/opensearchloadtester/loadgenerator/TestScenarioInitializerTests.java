@@ -1,6 +1,7 @@
 package com.opensearchloadtester.loadgenerator;
 
 import com.opensearchloadtester.loadgenerator.client.LoadTestStartSyncClient;
+import com.opensearchloadtester.loadgenerator.client.MetricsReporterClient;
 import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
 import com.opensearchloadtester.loadgenerator.service.LoadRunner;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,8 @@ public class TestScenarioInitializerTests {
     private OpenSearchGenericClient openSearchClient;
     @Mock
     private LoadTestStartSyncClient loadTestStartSyncClient;
+    @Mock
+    private MetricsReporterClient metricsReporterClient;
 
     @Test
     void run_warmupDisabled_singleReplica_executesScenario_withoutSync() {
@@ -35,7 +38,8 @@ public class TestScenarioInitializerTests {
                 scenarioConfig,
                 loadRunner,
                 openSearchClient,
-                loadTestStartSyncClient
+                loadTestStartSyncClient,
+                metricsReporterClient
         );
 
         initializer.run();
@@ -55,7 +59,8 @@ public class TestScenarioInitializerTests {
                 scenarioConfig,
                 loadRunner,
                 openSearchClient,
-                loadTestStartSyncClient
+                loadTestStartSyncClient,
+                metricsReporterClient
         );
 
         initializer.run();
