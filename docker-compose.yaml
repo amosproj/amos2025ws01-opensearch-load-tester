@@ -12,13 +12,11 @@ services:
       - DATA_GENERATION_DOCUMENT_TYPE=${TEST_DATA_GENERATION_DOCUMENT_TYPE:-ano}
       - DATA_GENERATION_COUNT=${TEST_DATA_GENERATION_COUNT:-1000}
       - DATA_GENERATION_BATCH_SIZE=${TEST_DATA_GENERATION_BATCH_SIZE:-1000}
-      - LOGGING_LEVEL_ROOT=${LOGGING_LVL_ROOT:-ERROR}
-      - LOGGING_LEVEL_ORG_ELASTICSEARCH=${LOGGING_LVL_ELASTIC:-ERROR}
       - LOGGING_LEVEL_COM_OPENSEARCHLOADTESTER_TESTDATAGENERATOR=${LOGGING_LVL_TESTDATA_GEN:-INFO}
     networks:
       - opensearch-loadtester-network
     healthcheck:
-      test: ["CMD", "pgrep", "-f", "app.jar"]
+      test: [ "CMD", "pgrep", "-f", "app.jar" ]
       interval: 10s
       timeout: 10s
       retries: 3
@@ -42,8 +40,6 @@ services:
       - OPENSEARCH_URL=${OPENSEARCH_URL:-http://test-target-opensearch:9200}
       - METRICS_REPORTER_URL=${METRICS_REPORTER_URL:-http://metrics-reporter:8080/api}
       - LOAD_GENERATOR_REPLICAS=${LOAD_GENERATOR_REPLICAS:-1}
-      - LOGGING_LEVEL_ROOT=${LOGGING_LVL_ROOT:-ERROR}
-      - LOGGING_LEVEL_ORG_ELASTICSEARCH=${LOGGING_LVL_ELASTIC:-ERROR}
       - LOGGING_LEVEL_COM_OPENSEARCHLOADTESTER_LOADGENERATOR=${LOGGING_LVL_LOAD_GEN:-INFO}
       - METRICS_BATCH_SIZE=${METRICS_BATCH_SIZE:-100}
       - SCENARIO_CONFIG_PATH=${SCENARIO_CONFIG_PATH:-scenarios/}
@@ -52,11 +48,11 @@ services:
       - opensearch-loadtester-network
     healthcheck:
       test: [
-          "CMD-SHELL",
-          "wget -q -O
+        "CMD-SHELL",
+        "wget -q -O
           - http://localhost:8081/api/load-test/health
           || exit 1",
-        ]
+      ]
       interval: 10s
       timeout: 10s
       retries: 3
@@ -77,8 +73,6 @@ services:
       - SPRING_APPLICATION_NAME=metrics-reporter
       - LOAD_GENERATOR_REPLICAS=${LOAD_GENERATOR_REPLICAS:-1}
       - REPORT_OUTPUT_DIRECTORY=${REPORT_OUTPUT_DIRECTORY:-./reports}
-      - LOGGING_LEVEL_ROOT=${LOGGING_LVL_ROOT:-ERROR}
-      - LOGGING_LEVEL_ORG_ELASTICSEARCH=${LOGGING_LVL_ELASTIC:-ERROR}
       - LOGGING_LEVEL_COM_OPENSEARCHLOADTESTER_METRICSREPORTER=${LOGGING_LVL_METRICS_REPORTER:-INFO}
     networks:
       - opensearch-loadtester-network
@@ -88,11 +82,11 @@ services:
       - reports:/app/reports
     healthcheck:
       test: [
-          "CMD-SHELL",
-          "wget -q -O
+        "CMD-SHELL",
+        "wget -q -O
           - http://metrics-reporter:8080/api/health
           || exit 1",
-        ]
+      ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -106,8 +100,8 @@ services:
       - DISABLE_SECURITY_PLUGIN=true
       - discovery.type=single-node
       - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
-    #volumes:
-    #  - opensearch-data:/usr/share/opensearch/data
+    volumes:
+      - ./log4j2.properties:/usr/share/opensearch/config/log4j2.properties
     networks:
       - opensearch-loadtester-network
     ###
@@ -119,11 +113,11 @@ services:
       #- "9600:9600" # OpenSearch Performance Analyzer
     healthcheck:
       test: [
-          "CMD-SHELL",
-          "curl -s \
+        "CMD-SHELL",
+        "curl -s \
           http://test-target-opensearch:9200/_cluster/health
           | grep green || exit 1",
-        ]
+      ]
       interval: 10s
       timeout: 5s
       retries: 20
