@@ -154,6 +154,7 @@ services:
   # {job="opensearch-load-tester"}
   grafana:
     environment:
+      - GF_LOG_LEVEL=${GRAFANA_LOGGING_LEVEL:-error}
       - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
