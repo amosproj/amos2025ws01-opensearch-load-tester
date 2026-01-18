@@ -75,31 +75,23 @@ public class StartController {
             alertStart.setTitle("Info");
             alertStart.setHeaderText("Docker Startup...");
             alertStart.setContentText("Old Docker containers are being removed, build and started. This may take a while. Please visit http://localhost:3000 afterwards.");
-            alertStart.showAndWait();
+            alertStart.show();
 
             writeEnvFile();
             dockerClean();
             dockerBuild();
             dockerRun();
-            
+
             alertStart.close();
 
         } catch (IOException e) {
             e.printStackTrace();
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
-            alert.setHeaderText("Fehler beim Starten des Load Tests");
-            alert.setContentText("Es ist ein Fehler aufgetreten: " + e.getMessage());
+            alert.setHeaderText("Error while starting Docker containers");
+            alert.setContentText("Errors have occurred : " + e.getMessage());
             alert.showAndWait();
         }
-
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Info");
-        alert.setHeaderText("Load Test gestartet");
-        alert.setContentText("Der Load Test läuft jetzt.");
-
-        alert.showAndWait();
-
     }
 
     private void writeEnvFile() throws IOException {
@@ -150,10 +142,12 @@ public class StartController {
         return content.replaceAll(regex, replacement);
     }
 
+    // TODO: only one processBuilder
+
     private void dockerBuild() {
         ProcessBuilder processBuilder = new ProcessBuilder();
         processBuilder.command("sh", "-c", "docker compose -f docker-compose.yaml build");
-        processBuilder.inheritIO();
+        //processBuilder.inheritIO();
         try {
             processBuilder.start();
         } catch (IOException e) {
