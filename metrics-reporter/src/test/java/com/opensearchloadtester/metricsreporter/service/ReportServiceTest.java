@@ -32,7 +32,6 @@ class ReportServiceTest {
         reportService = new ReportService();
         ReflectionTestUtils.setField(reportService, "outputDirectory", tempDir.toString());
         ReflectionTestUtils.setField(reportService, "statsFilename", "statistics.json");
-        ReflectionTestUtils.setField(reportService, "csvFilename", "query_results.csv");
         ReflectionTestUtils.setField(reportService, "ndjsonFilename", "tmp_query_results.ndjson");
         ReflectionTestUtils.setField(reportService, "fullJsonFilename", "query_results.json");
 
@@ -49,17 +48,12 @@ class ReportServiceTest {
 
         reportService.processMetrics(metrics);
 
-        Path csvPath = tempDir.resolve("query_results.csv");
         Path ndjsonPath = tempDir.resolve("tmp_query_results.ndjson");
 
-        assertThat(Files.exists(csvPath)).isTrue();
         assertThat(Files.exists(ndjsonPath)).isTrue();
 
-        List<String> csvLines = Files.readAllLines(csvPath);
         List<String> ndjsonLines = Files.readAllLines(ndjsonPath);
 
-        assertThat(csvLines).hasSize(3);
-        assertThat(csvLines.get(0)).contains("Load Generator ID");
         assertThat(ndjsonLines).hasSize(2);
 
         StatisticsDto statistics = reportService.finalizeReports(Set.of(LOAD_GENERATOR_ID));
