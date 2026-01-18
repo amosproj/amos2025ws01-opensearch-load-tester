@@ -1,0 +1,9 @@
+---
+name: default-scenario
+document_type: DUO
+schedule_duration: PT3S
+queries_per_second: 1000
+query_response_timeout: PT1M
+enable_warm_up: false
+query_types:
+  - DUO_MULTI_REGEX

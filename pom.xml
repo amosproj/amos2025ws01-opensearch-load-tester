@@ -29,6 +29,12 @@
         <mockito-inline.version>5.2.0</mockito-inline.version>
     </properties>
 
+    <modules>
+        <module>common-core</module>
+        <module>load-generator</module>
+        <module>ui</module>
+    </modules>
+
     <dependencyManagement>
         <dependencies>
 

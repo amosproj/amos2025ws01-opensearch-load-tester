@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.VBox?>
+<VBox alignment="TOP_LEFT" spacing="20.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/17.0.12"
+      fx:controller="com.opensearchloadtester.ui.StartController">
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
+    </padding>
+
+    <Label text="Please select test-data generation document type:"/>
+    <ComboBox fx:id="testdataGenerationDocumentType" prefWidth="200"/>
+
+    <Label text="Please type test-data generation count:"/>
+    <TextField fx:id="testdataGenerationCount" prefWidth="200"/>
+
+    <Label text="Please select test-data generation mode:"/>
+    <ComboBox fx:id="testdataGenerationMode" prefWidth="200"/>
+
+    <Label text="Please select scenario:"/>
+    <ComboBox fx:id="scenarioConfig" prefWidth="200"/>
+
+    <Label text="Please type load-generator replica amount:"/>
+    <TextField fx:id="loadGeneratorReplicas" prefWidth="200"/>
+
+    <Label text="Please type metrics batch size:"/>
+    <TextField fx:id="metricsBatchSize" prefWidth="200"/>
+
+    <Button onAction="#onStartLoadTest" text="Start Load Test"/>
+</VBox>
