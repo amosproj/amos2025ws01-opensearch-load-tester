@@ -1,31 +1,101 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.layout.VBox?>
-<VBox alignment="TOP_LEFT" spacing="20.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/17.0.12"
-      fx:controller="com.opensearchloadtester.ui.StartController">
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+<VBox prefHeight="862.0" prefWidth="584.0" spacing="20.0" xmlns="http://javafx.com/javafx/17.0.12"
+      xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.opensearchloadtester.ui.StartController">
     <padding>
         <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
     </padding>
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Region HBox.hgrow="ALWAYS"/>
+
+        <Label text="OpenSearch Loadtester UI" textAlignment="CENTER">
+            <font>
+                <Font name="Calibri Bold" size="27.0"/>
+            </font>
+        </Label>
+
+        <Region HBox.hgrow="ALWAYS"/>
+
+        <Button fx:id="closeButton" mnemonicParsing="false" onAction="#onCloseButtonClick">
+            <graphic>
+                <Label style="-fx-font-size:14;" text="✕" textFill="white"/>
+            </graphic>
+            <style>
+                -fx-background-color: #FF5C5C;
+                -fx-background-radius: 15;
+                -fx-pref-width: 30;
+                -fx-pref-height: 30;
+                -fx-cursor: hand;
+            </style>
+        </Button>
+    </HBox>
 
     <Label text="Please select test-data generation document type:"/>
-    <ComboBox fx:id="testdataGenerationDocumentType" prefWidth="200"/>
+    <ComboBox fx:id="testdataGenerationDocumentType" prefWidth="290.0" promptText="Please select document type"/>
 
     <Label text="Please type test-data generation count:"/>
-    <TextField fx:id="testdataGenerationCount" prefWidth="200"/>
+    <TextField fx:id="testdataGenerationCount" prefHeight="26.0" prefWidth="208.0"
+               promptText="Please enter test-data generation count"/>
 
     <Label text="Please select test-data generation mode:"/>
-    <ComboBox fx:id="testdataGenerationMode" prefWidth="200"/>
+    <ComboBox fx:id="testdataGenerationMode" prefWidth="290.0" promptText="Please select test-data generation mode"/>
 
-    <Label text="Please select scenario:"/>
-    <ComboBox fx:id="scenarioConfig" prefWidth="200"/>
+    <Label text="Please select the scenario, that should be executed:"/>
+    <ComboBox fx:id="scenarioConfig" prefWidth="290.0" promptText="Please enter scenario"/>
+    <VBox fx:id="customScenarioConfigurationBox" disable="true" visible="false">
+        <HBox alignment="CENTER_LEFT">
+            <Label text="Schedule duration:">
+                <HBox.margin>
+                    <Insets right="20.0"/>
+                </HBox.margin>
+            </Label>
+            <TextField fx:id="customScheduleDuration" promptText="e.g. PT30S"/>
+            <Label layoutX="10.0" layoutY="14.0" text="QPS:">
+                <HBox.margin>
+                    <Insets left="50.0" right="20.0"/>
+                </HBox.margin>
+            </Label>
+            <TextField fx:id="customQps" layoutX="120.0" layoutY="10.0" promptText="e.g. 20"/>
+            <VBox.margin>
+                <Insets bottom="10.0"/>
+            </VBox.margin>
+        </HBox>
+        <HBox alignment="CENTER_LEFT">
+            <Label text="Query response timout">
+                <HBox.margin>
+                    <Insets right="20.0"/>
+                </HBox.margin>
+            </Label>
+            <TextField fx:id="customQueryResponseTimeout" promptText="e.g. PT1M"/>
+            <Label layoutX="10.0" layoutY="14.0" text="Warmup:">
+                <HBox.margin>
+                    <Insets left="50.0" right="20.0"/>
+                </HBox.margin>
+            </Label>
+            <ComboBox fx:id="customWarmup" promptText="select"/>
+            <VBox.margin>
+                <Insets bottom="10.0"/>
+            </VBox.margin>
+        </HBox>
+        <VBox fx:id="dynamicCheckboxWrapper" alignment="CENTER" spacing="10.0"/>
+    </VBox>
 
     <Label text="Please type load-generator replica amount:"/>
-    <TextField fx:id="loadGeneratorReplicas" prefWidth="200"/>
+    <TextField fx:id="loadGeneratorReplicas" prefHeight="26.0" prefWidth="197.0"
+               promptText="Please enter load-generator replica amount"/>
 
     <Label text="Please type metrics batch size:"/>
-    <TextField fx:id="metricsBatchSize" prefWidth="200"/>
-
-    <Button onAction="#onStartLoadTest" text="Start Load Test"/>
+    <TextField fx:id="metricsBatchSize" prefHeight="26.0" prefWidth="197.0"
+               promptText="Please enter metrics batch size"/>
+    <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
+        <Button onAction="#onStartLoadTest" text="Start Load Test">
+            <font>
+                <Font name="Impact" size="12.0"/>
+            </font>
+        </Button>
+    </HBox>
 </VBox>

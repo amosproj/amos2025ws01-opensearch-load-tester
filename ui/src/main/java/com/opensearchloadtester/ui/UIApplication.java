@@ -11,7 +11,7 @@ public class UIApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(UIApplication.class.getResource("start-view.fxml"));
-        Scene scene = new Scene(fxmlLoader.load(), 600, 400);
+        Scene scene = new Scene(fxmlLoader.load());
         stage.setTitle("Load-Test Configuration");
         stage.setScene(scene);
         stage.sizeToScene();
