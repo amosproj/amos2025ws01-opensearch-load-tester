@@ -1,6 +1,9 @@
 #/bin/sh
 
-#TODO argument to restart/rebuild UI
+if [ "$1" = "rebuild" ]; then
+    echo "Rebuilding LoadTesterUI..."
+    sudo rm -r ./LoadTesterUI
+fi
 
 if [ -d "LoadTesterUI" ]; then
     ./LoadTesterUI/bin/LoadTesterUI
