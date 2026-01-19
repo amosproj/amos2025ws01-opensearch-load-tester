@@ -36,7 +36,7 @@ services:
     deploy:
       replicas: ${LOAD_GENERATOR_REPLICAS:-1}
     volumes:
-      - ./load-generator/scenarios:/app/scenarios:ro
+      - ./load-generator/src/main/resources/scenarios:/app/src/main/resources/scenarios:ro
     environment:
       - SPRING_APPLICATION_NAME=load-generator
       - OPENSEARCH_URL=${OPENSEARCH_URL:-http://test-target-opensearch:9200}
