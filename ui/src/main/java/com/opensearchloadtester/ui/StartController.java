@@ -3,7 +3,6 @@ package com.opensearchloadtester.ui;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 
 import java.io.IOException;
@@ -15,8 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class StartController {
-    @FXML
-    private Label welcomeText;
+
     @FXML
     private ComboBox<String> testdataGenerationMode;
     @FXML
@@ -31,9 +29,14 @@ public class StartController {
     private TextField metricsBatchSize;
 
     private final Path envPath = Path.of(".env");
+    private final ProcessBuilder processBuilder = new ProcessBuilder();
 
     @FXML
     public void initialize() {
+
+        // set all (sub)process outputs to console
+        processBuilder.inheritIO();
+
         testdataGenerationMode.getItems().addAll(
                 "DYNAMIC",
                 "PERSISTANT"
@@ -53,22 +56,15 @@ public class StartController {
             );
         });
 
-
         testdataGenerationDocumentType.setValue("ANO");
-
-//        scenarioConfig.getItems().addAll(
-//                getScenarioFiles(testdataGenerationDocumentType.getValue())
-//        );
 
         testdataGenerationCount.setText("10000");
         loadGeneratorReplicas.setText("3");
         metricsBatchSize.setText("100");
-
     }
 
     @FXML
     protected void onStartLoadTest() {
-
         try {
 
             Alert alertStart = new Alert(Alert.AlertType.INFORMATION);
@@ -142,15 +138,11 @@ public class StartController {
         return content.replaceAll(regex, replacement);
     }
 
-    // TODO: only one processBuilder
-
     private void dockerBuild() {
-        ProcessBuilder processBuilder = new ProcessBuilder();
         processBuilder.command("sh", "-c", "docker compose -f docker-compose.yaml build");
-        //processBuilder.inheritIO();
         try {
-            processBuilder.start();
-        } catch (IOException e) {
+            processBuilder.start().waitFor();
+        } catch (Exception e) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
             alert.setContentText("Es ist ein Fehler aufgetreten: " + e.getMessage());
@@ -159,12 +151,10 @@ public class StartController {
     }
 
     private void dockerRun() {
-        ProcessBuilder processBuilder = new ProcessBuilder();
         processBuilder.command("sh", "-c", "docker compose up -d");
-        processBuilder.inheritIO();
         try {
-            processBuilder.start();
-        } catch (IOException e) {
+            processBuilder.start().waitFor();
+        } catch (Exception e) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
             alert.setContentText("Es ist ein Fehler aufgetreten: " + e.getMessage());
@@ -173,12 +163,10 @@ public class StartController {
     }
 
     private void dockerStop() {
-        ProcessBuilder processBuilder = new ProcessBuilder();
         processBuilder.command("sh", "-c", "docker compose down");
-        processBuilder.inheritIO();
         try {
-            processBuilder.start();
-        } catch (IOException e) {
+            processBuilder.start().waitFor();
+        } catch (Exception e) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
             alert.setContentText("Es ist ein Fehler aufgetreten: " + e.getMessage());
@@ -187,12 +175,10 @@ public class StartController {
     }
 
     private void dockerClean() {
-        ProcessBuilder processBuilder = new ProcessBuilder();
         processBuilder.command("sh", "-c", "docker compose down --volumes --rmi local --remove-orphans");
-        processBuilder.inheritIO();
         try {
-            processBuilder.start();
-        } catch (IOException e) {
+            processBuilder.start().waitFor();
+        } catch (Exception e) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
             alert.setContentText("Es ist ein Fehler aufgetreten: " + e.getMessage());
@@ -201,13 +187,11 @@ public class StartController {
     }
 
     private void dockerRestart() {
-        ProcessBuilder processBuilder = new ProcessBuilder();
         // TODO: maybe just again docker compose up -d
         processBuilder.command("sh", "-c", "docker compose restart alloy load-generator metrics-reporter");
-        processBuilder.inheritIO();
         try {
-            processBuilder.start();
-        } catch (IOException e) {
+            processBuilder.start().waitFor();
+        } catch (Exception e) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
             alert.setContentText("Es ist ein Fehler aufgetreten: " + e.getMessage());
@@ -217,41 +201,31 @@ public class StartController {
 
     private List<String> getScenarioFiles(String docType) {
         List<String> result = new ArrayList<>();
-        Path path;
+        Path path = null;
 
         try {
             // try to load through classloader
             URL url = getClass().getClassLoader().getResource("scenarios");
             if (url != null) {
-
                 path = Paths.get(url.toURI());
-                Files.list(path)
-                        .filter(Files::isRegularFile)
-                        .filter(p -> p.toString().endsWith(".yaml"))
-                        .filter(p -> {
-                            String name = p.getFileName().toString().toLowerCase();
-                            return name.contains(docType.toLowerCase()) || (!name.contains("ano") && !name.contains("duo"));
-                        })
-                        .forEach(p -> result.add(p.getFileName().toString()));
-
             }
-            // if nothing found, try with absolute path
             if (result.isEmpty()) {
+                // if nothing found, try with absolute path
                 path = Paths.get("./load-generator/src/main/resources/scenarios");
-                Files.list(path)
-                        .filter(Files::isRegularFile)
-                        .filter(p -> p.toString().endsWith(".yaml"))
-                        .filter(p -> {
-                            String name = p.getFileName().toString().toLowerCase();
-                            return name.contains(docType.toLowerCase()) || (!name.contains("ano") && !name.contains("duo"));
-                        })
-                        .forEach(p -> result.add(p.getFileName().toString()));
             }
+
+            Files.list(path)
+                    .filter(Files::isRegularFile)
+                    .filter(p -> p.toString().endsWith(".yaml"))
+                    .filter(p -> {
+                        String name = p.getFileName().toString().toLowerCase();
+                        return name.contains(docType.toLowerCase()) || (!name.contains("ano") && !name.contains("duo"));
+                    })
+                    .forEach(p -> result.add(p.getFileName().toString()));
 
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return result;
     }
 }
