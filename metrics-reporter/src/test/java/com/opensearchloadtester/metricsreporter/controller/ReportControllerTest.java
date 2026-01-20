@@ -38,7 +38,6 @@ class ReportControllerTest {
     void setUp() {
         ReflectionTestUtils.setField(reportController, "expectedReplicas", 1);
         ReflectionTestUtils.setField(reportController, "jsonExportEnabled", false);
-        ReflectionTestUtils.setField(reportController, "csvExportEnabled", false);
     }
 
     @Test
@@ -70,7 +69,6 @@ class ReportControllerTest {
     void finish_generatesReports_whenAllReplicasFinished() throws Exception {
         ReflectionTestUtils.setField(reportController, "expectedReplicas", 1);
         ReflectionTestUtils.setField(reportController, "jsonExportEnabled", true);
-        ReflectionTestUtils.setField(reportController, "csvExportEnabled", true);
 
         List<MetricsDto> metrics = List.of(
                 new MetricsDto(LOAD_GENERATOR_ID, "query_type_test", 100L, 50L, 4, 200),
@@ -89,7 +87,6 @@ class ReportControllerTest {
         when(reportService.finalizeReports(anySet())).thenReturn(statistics);
         when(reportService.getFullJsonReportPath()).thenReturn(Path.of("out/query_results.json"));
         when(reportService.getStatisticsReportPath()).thenReturn(Path.of("out/statistics.json"));
-        when(reportService.getCsvReportPath()).thenReturn(Path.of("out/query_results.csv"));
 
         HttpServletRequest request = mock(HttpServletRequest.class);
         ResponseEntity<String> submitResponse = reportController.submitMetrics(metrics);
