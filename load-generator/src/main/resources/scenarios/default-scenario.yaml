@@ -1,9 +1,9 @@
 ---
 name: default-scenario
-document_type: DUO
-schedule_duration: PT3S
-queries_per_second: 1000
+document_type: ANO
+schedule_duration: PT10S
+queries_per_second: 30
 query_response_timeout: PT1M
-enable_warm_up: false
+enable_warm_up: true
 query_types:
-  - DUO_MULTI_REGEX
+  - ANO_PAYROLL_RANGE

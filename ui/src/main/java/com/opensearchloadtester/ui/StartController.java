@@ -2,6 +2,7 @@ package com.opensearchloadtester.ui;
 
 //import com.opensearchloadtester.loadgenerator.model.QueryType;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.CheckBox;
@@ -43,7 +44,7 @@ public class StartController {
     @FXML
     private VBox dynamicCheckboxWrapper;
 
-    private final Path envPath = Path.of(".env");
+    private final Path ENV_PATH = Path.of(".env");
     private final ProcessBuilder processBuilder = new ProcessBuilder();
 
     private boolean suppressListeners = false;
@@ -153,7 +154,7 @@ public class StartController {
             alertStart.close();
 
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Error while starting Docker containers: " + e.getMessage());
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
             alert.setHeaderText("Error while starting Docker containers");
@@ -164,11 +165,12 @@ public class StartController {
 
     @FXML
     protected void onCloseButtonClick() {
-        dockerClean();
+        // dockerClean();
+        Platform.exit();
     }
 
     private void writeEnvFile() throws IOException {
-        String content = Files.readString(envPath);
+        String content = Files.readString(ENV_PATH);
 
         content = regexInEnv(
                 content,
@@ -206,7 +208,7 @@ public class StartController {
                 scenarioConfig.getValue()
         );
 
-        Files.writeString(envPath, content);
+        Files.writeString(ENV_PATH, content);
     }
 
     private String regexInEnv(String content, String key, String value) {
