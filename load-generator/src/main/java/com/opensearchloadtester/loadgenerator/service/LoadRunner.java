@@ -20,6 +20,7 @@ public class LoadRunner {
     private final MetricsReporterClient metricsReporterClient;
     private final MetricsCollector metricsCollector;
 
+
     public LoadRunner(
             @Value("${HOSTNAME}") String loadGeneratorId,
             @Value("${load.generator.replicas}") int numberLoadGenerators,
@@ -45,13 +46,16 @@ public class LoadRunner {
 
         log.info("Timout {}s", scenarioConfig.getQueryResponseTimeout().toSeconds());
 
+        QueryTypePicker picker = QueryTypePicker.fromScenario(scenarioConfig);
+
         QueryExecutionTask query = new QueryExecutionTask(
                 loadGeneratorId,
                 scenarioConfig.getDocumentType().getIndex(),
                 scenarioConfig.getQueryTypes(),
                 openSearchClient,
                 metricsCollector,
-                scenarioConfig.getQueryResponseTimeout()
+                scenarioConfig.getQueryResponseTimeout(),
+                picker
         );
 
         // Track overall test start time

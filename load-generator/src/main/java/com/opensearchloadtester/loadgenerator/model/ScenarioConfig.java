@@ -30,4 +30,6 @@ public class ScenarioConfig {
 
     @NotEmpty
     private List<QueryType> queryTypes;
+
+    private List<QueryMixEntry> queryMix;
 }

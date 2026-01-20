@@ -67,7 +67,8 @@ class LoadRunnerTests {
                 scheduleDuration,
                 queryResponseTimeout,
                 qps, warmUpEnabled,
-                List.of(queryType)
+                List.of(queryType),
+                null// queryMix not used in these tests
         );
     }
 
@@ -313,7 +314,8 @@ class LoadRunnerTests {
                 Duration.ofMinutes(3),
                 2,
                 false,
-                List.of(QueryType.ANO_PAYROLL_RANGE, QueryType.ANO_CLIENT_BY_YEAR)
+                List.of(QueryType.ANO_PAYROLL_RANGE, QueryType.ANO_CLIENT_BY_YEAR),
+                null// queryMix not used in these tests
         );
 
         stubOpenSearchStatus(500);

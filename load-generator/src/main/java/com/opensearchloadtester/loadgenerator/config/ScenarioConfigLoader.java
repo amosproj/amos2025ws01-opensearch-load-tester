@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.opensearchloadtester.loadgenerator.model.QueryType;
 import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,6 +40,11 @@ public class ScenarioConfigLoader {
         try {
             ScenarioConfig config = yamlMapper.readValue(path.toFile(), ScenarioConfig.class);
 
+            if (config.getQueryTypes() == null || config.getQueryTypes().isEmpty()) {
+                throw new IllegalStateException("queryTypes must not be empty");
+            }
+            validateQueryMix(config);
+
             if (numberLoadGenerators <= 0) {
                 throw new IllegalStateException(
                         "Invalid configuration: load generator replicas must be > 0."
@@ -57,4 +63,35 @@ public class ScenarioConfigLoader {
             throw new RuntimeException(String.format("Failed to read or parse from file '%s'", path), e);
         }
     }
+    private void validateQueryMix(ScenarioConfig config) {
+        var mix = config.getQueryMix();
+        if (mix == null || mix.isEmpty()) return;
+
+        int sum = 0;
+        var seen = new java.util.HashSet<QueryType>();
+
+        for (var e : mix) {
+            if (!config.getQueryTypes().contains(e.getType())) {
+                throw new IllegalArgumentException(
+                        "queryMix contains type not listed in queryTypes: " + e.getType()
+                );
+            }
+            if (!seen.add(e.getType())) {
+                throw new IllegalArgumentException(
+                        "Duplicate queryMix entry for type: " + e.getType()
+                );
+            }
+            if (e.getPercent() <= 0) {
+                throw new IllegalArgumentException(
+                        "queryMix weights must be > 0 for type: " + e.getType()
+                );
+            }
+            sum += e.getPercent();
+        }
+
+        if (sum <= 0) {
+            throw new IllegalArgumentException("queryMix must contain at least one positive weight.");
+        }
+    }
+
 }

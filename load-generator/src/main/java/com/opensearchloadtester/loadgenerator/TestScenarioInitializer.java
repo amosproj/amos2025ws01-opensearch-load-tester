@@ -5,6 +5,7 @@ import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
 import com.opensearchloadtester.loadgenerator.service.LoadRunner;
 import com.opensearchloadtester.loadgenerator.service.MetricsCollector;
 import com.opensearchloadtester.loadgenerator.service.QueryExecutionTask;
+import com.opensearchloadtester.loadgenerator.service.QueryTypePicker;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.opensearch.generic.OpenSearchGenericClient;
 import org.springframework.beans.factory.annotation.Value;
@@ -72,6 +73,7 @@ public class TestScenarioInitializer implements CommandLineRunner {
         long warmupStart = System.currentTimeMillis();
 
         MetricsCollector warmupCollector = new MetricsCollector(metricsReporterClient, 1, false);
+        QueryTypePicker picker = QueryTypePicker.fromScenario(scenarioConfig);
 
         QueryExecutionTask warmupTask = new QueryExecutionTask(
                 loadGeneratorId,
@@ -79,7 +81,8 @@ public class TestScenarioInitializer implements CommandLineRunner {
                 scenarioConfig.getQueryTypes(),
                 openSearchClient,
                 warmupCollector,// warm-up metrics are ignored
-                scenarioConfig.getQueryResponseTimeout()
+                scenarioConfig.getQueryResponseTimeout(),
+                picker
         );
 
         int successCount = 0;
