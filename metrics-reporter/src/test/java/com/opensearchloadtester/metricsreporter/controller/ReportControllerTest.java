@@ -85,7 +85,7 @@ class ReportControllerTest {
         );
 
         when(reportService.finalizeReports(anySet())).thenReturn(statistics);
-        when(reportService.getFullJsonReportPath()).thenReturn(Path.of("out/query_results.json"));
+        when(reportService.getResultsJsonPath()).thenReturn(Path.of("out/query_results.json"));
         when(reportService.getStatisticsReportPath()).thenReturn(Path.of("out/statistics.json"));
 
         HttpServletRequest request = mock(HttpServletRequest.class);

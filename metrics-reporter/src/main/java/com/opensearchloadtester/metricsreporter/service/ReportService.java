@@ -9,6 +9,8 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.opensearchloadtester.common.dto.MetricsDto;
 import com.opensearchloadtester.metricsreporter.dto.StatisticsDto;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -41,11 +43,10 @@ public class ReportService {
     private String statsFilename;
     @Value("${report.ndjson.filename:tmp_query_results.ndjson}")
     private String ndjsonFilename;
-    @Value("${report.fulljson.filename:query_results.json}")
-    private String fullJsonFilename;
+    @Value("${report.resultsjson.filename}")
+    private String resultsJsonFilename;
 
     private final StatsAccumulator stats = new StatsAccumulator();
-    private boolean filesInitialized = false;
 
     public ReportService() {
         this.objectMapper = new ObjectMapper();
@@ -64,42 +65,42 @@ public class ReportService {
      */
     public synchronized void processMetrics(List<MetricsDto> metricsList) throws IOException {
         // metricsList is already validated in the controller, so we can skip the validation here
-
-        initializeReportFiles();
         appendToNdjsonReport(metricsList);
         stats.update(metricsList);
     }
 
+    @EventListener(ApplicationReadyEvent.class)
+    public void initializeReportsAtStartup() {
+        try {
+            initializeReportFiles();
+        } catch (IOException e) {
+            log.error("Failed to initialize report files on startup", e);
+            throw new IllegalStateException("Failed to initialize report files on startup", e);
+        }
+    }
+
     /**
-     * Initializes the report directory and creates empty report files if they don't exist.
-     * Idempotent and guarded to avoid repeated work under concurrent calls.
+     * Initializes the report directory, deletes any previous run outputs,
+     * and creates the NDJSON placeholder file. Intended to run once at startup.
      */
     private synchronized void initializeReportFiles() throws IOException {
-        if (filesInitialized) {
-            return;
-        }
-
         Path dirPath = Paths.get(outputDirectory);
 
-        if (!Files.exists(dirPath)) {
-            Files.createDirectories(dirPath);
-            log.info("Created report output directory: {}", dirPath.toAbsolutePath());
-        }
+        Files.createDirectories(dirPath);
+        log.info("Report output directory ready: {}", dirPath.toAbsolutePath());
 
-        Path ndjsonPath = Paths.get(outputDirectory, ndjsonFilename);
-        Path statsPath = Paths.get(outputDirectory, statsFilename);
-        Path fullJsonPath = Paths.get(outputDirectory, fullJsonFilename);
+        Path ndjsonPath = dirPath.resolve(ndjsonFilename);
+        Path statsPath = dirPath.resolve(statsFilename);
+        Path resultsJsonPath = dirPath.resolve(resultsJsonFilename);
 
-        // Start a fresh run: remove leftover report files from a previous run (e.g., when reports are volume-mounted).
+        // Start a fresh run: remove leftover report files from a previous runs (e.g., when reports are volume-mounted).
         deleteReportFileIfExists(ndjsonPath);
         deleteReportFileIfExists(statsPath);
-        deleteReportFileIfExists(fullJsonPath);
+        deleteReportFileIfExists(resultsJsonPath);
 
         // Create NDJSON file placeholder
         Files.createFile(ndjsonPath);
         log.info("Created NDJSON report file: {}", ndjsonPath.toAbsolutePath());
-
-        filesInitialized = true;
     }
 
     private void deleteReportFileIfExists(Path path) {
@@ -113,11 +114,7 @@ public class ReportService {
     }
 
     private void appendToNdjsonReport(List<MetricsDto> metricsList) throws IOException {
-        Path ndjsonPath = Paths.get(outputDirectory, ndjsonFilename);
-
-        if (!Files.exists(ndjsonPath)) {
-            initializeReportFiles();
-        }
+        Path ndjsonPath = resolveReportPath(ndjsonFilename);
 
         try (FileWriter writer = new FileWriter(ndjsonPath.toFile(), true)) {
             for (MetricsDto metrics : metricsList) {
@@ -140,17 +137,10 @@ public class ReportService {
     }
 
     /**
-     * Returns the absolute path to the NDJSON report file.
+     * Returns the absolute path to the results JSON report file containing all query results.
      */
-    public Path getNdjsonReportPath() {
-        return resolveReportPath(ndjsonFilename);
-    }
-
-    /**
-     * Returns the absolute path to the full JSON report file containing all query results.
-     */
-    public Path getFullJsonReportPath() {
-        return resolveReportPath(fullJsonFilename);
+    public Path getResultsJsonPath() {
+        return resolveReportPath(resultsJsonFilename);
     }
 
     private Path resolveReportPath(String fileName) {
@@ -162,16 +152,13 @@ public class ReportService {
      * without loading all query results into memory.
      */
     public synchronized StatisticsDto finalizeReports(Set<String> loadGeneratorInstances) throws IOException {
-        initializeReportFiles();
-
         StatisticsDto statistics = stats.toStatistics(LocalDateTime.now(), loadGeneratorInstances);
 
-        Path statsPath = Paths.get(outputDirectory, statsFilename);
+        Path statsPath = resolveReportPath(statsFilename);
         objectMapper.writeValue(statsPath.toFile(), statistics);
-        Path ndjsonPath = Paths.get(outputDirectory, ndjsonFilename);
-        Path fullJsonPath = Paths.get(outputDirectory, fullJsonFilename);
-        writeFullJsonReport(ndjsonPath, fullJsonPath);
-        //deleteNdjsonFile(ndjsonPath);
+        Path ndjsonPath = resolveReportPath(ndjsonFilename);
+        Path resultsJsonPath = resolveReportPath(resultsJsonFilename);
+        writeResultsJsonReport(ndjsonPath, resultsJsonPath);
 
         log.info("Statistics written: queries={}, errors={}, instances={}", statistics.getTotalQueries(), statistics.getTotalErrors(), statistics.getLoadGeneratorInstances().size());
         log.info("Request duration stats: avg={}ms min={}ms max={}ms | Query duration stats: avg={}ms min={}ms max={}ms",
@@ -188,14 +175,14 @@ public class ReportService {
     /**
      * Builds a valid JSON array file from the NDJSON stream so tools like Grafana can import it.
      */
-    private void writeFullJsonReport(Path ndjsonPath, Path fullJsonPath) throws IOException {
+    private void writeResultsJsonReport(Path ndjsonPath, Path resultsJsonPath) throws IOException {
         if (!Files.exists(ndjsonPath)) {
-            log.warn("NDJSON report file {} not found; skipping full JSON export", ndjsonPath.toAbsolutePath());
+            log.warn("NDJSON report file {} not found; skipping results JSON export", ndjsonPath.toAbsolutePath());
             return;
         }
 
         try (BufferedReader reader = Files.newBufferedReader(ndjsonPath);
-             FileWriter writer = new FileWriter(fullJsonPath.toFile())) {
+             FileWriter writer = new FileWriter(resultsJsonPath.toFile())) {
             JsonGenerator generator = objectMapper.getFactory().createGenerator(writer);
             generator.useDefaultPrettyPrinter();
             generator.writeStartArray();
@@ -212,17 +199,7 @@ public class ReportService {
 
             generator.writeEndArray();
             generator.flush();
-            log.info("Full JSON report written to {} with {} metrics entries", fullJsonPath.toAbsolutePath(), count);
-        }
-    }
-
-    private void deleteNdjsonFile(Path ndjsonPath) {
-        try {
-            if (Files.deleteIfExists(ndjsonPath)) {
-                log.info("Deleted temporary NDJSON file {}", ndjsonPath.toAbsolutePath());
-            }
-        } catch (IOException e) {
-            log.warn("Failed to delete temporary NDJSON file {}: {}", ndjsonPath.toAbsolutePath(), e.getMessage());
+            log.info("Results JSON report written to {} with {} metrics entries", resultsJsonPath.toAbsolutePath(), count);
         }
     }
 

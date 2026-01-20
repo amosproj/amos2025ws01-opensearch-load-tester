@@ -33,7 +33,7 @@ class ReportServiceTest {
         ReflectionTestUtils.setField(reportService, "outputDirectory", tempDir.toString());
         ReflectionTestUtils.setField(reportService, "statsFilename", "statistics.json");
         ReflectionTestUtils.setField(reportService, "ndjsonFilename", "tmp_query_results.ndjson");
-        ReflectionTestUtils.setField(reportService, "fullJsonFilename", "query_results.json");
+        ReflectionTestUtils.setField(reportService, "resultsJsonFilename", "query_results.json");
 
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
