@@ -8,3 +8,8 @@ enable_warm_up: true
 query_types:
   - ANO_MULTI_REGEX
   - DOCNAME_REGEX
+query_mix:
+  - type: ANO_MULTI_REGEX
+    percent: 80
+  - type: DOCNAME_REGEX
+    percent: 20

@@ -12,3 +12,16 @@ query_types:
   - ANO_PAYROLL_TYPE_LANGUAGE
   - ANO_MULTI_REGEX
   - DOCNAME_REGEX
+query_mix:
+  - type: ANO_PAYROLL_RANGE
+    percent: 20
+  - type: ANO_CLIENTS_AGGREGATION
+    percent: 10
+  - type: ANO_CLIENT_BY_YEAR
+    percent: 5
+  - type: ANO_PAYROLL_TYPE_LANGUAGE
+    percent: 5
+  - type: ANO_MULTI_REGEX
+    percent: 30
+  - type: DOCNAME_REGEX
+    percent: 30
