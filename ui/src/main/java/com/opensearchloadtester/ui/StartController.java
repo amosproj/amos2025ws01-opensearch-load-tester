@@ -77,7 +77,7 @@ public class StartController {
             updateScenarioConfigForDocumentType(newValue);
         });
 
-        scenarioConfig.getItems().add("default-scenario.yaml");
+        updateScenarioConfigForDocumentType("ANO");
 
         scenarioConfig.valueProperty().addListener((obs,
                                                     oldValue, newValue) -> {
@@ -131,15 +131,11 @@ public class StartController {
                 executeTimed("Step 3: Building Docker images...", this::dockerBuild);
                 executeTimed("Step 4: Running Docker containers...", this::dockerRun);
             } else {
-                if (!checkCorrectTestdataInOpenSearch()) {
-                    // TODO handle incorrect testdata
-                    System.out.println("Testdata in OpenSearch is incorrect!");
-                }
-                dockerRestart();
+                executeTimed("Step 2: Ensuring testdata amount...", this::ensureTestdataAmountInOpenSearch);
+                ensureTestdataAmountInOpenSearch();
+                executeTimed("Step 3: Restarting Docker containers...", this::dockerRestart);
             }
-
             Platform.runLater(() -> outputText.appendText("\n" + currScenario + " is running.\n"));
-
         });
         thread.start();
 
@@ -147,8 +143,7 @@ public class StartController {
 
     @FXML
     protected void onCloseButtonClick() {
-        dockerClean();
-        Platform.exit();
+        executeTimed("\nCleaning everything...", this::dockerClean);
     }
 
     private void writeEnvFile() {
@@ -289,11 +284,13 @@ public class StartController {
         }
     }
 
-    private boolean checkCorrectTestdataInOpenSearch() {
+    private void ensureTestdataAmountInOpenSearch() {
+        System.out.println("Checking if OpenSearch contains the required test data...");
         String dataType = testdataGenerationDocumentType.getValue().toLowerCase();
         String url = "http://localhost:9200/" + dataType + "-index/_count";
 
-        // TODO Exeption handling
+        int newTestdataAmount = Integer.parseInt(testdataGenerationCount.getText());
+
         HttpResponse<String> response;
         try (HttpClient client = HttpClient.newHttpClient()) {
             HttpRequest request = HttpRequest.newBuilder()
@@ -301,31 +298,49 @@ public class StartController {
                     .GET()
                     .build();
             response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() != 200) {
+                System.out.println("OpenSearch count check failed with status code: " + response.statusCode());
+                addMoreTestdata(newTestdataAmount);
+                return;
+            }
+
+            String jsonResponse = response.body();
+            Pattern pattern = Pattern.compile("\"count\":(\\d+)");
+            Matcher matcher = pattern.matcher(jsonResponse);
+
+            if (matcher.find()) {
+                String countString = matcher.group(1);
+                int count = Integer.parseInt(countString);
+
+                System.out.println("OpenSearch contains " + count + " documents, required are "
+                        + testdataGenerationCount.getText() + " documents.");
+
+                if (count < newTestdataAmount) {
+                    addMoreTestdata(newTestdataAmount - count);
+                }
+            }
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            System.err.println("Error checking OpenSearch count: " + e.getMessage());
+            addMoreTestdata(newTestdataAmount);
         }
-
-        if (response.statusCode() != 200) {
-            System.out.println("OpenSearch count check failed with status code: " + response.statusCode());
-            return false;
-        }
-
-        String jsonResponse = response.body();
-        Pattern pattern = Pattern.compile("\"count\":(\\d+)");
-        Matcher matcher = pattern.matcher(jsonResponse);
-        // respose: {"count":1000,"_shards":{"total":5,"successful":5,"skipped":0,"failed":0}}
-        String countString = matcher.group(1);
-        int count = Integer.parseInt(countString);
-
-        // return true if more count in Opensearch than in env
-        System.out.println("OpenSearch contains " + count + " documents, required are "
-                + testdataGenerationCount.getText() + " documents.");
-        return count >= Integer.parseInt(testdataGenerationCount.getText());
     }
 
 
     private void dockerRestart() {
-        processBuilder.command("sh", "-c", "docker compose restart load-generator metrics-reporter");
+        processBuilder.command("sh", "-c", "docker compose up -d --no-deps load-generator metrics-reporter");
+        try {
+            processBuilder.start().waitFor();
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error restarting Docker containers");
+            alert.setContentText("An error occurred: " + e.getMessage());
+            alert.showAndWait();
+        }
+    }
+
+    private void addMoreTestdata(int amount) {
+        processBuilder.command("sh", "-c", "TEST_DATA_GENERATION_COUNT=" + amount + " docker compose up -d testdata-generator");
         try {
             processBuilder.start().waitFor();
         } catch (Exception e) {

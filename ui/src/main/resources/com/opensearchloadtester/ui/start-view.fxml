@@ -4,8 +4,8 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
-<VBox prefHeight="862.0" prefWidth="584.0" spacing="20.0" xmlns="http://javafx.com/javafx/17.0.12"
-      xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.opensearchloadtester.ui.StartController">
+<VBox spacing="20.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.opensearchloadtester.ui.StartController">
     <padding>
         <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
     </padding>
@@ -22,13 +22,11 @@
 
         <Button mnemonicParsing="false" onAction="#onCloseButtonClick">
             <graphic>
-                <Label style="-fx-font-size:14;" text="✕" textFill="white"/>
+                <Label style="-fx-font-size:14;" text="Clean" textFill="white"/>
             </graphic>
             <style>
                 -fx-background-color: #FF5C5C;
                 -fx-background-radius: 15;
-                -fx-pref-width: 30;
-                -fx-pref-height: 30;
                 -fx-cursor: hand;
             </style>
         </Button>
