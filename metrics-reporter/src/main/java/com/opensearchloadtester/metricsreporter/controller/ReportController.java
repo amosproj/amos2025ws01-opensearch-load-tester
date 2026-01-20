@@ -158,7 +158,7 @@ public class ReportController {
                 ));
 
                 if (jsonExportEnabled) {
-                    message.append("Full JSON report: ").append(reportService.getResultsJsonPath()).append("\n");
+                    message.append("Results JSON report: ").append(reportService.getResultsJsonPath()).append("\n");
                     message.append("Statistics JSON: ").append(reportService.getStatisticsReportPath()).append("\n");
                 }
 

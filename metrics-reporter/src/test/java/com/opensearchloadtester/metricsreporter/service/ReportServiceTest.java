@@ -59,10 +59,10 @@ class ReportServiceTest {
         StatisticsDto statistics = reportService.finalizeReports(Set.of(LOAD_GENERATOR_ID));
 
         Path statsPath = tempDir.resolve("statistics.json");
-        Path fullJsonPath = tempDir.resolve("query_results.json");
+        Path resultsJsonPath = tempDir.resolve("query_results.json");
 
         assertThat(Files.exists(statsPath)).isTrue();
-        assertThat(Files.exists(fullJsonPath)).isTrue();
+        assertThat(Files.exists(resultsJsonPath)).isTrue();
 //        assertThat(Files.exists(ndjsonPath)).isFalse();
 
         StatisticsDto writtenStats = objectMapper.readValue(statsPath.toFile(), StatisticsDto.class);
@@ -81,8 +81,8 @@ class ReportServiceTest {
         assertThat(statistics.getTotalQueries()).isEqualTo(2);
         assertThat(statistics.getTotalErrors()).isEqualTo(1);
 
-        JsonNode fullJson = objectMapper.readTree(fullJsonPath.toFile());
-        assertThat(fullJson.isArray()).isTrue();
-        assertThat(fullJson.size()).isEqualTo(2);
+        JsonNode resultsJson = objectMapper.readTree(resultsJsonPath.toFile());
+        assertThat(resultsJson.isArray()).isTrue();
+        assertThat(resultsJson.size()).isEqualTo(2);
     }
 }
