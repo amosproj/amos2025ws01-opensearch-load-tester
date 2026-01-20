@@ -29,6 +29,7 @@ schema_config:
 
 server:
   http_listen_port: 3100
+  log_level: error
 
 compactor:
   working_directory: /tmp/compactor
