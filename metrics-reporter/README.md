@@ -20,5 +20,5 @@ Adjust filenames/paths via properties (defaults in parentheses):
 
 - `report.output.directory` (`../reports`)
 - `report.ndjson.filename` (`tmp_query_results.ndjson`)
-- `report.fulljson.filename` (`query_results.json`)
+- `report.resultsjson.filename` (`query_results.json`)
 - `report.stats.filename` (`statistics.json`)
