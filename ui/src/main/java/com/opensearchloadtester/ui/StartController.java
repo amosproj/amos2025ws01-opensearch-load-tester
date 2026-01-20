@@ -12,17 +12,17 @@ import javafx.scene.layout.VBox;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 public class StartController {
 
@@ -33,8 +33,6 @@ public class StartController {
     @FXML
     private ComboBox<String> scenarioConfig;
     @FXML
-    private VBox dynamicCheckboxWrapper;
-    @FXML
     private TextField testdataGenerationCount;
     @FXML
     private TextField loadGeneratorReplicas;
@@ -42,9 +40,13 @@ public class StartController {
     private TextField metricsBatchSize;
     @FXML
     private VBox customScenarioConfigurationBox;
+    @FXML
+    private VBox dynamicCheckboxWrapper;
 
     private final Path envPath = Path.of(".env");
     private final ProcessBuilder processBuilder = new ProcessBuilder();
+
+    private boolean suppressListeners = false;
 
     @FXML
     public void initialize() {
@@ -56,29 +58,68 @@ public class StartController {
                 "DYNAMIC",
                 "PERSISTANT"
         );
-        testdataGenerationMode.setValue("dynamic");
+        testdataGenerationMode.valueProperty().addListener((obs,
+                                                            oldValue, newValue) -> {
+            if (!suppressListeners && Objects.equals(scenarioConfig.getValue(), "default-scenario")) {
+                scenarioConfig.setValue(null);
+            }
+        });
 
         testdataGenerationDocumentType.getItems().addAll(
                 "ANO",
                 "DUO"
         );
+
         // When document type changes, update scenario files dropdown
         testdataGenerationDocumentType.valueProperty().addListener((obs,
                                                                     oldValue, newValue) -> {
-            scenarioConfig.getItems().clear();
-            scenarioConfig.getItems().addAll(
-                    getScenarioFiles(newValue)
-            );
+            if (Objects.equals(newValue, "ANO") && Objects.equals(scenarioConfig.getValue(), "default-scenario")) {
+                return;
+            }
+
+            updateScenarioConfigForDocumentType(newValue);
         });
+
+        scenarioConfig.getItems().add("default-scenario");
 
         scenarioConfig.valueProperty().addListener((obs,
                                                     oldValue, newValue) -> {
-            if (newValue == "default-scenario") {
+            suppressListeners = true;
+            if (Objects.equals(newValue, "default-scenario")) {
+                // set default values
+                testdataGenerationDocumentType.setValue("ANO");
+                testdataGenerationMode.setValue("DYNAMIC");
+                testdataGenerationCount.setText("10000");
+                loadGeneratorReplicas.setText("1");
+                metricsBatchSize.setText("100");
+            } else if (Objects.equals(newValue, "custom-scenario")) {
                 customScenarioConfigurationBox.setVisible(true);
                 customScenarioConfigurationBox.setDisable(false);
             } else {
                 customScenarioConfigurationBox.setVisible(false);
                 customScenarioConfigurationBox.setDisable(true);
+            }
+            suppressListeners = false;
+        });
+
+        testdataGenerationCount.textProperty().addListener((obs,
+                                                            oldValue, newValue) -> {
+            if (!suppressListeners && Objects.equals(scenarioConfig.getValue(), "default-scenario")) {
+                scenarioConfig.setValue(null);
+            }
+        });
+
+        loadGeneratorReplicas.textProperty().addListener((obs,
+                                                          oldValue, newValue) -> {
+            if (!suppressListeners && Objects.equals(scenarioConfig.getValue(), "default-scenario")) {
+                scenarioConfig.setValue(null);
+            }
+        });
+
+        metricsBatchSize.textProperty().addListener((obs,
+                                                     oldValue, newValue) -> {
+            if (!suppressListeners && Objects.equals(scenarioConfig.getValue(), "default-scenario")) {
+                scenarioConfig.setValue(null);
             }
         });
 
@@ -87,12 +128,6 @@ public class StartController {
 //            queryTypes.add(qt.name());
 //        }
 //        addCheckboxes(queryTypes, 3);
-
-        testdataGenerationDocumentType.setValue("ANO");
-
-        testdataGenerationCount.setText("10000");
-        loadGeneratorReplicas.setText("3");
-        metricsBatchSize.setText("100");
     }
 
     @FXML
@@ -290,33 +325,49 @@ public class StartController {
     }
 
     private List<String> getScenarioFiles(String docType) {
-        List<String> result = new ArrayList<>();
-        Path path = null;
 
-        try {
-            // try to load through classloader
-            URL url = getClass().getClassLoader().getResource("scenarios");
-            if (url != null) {
-                path = Paths.get(url.toURI());
-            }
-            if (result.isEmpty()) {
-                // if nothing found, try with absolute path
-                path = Paths.get("./load-generator/src/main/resources/scenarios");
-            }
+        Path scenarioDir = Paths.get("./load-generator/src/main/resources/scenarios");
 
-            Files.list(path)
-                    .filter(Files::isRegularFile)
-                    .filter(p -> p.toString().endsWith(".yaml"))
-                    .filter(p -> {
-                        String name = p.getFileName().toString().toLowerCase();
-                        return name.contains(docType.toLowerCase()) || (!name.contains("ano") && !name.contains("duo"));
-                    })
-                    .forEach(p -> result.add(p.getFileName().toString()));
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (!Files.exists(scenarioDir)) {
+            System.err.println("Scenario directory not found: " + scenarioDir.toAbsolutePath());
+            return List.of();
         }
-        return result;
+
+        try (Stream<Path> files = Files.list(scenarioDir)) {
+            return files
+                    .filter(Files::isRegularFile)
+                    .filter(p -> p.getFileName().toString().endsWith(".yaml"))
+                    .map(p -> {
+                        String filenameWithExt = p.getFileName().toString();
+                        return filenameWithExt.substring(0, filenameWithExt.length() - 5);
+                    })
+                    .filter(name -> {
+                        String lower = name.toLowerCase();
+                        return lower.contains(docType.toLowerCase())
+                                || (!lower.contains("ano") && !lower.contains("duo"));
+                    })
+                    .toList();
+        } catch (IOException e) {
+            System.err.println("Error getting scenario files: " + e.getMessage());
+            return List.of();
+        }
+    }
+
+    private void updateScenarioConfigForDocumentType(String documentType) {
+        List<String> scenarios = getScenarioFiles(documentType);
+        if (scenarios.isEmpty()) {
+            scenarioConfig.getItems().clear();
+            System.err.println("No scenario files found for document type: " + documentType);
+            return;
+        }
+        String oldValue = scenarioConfig.getValue();
+
+        scenarioConfig.getItems().clear();
+        scenarioConfig.getItems().addAll(scenarios);
+
+        if (!Objects.equals(oldValue, "default-scenario") && scenarios.contains(oldValue)) {
+            scenarioConfig.setValue(oldValue);
+        }
     }
 
     private void addCheckboxes(List<String> options, int perRow) {
