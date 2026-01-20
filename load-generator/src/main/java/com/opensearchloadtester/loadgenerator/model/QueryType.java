@@ -1,6 +1,8 @@
 package com.opensearchloadtester.loadgenerator.model;
 
 import com.opensearchloadtester.loadgenerator.queries.*;
+import com.opensearchloadtester.loadgenerator.queries.span.AnoSpanNearQuery;
+import com.opensearchloadtester.loadgenerator.queries.span.DuoSpanNearQuery;
 
 import java.util.function.Supplier;
 
@@ -19,7 +21,10 @@ public enum QueryType {
     DUO_COMPLEX(DuoComplexQuery::random),
     DOCNAME_REGEX(DocNameRegexQuery::random),
     ANO_MULTI_REGEX(AnoMultiRegexQuery::random),
-    DUO_MULTI_REGEX(DuoMultiRegexQuery::random);
+    DUO_MULTI_REGEX(DuoMultiRegexQuery::random),
+    // Span Query
+    ANO_SPAN_NEAR(AnoSpanNearQuery::random),
+    DUO_SPAN_NEAR(DuoSpanNearQuery::random);
 
     private final Supplier<? extends Query> supplier;
 
