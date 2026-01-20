@@ -19,6 +19,6 @@ public class DuoBookingByCostcenterAndDateQuery extends AbstractQuery {
         );
 
         return new DuoBookingByCostcenterAndDateQuery(queryParams,
-                "queries/q10_duo_booking_by_costcenter_and_date.json");
+                "query-templates/q10_duo_booking_by_costcenter_and_date.json");
     }
 }

@@ -21,6 +21,6 @@ public class DuoClientByNameAndStateQuery extends AbstractQuery {
         );
 
         return new DuoClientByNameAndStateQuery(queryParams,
-                "queries/q8_duo_client_by_name_and_state.json");
+                "query-templates/q8_duo_client_by_name_and_state.json");
     }
 }
