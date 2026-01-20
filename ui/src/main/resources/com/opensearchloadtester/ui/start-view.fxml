@@ -94,6 +94,7 @@
     <Label text="Please type metrics batch size:"/>
     <TextField fx:id="metricsBatchSize" prefHeight="26.0" prefWidth="197.0"
                promptText="Please enter metrics batch size"/>
+    <TextArea fx:id="outputText" editable="false" prefHeight="200.0" prefWidth="200.0" visible="false"/>
     <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
         <Button onAction="#onStartLoadTest" text="Start Load Test">
             <font>

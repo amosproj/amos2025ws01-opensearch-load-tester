@@ -3,11 +3,9 @@ package com.opensearchloadtester.ui;
 //import com.opensearchloadtester.loadgenerator.model.QueryType;
 
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
@@ -19,6 +17,7 @@ import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -43,6 +42,8 @@ public class StartController {
     private VBox customScenarioConfigurationBox;
     @FXML
     private VBox dynamicCheckboxWrapper;
+    @FXML
+    private TextArea outputText;
 
     private final Path ENV_PATH = Path.of(".env");
     private final ProcessBuilder processBuilder = new ProcessBuilder();
@@ -59,12 +60,7 @@ public class StartController {
                 "DYNAMIC",
                 "PERSISTANT"
         );
-        testdataGenerationMode.valueProperty().addListener((obs,
-                                                            oldValue, newValue) -> {
-            if (!suppressListeners && Objects.equals(scenarioConfig.getValue(), "default-scenario")) {
-                scenarioConfig.setValue(null);
-            }
-        });
+        testdataGenerationMode.valueProperty().addListener(getDefaultScenarioRemovalListener());
 
         testdataGenerationDocumentType.getItems().addAll(
                 "ANO",
@@ -74,19 +70,19 @@ public class StartController {
         // When document type changes, update scenario files dropdown
         testdataGenerationDocumentType.valueProperty().addListener((obs,
                                                                     oldValue, newValue) -> {
-            if (Objects.equals(newValue, "ANO") && Objects.equals(scenarioConfig.getValue(), "default-scenario")) {
+            if (Objects.equals(newValue, "ANO") && Objects.equals(scenarioConfig.getValue(), "default-scenario.yaml")) {
                 return;
             }
 
             updateScenarioConfigForDocumentType(newValue);
         });
 
-        scenarioConfig.getItems().add("default-scenario");
+        scenarioConfig.getItems().add("default-scenario.yaml");
 
         scenarioConfig.valueProperty().addListener((obs,
                                                     oldValue, newValue) -> {
             suppressListeners = true;
-            if (Objects.equals(newValue, "default-scenario")) {
+            if (Objects.equals(newValue, "default-scenario.yaml")) {
                 // set default values
                 testdataGenerationDocumentType.setValue("ANO");
                 testdataGenerationMode.setValue("DYNAMIC");
@@ -103,27 +99,11 @@ public class StartController {
             suppressListeners = false;
         });
 
-        testdataGenerationCount.textProperty().addListener((obs,
-                                                            oldValue, newValue) -> {
-            if (!suppressListeners && Objects.equals(scenarioConfig.getValue(), "default-scenario")) {
-                scenarioConfig.setValue(null);
-            }
-        });
+        testdataGenerationCount.textProperty().addListener(getDefaultScenarioRemovalListener());
+        loadGeneratorReplicas.textProperty().addListener(getDefaultScenarioRemovalListener());
+        metricsBatchSize.textProperty().addListener(getDefaultScenarioRemovalListener());
 
-        loadGeneratorReplicas.textProperty().addListener((obs,
-                                                          oldValue, newValue) -> {
-            if (!suppressListeners && Objects.equals(scenarioConfig.getValue(), "default-scenario")) {
-                scenarioConfig.setValue(null);
-            }
-        });
-
-        metricsBatchSize.textProperty().addListener((obs,
-                                                     oldValue, newValue) -> {
-            if (!suppressListeners && Objects.equals(scenarioConfig.getValue(), "default-scenario")) {
-                scenarioConfig.setValue(null);
-            }
-        });
-
+        // TODO implement query type checkboxes
 //        ArrayList<String> queryTypes = new ArrayList<>();
 //        for (QueryType qt : QueryType.values()) {
 //            queryTypes.add(qt.name());
@@ -133,44 +113,52 @@ public class StartController {
 
     @FXML
     protected void onStartLoadTest() {
-        try {
+        outputText.setVisible(true);
+        outputText.setText(
+                "Starting OpenSearch Loadtester...\n" +
+                        "\n" +
+                        "Please wait until all steps are complete.\n" +
+                        "Once finished, visit your dashboard at http://localhost:3000\n" +
+                        "\n" +
+                        "Please do not close this application while the load test is running.\n\n"
+        );
+        Thread thread = new Thread(() -> {
+            String currScenario = scenarioConfig.getValue();
+            executeTimed("Step 1: Applying test configuration...", this::writeEnvFile);
 
-            Alert alertStart = new Alert(Alert.AlertType.INFORMATION);
-            alertStart.setTitle("Info");
-            alertStart.setHeaderText("Docker Startup...");
-            alertStart.setContentText("Old Docker containers are being removed, build and started. This may take a while. Please visit http://localhost:3000 afterwards.");
-            alertStart.show();
-
-            writeEnvFile();
-
-            if (!checkOpensearchRunning() && !checkCorrectTestdataInOpenSearch()) {
-                dockerClean();
-                dockerBuild();
-                dockerRun();
+            if (!checkOpensearchRunning()) {
+                executeTimed("Step 2: Cleaning old Docker containers...", this::dockerClean);
+                executeTimed("Step 3: Building Docker images...", this::dockerBuild);
+                executeTimed("Step 4: Running Docker containers...", this::dockerRun);
             } else {
+                if (!checkCorrectTestdataInOpenSearch()) {
+                    // TODO handle incorrect testdata
+                    System.out.println("Testdata in OpenSearch is incorrect!");
+                }
                 dockerRestart();
             }
 
-            alertStart.close();
+            Platform.runLater(() -> outputText.appendText("\n" + currScenario + " is running.\n"));
 
-        } catch (IOException e) {
-            System.err.println("Error while starting Docker containers: " + e.getMessage());
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error");
-            alert.setHeaderText("Error while starting Docker containers");
-            alert.setContentText("Errors have occurred : " + e.getMessage());
-            alert.showAndWait();
-        }
+        });
+        thread.start();
+
     }
 
     @FXML
     protected void onCloseButtonClick() {
-        // dockerClean();
+        dockerClean();
         Platform.exit();
     }
 
-    private void writeEnvFile() throws IOException {
-        String content = Files.readString(ENV_PATH);
+    private void writeEnvFile() {
+        String content = null;
+        try {
+            content = Files.readString(ENV_PATH);
+        } catch (IOException e) {
+            System.err.println("Error reading .env file: " + e.getMessage());
+            return;
+        }
 
         content = regexInEnv(
                 content,
@@ -208,7 +196,13 @@ public class StartController {
                 scenarioConfig.getValue()
         );
 
-        Files.writeString(ENV_PATH, content);
+        try {
+            Files.writeString(ENV_PATH, content);
+        } catch (IOException e) {
+            System.err.println("Error writing .env file: " + e.getMessage());
+            return;
+        }
+        System.out.println(".env file updated successfully.");
     }
 
     private String regexInEnv(String content, String key, String value) {
@@ -218,67 +212,81 @@ public class StartController {
     }
 
     private void dockerBuild() {
+        System.out.println("Building Docker images...");
         processBuilder.command("sh", "-c", "docker compose -f docker-compose.yaml build");
         try {
             processBuilder.start().waitFor();
         } catch (Exception e) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error");
-            alert.setContentText("Es ist ein Fehler aufgetreten: " + e.getMessage());
+            alert.setTitle("Error building Docker images");
+            alert.setContentText("An error occurred: " + e.getMessage());
             alert.showAndWait();
         }
     }
 
     private void dockerRun() {
+        System.out.println("Running Docker containers...");
         processBuilder.command("sh", "-c", "docker compose up -d");
         try {
             processBuilder.start().waitFor();
         } catch (Exception e) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error");
-            alert.setContentText("Es ist ein Fehler aufgetreten: " + e.getMessage());
+            alert.setTitle("Error running Docker containers");
+            alert.setContentText("An error occurred: " + e.getMessage());
             alert.showAndWait();
         }
     }
 
     private void dockerStop() {
+        System.out.println("Stopping Docker containers...");
         processBuilder.command("sh", "-c", "docker compose down");
         try {
             processBuilder.start().waitFor();
         } catch (Exception e) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error");
-            alert.setContentText("Es ist ein Fehler aufgetreten: " + e.getMessage());
+            alert.setTitle("Error stopping Docker containers");
+            alert.setContentText("An error occurred: " + e.getMessage());
             alert.showAndWait();
         }
     }
 
     private void dockerClean() {
+        System.out.println("Cleaning old Docker containers, volumes, and images...");
         processBuilder.command("sh", "-c", "docker compose down --volumes --rmi local --remove-orphans");
         try {
             processBuilder.start().waitFor();
         } catch (Exception e) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error");
-            alert.setContentText("Es ist ein Fehler aufgetreten: " + e.getMessage());
+            alert.setTitle("Error cleaning Docker");
+            alert.setContentText("An error occurred: " + e.getMessage());
             alert.showAndWait();
         }
     }
 
     private boolean checkOpensearchRunning() {
-        processBuilder.command("sh", "-c", "docker ps --filter \"name=name=test-target-opensearch\" --filter \"status=running\" --format \"{{.Names}}\"");
-        try {
-            int exitCode = processBuilder.start().waitFor();
-            if (exitCode == 0) {
+        String url = "http://localhost:9200";
+
+        try (HttpClient client = HttpClient.newHttpClient()) {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .GET()
+                    .timeout(Duration.ofSeconds(2))
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200) {
+                System.out.println("OpenSearch is running.");
                 return true;
+            } else {
+                System.out.println("OpenSearch responded with status: " + response.statusCode());
+                return false;
             }
+
         } catch (Exception e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error");
-            alert.setContentText("Es ist ein Fehler aufgetreten: " + e.getMessage());
-            alert.showAndWait();
+            System.out.println("OpenSearch is not running: " + e.getClass().getName());
+            return false;
         }
-        return false;
     }
 
     private boolean checkCorrectTestdataInOpenSearch() {
@@ -298,6 +306,7 @@ public class StartController {
         }
 
         if (response.statusCode() != 200) {
+            System.out.println("OpenSearch count check failed with status code: " + response.statusCode());
             return false;
         }
 
@@ -309,8 +318,9 @@ public class StartController {
         int count = Integer.parseInt(countString);
 
         // return true if more count in Opensearch than in env
+        System.out.println("OpenSearch contains " + count + " documents, required are "
+                + testdataGenerationCount.getText() + " documents.");
         return count >= Integer.parseInt(testdataGenerationCount.getText());
-
     }
 
 
@@ -320,8 +330,8 @@ public class StartController {
             processBuilder.start().waitFor();
         } catch (Exception e) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error");
-            alert.setContentText("Es ist ein Fehler aufgetreten: " + e.getMessage());
+            alert.setTitle("Error restarting Docker containers");
+            alert.setContentText("An error occurred: " + e.getMessage());
             alert.showAndWait();
         }
     }
@@ -339,10 +349,7 @@ public class StartController {
             return files
                     .filter(Files::isRegularFile)
                     .filter(p -> p.getFileName().toString().endsWith(".yaml"))
-                    .map(p -> {
-                        String filenameWithExt = p.getFileName().toString();
-                        return filenameWithExt.substring(0, filenameWithExt.length() - 5);
-                    })
+                    .map(p -> p.getFileName().toString())
                     .filter(name -> {
                         String lower = name.toLowerCase();
                         return lower.contains(docType.toLowerCase())
@@ -367,9 +374,25 @@ public class StartController {
         scenarioConfig.getItems().clear();
         scenarioConfig.getItems().addAll(scenarios);
 
-        if (!Objects.equals(oldValue, "default-scenario") && scenarios.contains(oldValue)) {
+        if (!Objects.equals(oldValue, "default-scenario.yaml") && scenarios.contains(oldValue)) {
             scenarioConfig.setValue(oldValue);
         }
+    }
+
+    private ChangeListener<String> getDefaultScenarioRemovalListener() {
+        return (observable, oldValue, newValue) -> {
+            if (!suppressListeners && Objects.equals(scenarioConfig.getValue(), "default-scenario.yaml")) {
+                scenarioConfig.setValue(null);
+            }
+        };
+    }
+
+    private void executeTimed(String logBefore, Runnable runnable) {
+        Platform.runLater(() -> outputText.appendText(logBefore));
+        long startTime = System.currentTimeMillis();
+        runnable.run();
+        double duration = (System.currentTimeMillis() - startTime) / 1000.0;
+        Platform.runLater(() -> outputText.appendText(" Done (" + duration + "s).\n\n"));
     }
 
     private void addCheckboxes(List<String> options, int perRow) {
