@@ -36,9 +36,6 @@ public class ReportController {
     @Value("${report.export.json.enabled:true}")
     private boolean jsonExportEnabled;
 
-    @Value("${report.export.csv.enabled:true}")
-    private boolean csvExportEnabled;
-
     @Autowired
     private ReportService reportService;
 
@@ -163,9 +160,6 @@ public class ReportController {
                 if (jsonExportEnabled) {
                     message.append("Full JSON report: ").append(reportService.getFullJsonReportPath()).append("\n");
                     message.append("Statistics JSON: ").append(reportService.getStatisticsReportPath()).append("\n");
-                }
-                if (csvExportEnabled) {
-                    message.append("CSV report: ").append(reportService.getCsvReportPath()).append("\n");
                 }
 
                 // Mark request for application shutdown AFTER response completed

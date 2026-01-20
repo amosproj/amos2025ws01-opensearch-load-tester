@@ -9,8 +9,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.opensearchloadtester.common.dto.MetricsDto;
 import com.opensearchloadtester.metricsreporter.dto.StatisticsDto;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -27,7 +25,7 @@ import java.util.Set;
 
 /**
  * Service responsible for creating and exporting test run reports.
- * Supports JSON and CSV export formats for raw query data.
+ * Supports JSON export formats for raw query data.
  */
 @Slf4j
 @Service
@@ -41,8 +39,6 @@ public class ReportService {
 
     @Value("${report.stats.filename:statistics.json}")
     private String statsFilename;
-    @Value("${report.csv.filename:query_results.csv}")
-    private String csvFilename;
     @Value("${report.ndjson.filename:tmp_query_results.ndjson}")
     private String ndjsonFilename;
     @Value("${report.fulljson.filename:query_results.json}")
@@ -63,14 +59,13 @@ public class ReportService {
     /**
      * Processes incoming metrics in a streaming fashion:
      * - flattens the MetricsDto list into entries
-     * - appends to CSV and NDJSON
+     * - appends to NDJSON
      * - updates aggregated statistics in memory
      */
     public synchronized void processMetrics(List<MetricsDto> metricsList) throws IOException {
         // metricsList is already validated in the controller, so we can skip the validation here
 
         initializeReportFiles();
-        appendToCsvReport(metricsList);
         appendToNdjsonReport(metricsList);
         stats.update(metricsList);
     }
@@ -91,21 +86,14 @@ public class ReportService {
             log.info("Created report output directory: {}", dirPath.toAbsolutePath());
         }
 
-        Path csvPath = Paths.get(outputDirectory, csvFilename);
         Path ndjsonPath = Paths.get(outputDirectory, ndjsonFilename);
         Path statsPath = Paths.get(outputDirectory, statsFilename);
         Path fullJsonPath = Paths.get(outputDirectory, fullJsonFilename);
 
         // Start a fresh run: remove leftover report files from a previous run (e.g., when reports are volume-mounted).
-        deleteReportFileIfExists(csvPath);
         deleteReportFileIfExists(ndjsonPath);
         deleteReportFileIfExists(statsPath);
         deleteReportFileIfExists(fullJsonPath);
-
-        // Create CSV file with headers
-        String csvHeaders = "Load Generator ID,Query Type,Request Duration (ms),Query Duration (ms),Total Hits,HTTP Status Code\n";
-        Files.writeString(csvPath, csvHeaders);
-        log.info("Created initial CSV report file: {}", csvPath.toAbsolutePath());
 
         // Create NDJSON file placeholder
         Files.createFile(ndjsonPath);
@@ -122,33 +110,6 @@ public class ReportService {
         } catch (IOException e) {
             log.warn("Failed to delete previous report file {}: {}", path.toAbsolutePath(), e.getMessage());
         }
-    }
-
-    private void appendToCsvReport(List<MetricsDto> metricsList) throws IOException {
-        Path csvPath = Paths.get(outputDirectory, csvFilename);
-
-        if (!Files.exists(csvPath)) {
-            initializeReportFiles();
-        }
-
-        try (FileWriter fileWriter = new FileWriter(csvPath.toFile(), true);
-             CSVPrinter csvPrinter = new CSVPrinter(fileWriter, CSVFormat.DEFAULT)) {
-
-            for (MetricsDto metrics : metricsList) {
-                csvPrinter.printRecord(
-                        metrics.getLoadGeneratorId(),
-                        metrics.getQueryType(),
-                        metrics.getRequestDurationMillis(),
-                        metrics.getQueryDurationMillis(),
-                        metrics.getTotalHits(),
-                        metrics.getHttpStatusCode()
-                );
-            }
-
-            csvPrinter.flush();
-        }
-
-        log.info("Appended {} metrics entries to CSV report", metricsList.size());
     }
 
     private void appendToNdjsonReport(List<MetricsDto> metricsList) throws IOException {
@@ -176,15 +137,6 @@ public class ReportService {
      */
     public Path getStatisticsReportPath() {
         return resolveReportPath(statsFilename);
-    }
-
-    /**
-     * Returns the absolute path to the CSV report file.
-     *
-     * @return Path to CSV report file
-     */
-    public Path getCsvReportPath() {
-        return resolveReportPath(csvFilename);
     }
 
     /**
