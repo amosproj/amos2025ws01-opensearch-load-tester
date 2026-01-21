@@ -1,0 +1,19 @@
+{
+  "track_total_hits": true,
+  "query": {
+    "bool": {
+      "should": [
+        { "prefix": { "dssCustomMetadataDuo.invoiceNumber.raw": "INV" } },
+        { "prefix": { "dssCustomMetadataDuo.invoiceNumber.raw": "RE" } },
+        { "prefix": { "dssCustomMetadataDuo.invoiceBusinessPartner.raw": "a" } },
+        { "prefix": { "dssCustomMetadataDuo.customerNumber.raw": "1" } }
+      ],
+      "minimum_should_match": 1
+    }
+  },
+  "sort": [
+    { "dssLastModifiedDatetime": "desc" },
+    { "dssDocumentName.sort": "asc" }
+  ]
+}
+
