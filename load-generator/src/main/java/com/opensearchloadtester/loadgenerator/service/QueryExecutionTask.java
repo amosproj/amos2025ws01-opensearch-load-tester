@@ -27,7 +27,7 @@ public class QueryExecutionTask implements Runnable {
 
     private final String loadGeneratorId;
     private final String index;
-    private final List<QueryType> queryTypes;
+    private final List<QueryType> queryPool;
     private final OpenSearchGenericClient openSearchClient;
     private final MetricsCollector metricsCollector;
     private final Duration timeout;
@@ -38,8 +38,7 @@ public class QueryExecutionTask implements Runnable {
     public void run() {
         //log.debug("Executing query in thread '{}'", Thread.currentThread().getName());
 
-        int queryTypesCount = queryTypes.size();
-        QueryType selectedQueryType = queryTypes.get(ThreadLocalRandom.current().nextInt(queryTypesCount));
+        QueryType selectedQueryType = queryPool.get(ThreadLocalRandom.current().nextInt(queryPool.size()));
         Query query = selectedQueryType.createRandomQuery();
         String queryAsJson = query.toJsonString();
 
@@ -56,6 +55,7 @@ public class QueryExecutionTask implements Runnable {
         Response response = null;
         int status;
         try {
+
             response = openSearchClient.execute(request);
             status = response.getStatus();
         } catch (Exception e) {
