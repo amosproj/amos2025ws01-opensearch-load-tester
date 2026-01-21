@@ -1,5 +1,5 @@
 {
-  "size": 0,
+  "size": 50,
   "track_total_hits": true,
   "query": {
     "range": {
