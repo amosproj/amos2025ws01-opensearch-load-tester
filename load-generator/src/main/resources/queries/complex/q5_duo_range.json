@@ -1,0 +1,34 @@
+{
+  "size": 0,
+  "track_total_hits": true,
+  "query": {
+    "range": {
+      "dssCustomMetadataDuo.invoiceDate": {
+        "gte": "2020-01-01",
+        "lte": "2026-12-31"
+      }
+    }
+  },
+  "aggs": {
+    "top_partners": {
+      "terms": {
+        "field": "dssCustomMetadataDuo.invoiceBusinessPartner.raw",
+        "size": 5000,
+        "shard_size": 20000
+      }
+    },
+    "top_uploaders": {
+      "terms": {
+        "field": "dssCustomMetadataDuo.uploaderScId.raw",
+        "size": 5000,
+        "shard_size": 20000
+      }
+    },
+    "unique_invoices": {
+      "cardinality": {
+        "field": "dssCustomMetadataDuo.invoiceNumber.raw"
+      }
+    }
+  }
+}
+

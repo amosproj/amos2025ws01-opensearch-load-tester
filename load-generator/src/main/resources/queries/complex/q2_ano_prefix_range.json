@@ -1,0 +1,42 @@
+{
+  "size": 50,
+  "track_total_hits": true,
+  "_source": [
+    "dssDocumentName",
+    "dssOriginalFilename",
+    "dssLastModifiedDatetime",
+    "lastDocumentChange",
+    "dssDataspaceId",
+    "dssCustomMetadataPayrollInfo.accountingYear",
+    "dssCustomMetadataPayrollInfo.accountingMonth",
+    "dssCustomMetadataPayrollInfo.provisionDate"
+  ],
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "prefix": {
+            "dssOriginalFilename.raw": {
+              "value": "B"
+            }
+          }
+        }
+      ],
+      "filter": [
+        { "term": { "dssRecyclebin": false } },
+        {
+          "range": {
+            "lastDocumentChange": {
+              "gte": "2015-01-01T00:00:00Z",
+              "lte": "2026-12-31T23:59:59Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "sort": [
+    { "lastDocumentChange": "desc" }
+  ]
+}
+
