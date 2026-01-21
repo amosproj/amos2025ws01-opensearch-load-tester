@@ -1,14 +1,19 @@
 package com.opensearchloadtester.ui;
 
-//import com.opensearchloadtester.loadgenerator.model.QueryType;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.opensearchloadtester.ui.config.CustomScenarioConfig;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -18,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -44,11 +50,39 @@ public class StartController {
     private VBox dynamicCheckboxWrapper;
     @FXML
     private TextArea outputText;
+    @FXML
+    private ComboBox<String> customWarmup;
+    @FXML
+    private TextField customScheduleDuration;
+    @FXML
+    private TextField customQps;
+    @FXML
+    private TextField customQueryResponseTimeout;
+
 
     private final Path ENV_PATH = Path.of(".env");
+    private final Path CUSTOM_SCENARIO_PATH = Path.of("./load-generator/src/main/resources/scenarios/custom-scenario.yaml");
     private final ProcessBuilder processBuilder = new ProcessBuilder();
 
     private boolean suppressListeners = false;
+
+    private static final List<String> QUERY_TYPES = List.of(
+            "ANO_PAYROLL_RANGE",
+            "DUO_INVOICE_CATEGORY",
+            "DUO_STATE_LOCATION",
+            "DUO_BOOKING_BY_CLIENT_AND_STATE",
+            "ANO_CLIENTS_AGGREGATION",
+            "ANO_CLIENT_BY_YEAR",
+            "DUO_CLIENT_BY_CUSTOMER_NUMBER",
+            "DUO_CLIENT_BY_NAME_AND_STATE",
+            "ANO_PAYROLL_TYPE_LANGUAGE",
+            "DUO_BOOKING_BY_COSTCENTER_AND_DATE",
+            "DUO_BOOKING_BY_AMOUNT_RANGE",
+            "DUO_COMPLEX",
+            "DOCNAME_REGEX",
+            "ANO_MULTI_REGEX",
+            "DUO_MULTI_REGEX"
+    );
 
     @FXML
     public void initialize() {
@@ -56,16 +90,10 @@ public class StartController {
         // set all (sub)process outputs to console
         processBuilder.inheritIO();
 
-        testdataGenerationMode.getItems().addAll(
-                "DYNAMIC",
-                "PERSISTANT"
-        );
+        testdataGenerationMode.getItems().addAll("DYNAMIC", "PERSISTANT");
         testdataGenerationMode.valueProperty().addListener(getDefaultScenarioRemovalListener());
 
-        testdataGenerationDocumentType.getItems().addAll(
-                "ANO",
-                "DUO"
-        );
+        testdataGenerationDocumentType.getItems().addAll("ANO", "DUO");
 
         // When document type changes, update scenario files dropdown
         testdataGenerationDocumentType.valueProperty().addListener((obs,
@@ -75,6 +103,7 @@ public class StartController {
             }
 
             updateScenarioConfigForDocumentType(newValue);
+            addCheckboxes(QUERY_TYPES, 3);
         });
 
         updateScenarioConfigForDocumentType("ANO");
@@ -89,7 +118,10 @@ public class StartController {
                 testdataGenerationCount.setText("10000");
                 loadGeneratorReplicas.setText("1");
                 metricsBatchSize.setText("100");
-            } else if (Objects.equals(newValue, "custom-scenario")) {
+
+                customScenarioConfigurationBox.setVisible(false);
+                customScenarioConfigurationBox.setDisable(true);
+            } else if (Objects.equals(newValue, "custom-scenario.yaml")) {
                 customScenarioConfigurationBox.setVisible(true);
                 customScenarioConfigurationBox.setDisable(false);
             } else {
@@ -99,16 +131,13 @@ public class StartController {
             suppressListeners = false;
         });
 
+        customWarmup.getItems().addAll("true", "false");
+
         testdataGenerationCount.textProperty().addListener(getDefaultScenarioRemovalListener());
         loadGeneratorReplicas.textProperty().addListener(getDefaultScenarioRemovalListener());
         metricsBatchSize.textProperty().addListener(getDefaultScenarioRemovalListener());
 
-        // TODO implement query type checkboxes
-//        ArrayList<String> queryTypes = new ArrayList<>();
-//        for (QueryType qt : QueryType.values()) {
-//            queryTypes.add(qt.name());
-//        }
-//        addCheckboxes(queryTypes, 3);
+        addCheckboxes(QUERY_TYPES, 3);
     }
 
     @FXML
@@ -124,7 +153,12 @@ public class StartController {
         );
         Thread thread = new Thread(() -> {
             String currScenario = scenarioConfig.getValue();
+
             executeTimed("Step 1: Applying test configuration...", this::writeEnvFile);
+
+            if (Objects.equals(currScenario, "custom-scenario.yaml")) {
+                executeTimed("Applying custom scenario config...", this::writeCustomScenarioFile);
+            }
 
             if (!checkOpensearchRunning()) {
                 executeTimed("Step 2: Cleaning old Docker containers...", this::dockerClean);
@@ -147,7 +181,7 @@ public class StartController {
     }
 
     private void writeEnvFile() {
-        String content = null;
+        String content;
         try {
             content = Files.readString(ENV_PATH);
         } catch (IOException e) {
@@ -420,14 +454,52 @@ public class StartController {
             if (count % perRow == 0) {
                 currentHBox = new HBox();
                 currentHBox.setSpacing(10);
-                currentHBox.setAlignment(javafx.geometry.Pos.CENTER);
+                currentHBox.setAlignment(Pos.CENTER_LEFT);
                 dynamicCheckboxWrapper.getChildren().add(currentHBox);
             }
 
             CheckBox checkBox = new CheckBox(option);
-            checkBox.setId("checkbox_" + option);
+            checkBox.setMnemonicParsing(false);
+            if (option == null || testdataGenerationDocumentType.getValue() == null
+                    || (option.contains("ANO") && testdataGenerationDocumentType.getValue().equals("DUO"))
+                    || (option.contains("DUO") && testdataGenerationDocumentType.getValue().equals("ANO"))) {
+                checkBox.setDisable(true);
+            }
             currentHBox.getChildren().add(checkBox);
             count++;
+        }
+    }
+
+    private void writeCustomScenarioFile() {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.registerModule(new JavaTimeModule()); // für Duration
+
+        File customScenarioFile = CUSTOM_SCENARIO_PATH.toFile();
+        try {
+            CustomScenarioConfig config = mapper.readValue(customScenarioFile, CustomScenarioConfig.class);
+
+            config.setDocument_type(testdataGenerationDocumentType.getValue());
+            config.setSchedule_duration(Duration.parse(customScheduleDuration.getText()));
+            config.setQueries_per_second(Integer.parseInt(customQps.getText()));
+            config.setQuery_response_timeout(Duration.parse(customQueryResponseTimeout.getText()));
+            config.setEnable_warm_up(Boolean.parseBoolean(customWarmup.getValue()));
+
+            List<String> selected = new ArrayList<>();
+
+            for (Node node : dynamicCheckboxWrapper.getChildren()) {
+                if (node instanceof HBox hbox) {
+                    for (Node child : hbox.getChildren()) {
+                        if (child instanceof CheckBox checkBox && checkBox.isSelected()) {
+                            selected.add(checkBox.getText());
+                        }
+                    }
+                }
+            }
+            config.setQuery_types(selected);
+
+            mapper.writeValue(customScenarioFile, config);
+        } catch (IOException e) {
+            System.err.println("Error writing custom scenario file: " + e.getMessage());
         }
     }
 }

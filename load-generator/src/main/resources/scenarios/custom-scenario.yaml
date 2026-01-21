@@ -1,0 +1,9 @@
+---
+name: "custom-scenario"
+document_type: "ANO"
+schedule_duration: 1
+queries_per_second: 1
+query_response_timeout: 1
+enable_warm_up: false
+query_types:
+  - "ANO_PAYROLL_RANGE"
