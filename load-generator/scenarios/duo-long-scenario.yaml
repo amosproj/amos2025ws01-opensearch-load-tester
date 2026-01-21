@@ -5,7 +5,7 @@ schedule_duration: PT5M
 queries_per_second: 5
 query_response_timeout: PT5M
 enable_warm_up: false
-query_types:
+query_mix:
   - DUO_INVOICE_CATEGORY
   - DUO_STATE_LOCATION
   - DUO_BOOKING_BY_CLIENT_AND_STATE

@@ -10,10 +10,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
 
 @Slf4j
 @Configuration
@@ -40,9 +42,6 @@ public class ScenarioConfigLoader {
         try {
             ScenarioConfig config = yamlMapper.readValue(path.toFile(), ScenarioConfig.class);
 
-            if (config.getQueryTypes() == null || config.getQueryTypes().isEmpty()) {
-                throw new IllegalStateException("queryTypes must not be empty");
-            }
             validateQueryMix(config);
 
             if (numberLoadGenerators <= 0) {
@@ -63,35 +62,68 @@ public class ScenarioConfigLoader {
             throw new RuntimeException(String.format("Failed to read or parse from file '%s'", path), e);
         }
     }
+    private static final int MAX_POOL_SIZE = 10_000;
+
     private void validateQueryMix(ScenarioConfig config) {
-        var mix = config.getQueryMix();
-        if (mix == null || mix.isEmpty()) return;
+        JsonNode mix = config.getQueryMix();
 
-        int sum = 0;
-        var seen = new java.util.HashSet<QueryType>();
-
-        for (var e : mix) {
-            if (!config.getQueryTypes().contains(e.getType())) {
-                throw new IllegalArgumentException(
-                        "queryMix contains type not listed in queryTypes: " + e.getType()
-                );
-            }
-            if (!seen.add(e.getType())) {
-                throw new IllegalArgumentException(
-                        "Duplicate queryMix entry for type: " + e.getType()
-                );
-            }
-            if (e.getPercent() <= 0) {
-                throw new IllegalArgumentException(
-                        "queryMix weights must be > 0 for type: " + e.getType()
-                );
-            }
-            sum += e.getPercent();
+        if (mix == null || mix.isNull()) {
+            throw new IllegalArgumentException("query_mix must be defined and contain at least one query type.");
+        }
+        if (!mix.isArray()) {
+            throw new IllegalArgumentException("query_mix must be a YAML list");
+        }
+        if (mix.isEmpty()) {
+            throw new IllegalArgumentException("query_mix must contain at least one query type.");
         }
 
-        if (sum <= 0) {
-            throw new IllegalArgumentException("queryMix must contain at least one positive weight.");
+        var seen = new HashSet<QueryType>();
+        int totalWeight = 0;
+
+        for (JsonNode entry : mix) {
+            QueryType type;
+            int weight;
+
+            if (entry.isTextual()) {
+                // short form: "query_mix:- ANO_PAYROLL_RANGE"
+                type = QueryType.valueOf(entry.asText());
+                weight = 1;
+            } else if (entry.isObject()) {
+                // long form: "query_mix: - type: ANO_MULTI_REGEX percent: 80"
+
+                JsonNode typeNode = entry.get("type");
+                JsonNode percentNode = entry.get("percent");
+
+                if (typeNode == null || !typeNode.isTextual()) {
+                    throw new IllegalArgumentException("query_mix entry missing string field 'type'");
+                }
+                if (percentNode == null || !percentNode.canConvertToInt()) {
+                    throw new IllegalArgumentException("query_mix entry missing integer field 'percent'");
+                }
+
+                type = QueryType.valueOf(typeNode.asText());
+                weight = percentNode.asInt();
+
+                if (weight <= 0) {
+                    throw new IllegalArgumentException("query_mix weights must be > 0 for type: " + type);
+                }
+            } else {
+                throw new IllegalArgumentException("Invalid query_mix entry: " + entry);
+            }
+
+            if (!seen.add(type)) {
+                throw new IllegalArgumentException("Duplicate query_mix entry for type: " + type);
+            }
+
+            totalWeight += weight;
+            if (totalWeight > MAX_POOL_SIZE) {
+                throw new IllegalArgumentException(
+                        "query_mix weights sum too large (" + totalWeight + "). Please use smaller ratios (e.g. 2:5:3)."
+                );
+            }
         }
     }
+
+
 
 }
