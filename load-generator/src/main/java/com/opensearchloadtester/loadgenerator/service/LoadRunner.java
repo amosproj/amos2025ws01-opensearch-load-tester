@@ -1,12 +1,14 @@
 package com.opensearchloadtester.loadgenerator.service;
 
 import com.opensearchloadtester.loadgenerator.client.MetricsReporterClient;
+import com.opensearchloadtester.loadgenerator.model.QueryType;
 import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.opensearch.generic.OpenSearchGenericClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -19,6 +21,7 @@ public class LoadRunner {
     private final OpenSearchGenericClient openSearchClient;
     private final MetricsReporterClient metricsReporterClient;
     private final MetricsCollector metricsCollector;
+
 
     public LoadRunner(
             @Value("${HOSTNAME}") String loadGeneratorId,
@@ -45,10 +48,12 @@ public class LoadRunner {
 
         log.info("Timout {}s", scenarioConfig.getQueryResponseTimeout().toSeconds());
 
+        List<QueryType> queryPool = QueryPoolBuilder.build(scenarioConfig);
+
         QueryExecutionTask query = new QueryExecutionTask(
                 loadGeneratorId,
                 scenarioConfig.getDocumentType().getIndex(),
-                scenarioConfig.getQueryTypes(),
+                queryPool,
                 openSearchClient,
                 metricsCollector,
                 scenarioConfig.getQueryResponseTimeout()
