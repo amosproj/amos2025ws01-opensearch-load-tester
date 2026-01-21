@@ -67,14 +67,11 @@ public class ScenarioConfigLoader {
     private void validateQueryMix(ScenarioConfig config) {
         JsonNode mix = config.getQueryMix();
 
-        if (mix == null || mix.isNull()) {
-            throw new IllegalArgumentException("query_mix must be defined and contain at least one query type.");
-        }
-        if (!mix.isArray()) {
-            throw new IllegalArgumentException("query_mix must be a YAML list");
-        }
-        if (mix.isEmpty()) {
-            throw new IllegalArgumentException("query_mix must contain at least one query type.");
+        if (mix == null || mix.isNull() || !mix.isArray() || mix.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "query_mix must be defined and contain at least one query type. " +
+                            "Use short form (e.g. query_mix: [TYPE_A, TYPE_B]) for uniform distribution."
+            );
         }
 
         var seen = new HashSet<QueryType>();

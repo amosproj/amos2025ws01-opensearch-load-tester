@@ -9,49 +9,25 @@ import java.util.List;
 
 public final class QueryPoolBuilder {
 
-    private static final int MAX_POOL_SIZE = 10_000;
-
     private QueryPoolBuilder() {}
 
     public static List<QueryType> build(ScenarioConfig config) {
         JsonNode mix = config.getQueryMix();
 
-        if (mix == null || mix.isNull() || (mix.isArray() && mix.isEmpty())) {
-            throw new IllegalArgumentException(
-                    "query_mix must be defined and contain at least one query type. " +
-                            "Use short form (e.g. query_mix: [TYPE_A, TYPE_B]) for uniform distribution."
-            );
-        }
-
-        if (!mix.isArray()) {
-            throw new IllegalArgumentException("query_mix must be a YAML list");
+        if (mix == null || !mix.isArray() || mix.isEmpty()) {
+            throw new IllegalStateException("ScenarioConfig must be validated before building query pool");
         }
 
         int totalWeight = 0;
         for (JsonNode entry : mix) {
-            int weight;
-
             if (entry.isTextual()) {
-                weight = 1;
-            } else if (entry.isObject()) {
-                JsonNode percentNode = entry.get("percent");
-                if (percentNode == null || !percentNode.canConvertToInt()) {
-                    throw new IllegalArgumentException("query_mix entry missing integer field 'percent'");
-                }
-                weight = percentNode.asInt();
-                if (weight <= 0) {
-                    throw new IllegalArgumentException("query_mix weights must be > 0");
-                }
+                totalWeight++;
             } else {
-                throw new IllegalArgumentException("Invalid query_mix entry: " + entry);
-            }
-
-            totalWeight += weight;
-            if (totalWeight > MAX_POOL_SIZE) {
-                throw new IllegalArgumentException(
-                        "query_mix weights sum too large (" + totalWeight + "). " +
-                                "Please use smaller ratios (e.g. 2:5:3) or percentages that sum to ~100."
-                );
+                JsonNode percent = entry.get("percent");
+                if (percent == null) {
+                    throw new IllegalStateException("ScenarioConfig must be validated before building query pool");
+                }
+                totalWeight += percent.asInt();
             }
         }
 
@@ -59,26 +35,20 @@ public final class QueryPoolBuilder {
 
         for (JsonNode entry : mix) {
             if (entry.isTextual()) {
-                QueryType type = QueryType.valueOf(entry.asText());
-                pool.add(type);
-                continue;
-            }
+                pool.add(QueryType.valueOf(entry.asText()));
+            } else {
+                JsonNode typeNode = entry.get("type");
+                JsonNode percentNode = entry.get("percent");
 
-            JsonNode typeNode = entry.get("type");
-            JsonNode percentNode = entry.get("percent");
+                if (typeNode == null || percentNode == null) {
+                    throw new IllegalStateException("ScenarioConfig must be validated before building query pool");
+                }
 
-            if (typeNode == null || !typeNode.isTextual()) {
-                throw new IllegalArgumentException("query_mix entry missing string field 'type'");
-            }
-            if (percentNode == null || !percentNode.canConvertToInt()) {
-                throw new IllegalArgumentException("query_mix entry missing integer field 'percent'");
-            }
-
-            QueryType type = QueryType.valueOf(typeNode.asText());
-            int weight = percentNode.asInt();
-
-            for (int i = 0; i < weight; i++) {
-                pool.add(type);
+                QueryType type = QueryType.valueOf(typeNode.asText());
+                int weight = percentNode.asInt();
+                for (int i = 0; i < weight; i++) {
+                    pool.add(type);
+                }
             }
         }
 
