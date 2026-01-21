@@ -60,8 +60,15 @@ public class StartController {
     private TextField customQueryResponseTimeout;
 
 
+    private static final String CUSTOM_SCENARIO_FILENAME = "custom-scenario.yaml";
+    private static final String DEFAULT_CUSTOM_DOCUMENT_TYPE = "ANO";
+    private static final String DEFAULT_CUSTOM_SCHEDULE_DURATION = "PT30S";
+    private static final String DEFAULT_CUSTOM_QPS = "20";
+    private static final String DEFAULT_CUSTOM_QUERY_TIMEOUT = "PT1M";
+    private static final String DEFAULT_CUSTOM_WARMUP = "false";
+
     private final Path ENV_PATH = Path.of(".env");
-    private final Path CUSTOM_SCENARIO_PATH = Path.of("./load-generator/src/main/resources/scenarios/custom-scenario.yaml");
+    private final Path CUSTOM_SCENARIO_PATH = Path.of("./load-generator/src/main/resources/scenarios/" + CUSTOM_SCENARIO_FILENAME);
     private final ProcessBuilder processBuilder = new ProcessBuilder();
 
     private boolean suppressListeners = false;
@@ -104,6 +111,9 @@ public class StartController {
 
             updateScenarioConfigForDocumentType(newValue);
             addCheckboxes(QUERY_TYPES, 3);
+            if (isCustomScenarioSelected()) {
+                ensureCustomScenarioDefaults();
+            }
         });
 
         updateScenarioConfigForDocumentType("ANO");
@@ -121,9 +131,10 @@ public class StartController {
 
                 customScenarioConfigurationBox.setVisible(false);
                 customScenarioConfigurationBox.setDisable(true);
-            } else if (Objects.equals(newValue, "custom-scenario.yaml")) {
+            } else if (Objects.equals(newValue, CUSTOM_SCENARIO_FILENAME)) {
                 customScenarioConfigurationBox.setVisible(true);
                 customScenarioConfigurationBox.setDisable(false);
+                ensureCustomScenarioDefaults();
             } else {
                 customScenarioConfigurationBox.setVisible(false);
                 customScenarioConfigurationBox.setDisable(true);
@@ -156,7 +167,7 @@ public class StartController {
 
             executeTimed("Step 1: Applying test configuration...", this::writeEnvFile);
 
-            if (Objects.equals(currScenario, "custom-scenario.yaml")) {
+            if (Objects.equals(currScenario, CUSTOM_SCENARIO_FILENAME)) {
                 executeTimed("Applying custom scenario config...", this::writeCustomScenarioFile);
             }
 
@@ -467,6 +478,57 @@ public class StartController {
             }
             currentHBox.getChildren().add(checkBox);
             count++;
+        }
+
+        if (isCustomScenarioSelected()) {
+            ensureDefaultQuerySelection();
+        }
+    }
+
+    private boolean isCustomScenarioSelected() {
+        return Objects.equals(scenarioConfig.getValue(), CUSTOM_SCENARIO_FILENAME);
+    }
+
+    private void ensureCustomScenarioDefaults() {
+        if (testdataGenerationDocumentType.getValue() == null) {
+            testdataGenerationDocumentType.setValue(DEFAULT_CUSTOM_DOCUMENT_TYPE);
+        }
+        if (customScheduleDuration.getText() == null || customScheduleDuration.getText().isBlank()) {
+            customScheduleDuration.setText(DEFAULT_CUSTOM_SCHEDULE_DURATION);
+        }
+        if (customQps.getText() == null || customQps.getText().isBlank()) {
+            customQps.setText(DEFAULT_CUSTOM_QPS);
+        }
+        if (customQueryResponseTimeout.getText() == null || customQueryResponseTimeout.getText().isBlank()) {
+            customQueryResponseTimeout.setText(DEFAULT_CUSTOM_QUERY_TIMEOUT);
+        }
+        if (customWarmup.getValue() == null) {
+            customWarmup.setValue(DEFAULT_CUSTOM_WARMUP);
+        }
+
+        ensureDefaultQuerySelection();
+    }
+
+    private void ensureDefaultQuerySelection() {
+        for (Node node : dynamicCheckboxWrapper.getChildren()) {
+            if (node instanceof HBox hbox) {
+                for (Node child : hbox.getChildren()) {
+                    if (child instanceof CheckBox checkBox && checkBox.isSelected()) {
+                        return;
+                    }
+                }
+            }
+        }
+
+        for (Node node : dynamicCheckboxWrapper.getChildren()) {
+            if (node instanceof HBox hbox) {
+                for (Node child : hbox.getChildren()) {
+                    if (child instanceof CheckBox checkBox && !checkBox.isDisable()) {
+                        checkBox.setSelected(true);
+                        return;
+                    }
+                }
+            }
         }
     }
 
