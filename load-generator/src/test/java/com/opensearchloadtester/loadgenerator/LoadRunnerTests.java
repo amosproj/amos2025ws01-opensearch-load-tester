@@ -1,7 +1,5 @@
 package com.opensearchloadtester.loadgenerator;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.opensearchloadtester.loadgenerator.client.MetricsReporterClient;
 import com.opensearchloadtester.loadgenerator.exception.MetricsReporterAccessException;
 import com.opensearchloadtester.loadgenerator.model.DocumentType;
@@ -18,6 +16,7 @@ import org.opensearch.client.opensearch.generic.OpenSearchGenericClient;
 import org.opensearch.client.opensearch.generic.Response;
 import java.io.IOException;
 import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 
@@ -30,7 +29,6 @@ class LoadRunnerTests {
 
     private static final int NUMBER_LOAD_GENERATORS = 1;
     private static final int METRICS_BATCH_SIZE = 100;
-    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     @Mock
     private OpenSearchGenericClient openSearchClient;
@@ -54,17 +52,6 @@ class LoadRunnerTests {
         );
     }
 
-    private static ArrayNode queryMix(QueryType... types) {
-        if (types == null || types.length == 0) {
-            throw new IllegalArgumentException("Tests must provide at least one QueryType for query_mix");
-        }
-        ArrayNode arr = MAPPER.createArrayNode();
-        for (QueryType t : types) {
-            arr.add(t.name());
-        }
-        return arr;
-    }
-
     private ScenarioConfig createScenario(
             String name,
             DocumentType documentType,
@@ -80,7 +67,7 @@ class LoadRunnerTests {
                 scheduleDuration,
                 queryResponseTimeout,
                 qps, warmUpEnabled,
-                queryMix(queryType)
+                List.of(queryType)
         );
     }
 
@@ -326,7 +313,7 @@ class LoadRunnerTests {
                 Duration.ofMinutes(3),
                 2,
                 false,
-                queryMix(QueryType.ANO_PAYROLL_RANGE, QueryType.ANO_CLIENT_BY_YEAR)
+                List.of(QueryType.ANO_PAYROLL_RANGE, QueryType.ANO_CLIENT_BY_YEAR)
         );
 
         stubOpenSearchStatus(500);

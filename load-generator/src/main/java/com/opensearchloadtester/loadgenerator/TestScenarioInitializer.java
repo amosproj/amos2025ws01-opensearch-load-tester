@@ -1,17 +1,16 @@
 package com.opensearchloadtester.loadgenerator;
 
 import com.opensearchloadtester.loadgenerator.client.LoadTestStartSyncClient;
-import com.opensearchloadtester.loadgenerator.model.QueryType;
 import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
-import com.opensearchloadtester.loadgenerator.service.*;
+import com.opensearchloadtester.loadgenerator.service.LoadRunner;
+import com.opensearchloadtester.loadgenerator.service.MetricsCollector;
+import com.opensearchloadtester.loadgenerator.service.QueryExecutionTask;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.opensearch.generic.OpenSearchGenericClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import com.opensearchloadtester.loadgenerator.client.MetricsReporterClient;
-
-import java.util.List;
 
 @Slf4j
 @Component
@@ -73,16 +72,14 @@ public class TestScenarioInitializer implements CommandLineRunner {
         long warmupStart = System.currentTimeMillis();
 
         MetricsCollector warmupCollector = new MetricsCollector(metricsReporterClient, 1, false);
-        List<QueryType> queryPool = QueryPoolBuilder.build(scenarioConfig);
 
         QueryExecutionTask warmupTask = new QueryExecutionTask(
                 loadGeneratorId,
                 scenarioConfig.getDocumentType().getIndex(),
-                queryPool,
+                scenarioConfig.getQueryTypes(),
                 openSearchClient,
                 warmupCollector,// warm-up metrics are ignored
                 scenarioConfig.getQueryResponseTimeout()
-
         );
 
         int successCount = 0;

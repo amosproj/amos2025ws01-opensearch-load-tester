@@ -5,5 +5,5 @@ schedule_duration: PT5S
 queries_per_second: 20
 query_response_timeout: PT30M
 enable_warm_up: true
-query_mix:
+query_types:
   - ANO_MULTI_REGEX
