@@ -90,7 +90,7 @@ public class StartController {
         // set all (sub)process outputs to console
         processBuilder.inheritIO();
 
-        testdataGenerationMode.getItems().addAll("DYNAMIC", "PERSISTANT");
+        testdataGenerationMode.getItems().addAll("DYNAMIC", "PERSISTENT");
         testdataGenerationMode.valueProperty().addListener(getDefaultScenarioRemovalListener());
 
         testdataGenerationDocumentType.getItems().addAll("ANO", "DUO");
@@ -166,7 +166,6 @@ public class StartController {
                 executeTimed("Step 4: Running Docker containers...", this::dockerRun);
             } else {
                 executeTimed("Step 2: Ensuring testdata amount...", this::ensureTestdataAmountInOpenSearch);
-                ensureTestdataAmountInOpenSearch();
                 executeTimed("Step 3: Restarting Docker containers...", this::dockerRestart);
             }
             Platform.runLater(() -> outputText.appendText("\n" + currScenario + " is running.\n"));
