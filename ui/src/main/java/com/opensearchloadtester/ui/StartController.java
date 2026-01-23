@@ -64,8 +64,6 @@ public class StartController {
     private final Path CUSTOM_SCENARIO_PATH = Path.of("./load-generator/src/main/resources/scenarios/custom-scenario.yaml");
     private final ProcessBuilder processBuilder = new ProcessBuilder();
 
-    private boolean suppressListeners = false;
-
     private static final List<String> QUERY_TYPES = List.of(
             "ANO_PAYROLL_RANGE",
             "DUO_INVOICE_CATEGORY",
@@ -90,27 +88,34 @@ public class StartController {
         // set all (sub)process outputs to console
         processBuilder.inheritIO();
 
-        testdataGenerationMode.getItems().addAll("DYNAMIC", "PERSISTENT");
-        testdataGenerationMode.valueProperty().addListener(getDefaultScenarioRemovalListener());
-
         testdataGenerationDocumentType.getItems().addAll("ANO", "DUO");
 
         // When document type changes, update scenario files dropdown
         testdataGenerationDocumentType.valueProperty().addListener((obs,
                                                                     oldValue, newValue) -> {
             if (Objects.equals(newValue, "ANO") && Objects.equals(scenarioConfig.getValue(), "default-scenario.yaml")) {
+                testdataGenerationDocumentType.setStyle("");
+                testdataGenerationDocumentType.setTooltip(null);
+                addCheckboxes(QUERY_TYPES, 3);
                 return;
             }
 
             updateScenarioConfigForDocumentType(newValue);
             addCheckboxes(QUERY_TYPES, 3);
+
+            testdataGenerationDocumentType.setStyle("");
+            testdataGenerationDocumentType.setTooltip(null);
         });
 
         updateScenarioConfigForDocumentType("ANO");
 
+        testdataGenerationMode.getItems().addAll("DYNAMIC", "PERSISTENT");
+        testdataGenerationMode.valueProperty().addListener(getDefaultListener(testdataGenerationMode));
+
+        testdataGenerationCount.textProperty().addListener(getDefaultListener(testdataGenerationCount));
+
         scenarioConfig.valueProperty().addListener((obs,
                                                     oldValue, newValue) -> {
-            suppressListeners = true;
             if (Objects.equals(newValue, "default-scenario.yaml")) {
                 // set default values
                 testdataGenerationDocumentType.setValue("ANO");
@@ -128,21 +133,33 @@ public class StartController {
                 customScenarioConfigurationBox.setVisible(false);
                 customScenarioConfigurationBox.setDisable(true);
             }
-            suppressListeners = false;
+
+            scenarioConfig.setStyle("");
+            scenarioConfig.setTooltip(null);
         });
 
+        customScheduleDuration.textProperty().addListener(getDefaultListener(customScheduleDuration));
+        customQps.textProperty().addListener(getDefaultListener(customQps));
+        customQueryResponseTimeout.textProperty().addListener(getDefaultListener(customQueryResponseTimeout));
         customWarmup.getItems().addAll("true", "false");
+        customWarmup.valueProperty().addListener(getDefaultListener(customWarmup));
 
-        testdataGenerationCount.textProperty().addListener(getDefaultScenarioRemovalListener());
-        loadGeneratorReplicas.textProperty().addListener(getDefaultScenarioRemovalListener());
-        metricsBatchSize.textProperty().addListener(getDefaultScenarioRemovalListener());
+        loadGeneratorReplicas.textProperty().addListener(getDefaultListener(loadGeneratorReplicas));
+        metricsBatchSize.textProperty().addListener(getDefaultListener(metricsBatchSize));
 
         addCheckboxes(QUERY_TYPES, 3);
     }
 
     @FXML
     protected void onStartLoadTest() {
+
         outputText.setVisible(true);
+
+        if (!validateUserInputs()) {
+            Platform.runLater(() -> outputText.appendText("Invalid inputs!\n"));
+            return;
+        }
+
         outputText.setText(
                 "Starting OpenSearch Loadtester...\n" +
                         "\n" +
@@ -427,11 +444,10 @@ public class StartController {
         }
     }
 
-    private ChangeListener<String> getDefaultScenarioRemovalListener() {
+    private ChangeListener<String> getDefaultListener(Control control) {
         return (observable, oldValue, newValue) -> {
-            if (!suppressListeners && Objects.equals(scenarioConfig.getValue(), "default-scenario.yaml")) {
-                scenarioConfig.setValue(null);
-            }
+            control.setStyle("");
+            control.setTooltip(null);
         };
     }
 
@@ -483,22 +499,124 @@ public class StartController {
             config.setQuery_response_timeout(Duration.parse(customQueryResponseTimeout.getText()));
             config.setEnable_warm_up(Boolean.parseBoolean(customWarmup.getValue()));
 
-            List<String> selected = new ArrayList<>();
-
-            for (Node node : dynamicCheckboxWrapper.getChildren()) {
-                if (node instanceof HBox hbox) {
-                    for (Node child : hbox.getChildren()) {
-                        if (child instanceof CheckBox checkBox && checkBox.isSelected()) {
-                            selected.add(checkBox.getText());
-                        }
-                    }
-                }
-            }
-            config.setQuery_types(selected);
+            config.setQuery_types(getSelectedQueryTypes());
 
             mapper.writeValue(customScenarioFile, config);
         } catch (IOException e) {
             System.err.println("Error writing custom scenario file: " + e.getMessage());
         }
+    }
+
+    private List<String> getSelectedQueryTypes() {
+        List<String> selected = new ArrayList<>();
+
+        for (Node node : dynamicCheckboxWrapper.getChildren()) {
+            if (node instanceof HBox hbox) {
+                for (Node child : hbox.getChildren()) {
+                    if (child instanceof CheckBox checkBox && checkBox.isSelected()) {
+                        selected.add(checkBox.getText());
+                    }
+                }
+            }
+        }
+        return selected;
+    }
+
+    private boolean validateUserInputs() {
+        boolean valid = true;
+
+        valid &= validateCombobox(testdataGenerationDocumentType);
+        valid &= validateCombobox(testdataGenerationMode);
+        valid &= validateNumericTextfield(testdataGenerationCount);
+        valid &= validateCombobox(scenarioConfig);
+        valid &= validateCustomScenario();
+        valid &= validateNumericTextfield(loadGeneratorReplicas);
+        valid &= validateNumericTextfield(metricsBatchSize);
+
+        return valid;
+    }
+
+
+    private boolean validateCustomScenario() {
+        if (!Objects.equals(scenarioConfig.getValue(), "custom-scenario.yaml")) {
+            return true;
+        }
+
+        boolean valid = true;
+
+        valid &= validateDurationTextfield(customScheduleDuration);
+        valid &= validateNumericTextfield(customQps);
+        valid &= validateDurationTextfield(customQueryResponseTimeout);
+        valid &= validateCombobox(customWarmup);
+        valid &= validateQueryTypeSelection();
+
+        return valid;
+    }
+
+    private boolean validateCombobox(ComboBox<String> comboBox) {
+        if (comboBox.getValue() == null
+                || comboBox.getValue().isEmpty()) {
+            markError(comboBox);
+            return false;
+        }
+        return true;
+    }
+
+    private boolean validateNumericTextfield(TextField textField) {
+        if (textField.getText() == null
+                || textField.getText().isEmpty()) {
+            markError(textField);
+            return false;
+        } else {
+            try {
+                int value = Integer.parseInt(textField.getText());
+                if (value <= 0) {
+                    markError(textField);
+                    return false;
+                }
+            } catch (NumberFormatException e) {
+                markError(textField);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean validateDurationTextfield(TextField textField) {
+        if (textField.getText() == null
+                || textField.getText().isEmpty()) {
+            markError(textField);
+            return false;
+
+        } else {
+            try {
+                Duration duration = Duration.parse(textField.getText());
+                if (duration.isNegative() || duration.isZero()) {
+                    markError(textField);
+                    return false;
+                }
+            } catch (Exception e) {
+                markError(textField);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void markError(Control control) {
+        control.setStyle("-fx-border-color: red; -fx-border-width: 2;");
+        control.requestFocus();
+    }
+
+    private boolean validateQueryTypeSelection() {
+        if (getSelectedQueryTypes().isEmpty()) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Validation Error");
+            alert.setHeaderText("No Query Types Selected");
+            alert.setContentText("Please select at least one query type for the custom scenario.");
+            alert.showAndWait();
+            return false;
+        }
+        return true;
     }
 }
