@@ -14,7 +14,7 @@
 
     <groupId>com.opensearchloadtester</groupId>
     <artifactId>opensearch-load-tester-parent</artifactId>
-    <version>4.0.0</version>
+    <version>5.0.0</version>
     <packaging>pom</packaging>
 
     <name>opensearch-load-tester-parent</name>

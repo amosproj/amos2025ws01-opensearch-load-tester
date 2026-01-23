@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.opensearchloadtester</groupId>
         <artifactId>opensearch-load-tester-parent</artifactId>
-        <version>4.0.0</version>
+        <version>5.0.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -36,11 +36,6 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-csv</artifactId>
         </dependency>
 
         <!-- Jackson -->

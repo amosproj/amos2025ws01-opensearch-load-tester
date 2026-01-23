@@ -5,7 +5,7 @@ schedule_duration: PT5M
 queries_per_second: 5
 query_response_timeout: PT5M
 enable_warm_up: false
-query_types:
+query_mix:
   - ANO_PAYROLL_RANGE
   - ANO_CLIENTS_AGGREGATION
   - ANO_CLIENT_BY_YEAR
