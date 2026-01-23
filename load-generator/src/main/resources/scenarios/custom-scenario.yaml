@@ -1,9 +1,12 @@
 ---
 name: "custom-scenario"
 document_type: "ANO"
-schedule_duration: PT1S
-queries_per_second: 1
-query_response_timeout: PT1S
+schedule_duration: 30.000000000
+queries_per_second: 20
+query_response_timeout: 30.000000000
 enable_warm_up: false
-query_types:
-  - ANO_PAYROLL_RANGE
+query_mix:
+- "ANO_PAYROLL_RANGE"
+- "ANO_CLIENTS_AGGREGATION"
+- "ANO_CLIENT_BY_YEAR"
+- "ANO_PAYROLL_TYPE_LANGUAGE"

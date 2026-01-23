@@ -499,7 +499,7 @@ public class StartController {
             config.setQuery_response_timeout(Duration.parse(customQueryResponseTimeout.getText()));
             config.setEnable_warm_up(Boolean.parseBoolean(customWarmup.getValue()));
 
-            config.setQuery_types(getSelectedQueryTypes());
+            config.setQuery_mix(getSelectedQueryTypes());
 
             mapper.writeValue(customScenarioFile, config);
         } catch (IOException e) {

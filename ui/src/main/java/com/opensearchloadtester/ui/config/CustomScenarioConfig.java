@@ -11,7 +11,7 @@ public class CustomScenarioConfig {
     private int queries_per_second;
     private Duration query_response_timeout;
     private boolean enable_warm_up;
-    private List<String> query_types;
+    private List<String> query_mix;
 
     public String getName() {
         return name;
@@ -61,11 +61,11 @@ public class CustomScenarioConfig {
         this.enable_warm_up = enable_warm_up;
     }
 
-    public List<String> getQuery_types() {
-        return query_types;
+    public List<String> getQuery_mix() {
+        return query_mix;
     }
 
-    public void setQuery_types(List<String> query_types) {
-        this.query_types = query_types;
+    public void setQuery_mix(List<String> query_mix) {
+        this.query_mix = query_mix;
     }
 }
