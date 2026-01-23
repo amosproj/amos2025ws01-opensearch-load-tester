@@ -8,8 +8,6 @@ import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch.core.*;
 import org.opensearch.client.opensearch.core.bulk.BulkOperation;
 import org.opensearch.client.opensearch.core.bulk.IndexOperation;
-import org.opensearch.client.opensearch.core.search.Hit;
-import org.opensearch.client.opensearch._types.FieldValue;
 import org.opensearch.client.opensearch._types.mapping.TypeMapping;
 import org.opensearch.client.opensearch.indices.CreateIndexRequest;
 import org.opensearch.client.opensearch.indices.ExistsRequest;
@@ -24,7 +22,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -52,7 +49,6 @@ public class OpenSearchDataService {
      * @param indexSettings optional index settings (may be {@code null})
      * @param indexMapping  optional index mapping (may be {@code null})
      */
-
     public void createIndex(String indexName,
                             @Nullable IndexSettings indexSettings,
                             @Nullable TypeMapping indexMapping) {
@@ -82,28 +78,6 @@ public class OpenSearchDataService {
             log.error("Unexpected error while creating index '{}'", indexName, e);
             throw new OpenSearchDataAccessException(
                     String.format("Unexpected error while creating index '%s'", indexName), e);
-        }
-    }
-
-    public <T> String indexDocument(String indexName, T document) {
-        validateIndexName(indexName);
-        Objects.requireNonNull(document, "document must not be null");
-
-        try {
-            IndexRequest<T> request = new IndexRequest.Builder<T>()
-                    .index(indexName)
-                    .document(document)
-                    .build();
-
-            IndexResponse response = openSearchClient.index(request);
-
-            log.info("Indexed document in index '{}' with id '{}'", indexName, response.id());
-
-            return response.id();
-        } catch (Exception e) {
-            log.error("Unexpected error while indexing document in index '{}'", indexName, e);
-            throw new OpenSearchDataAccessException(
-                    String.format("Unexpected error while indexing document in index '%s'", indexName), e);
         }
     }
 
@@ -143,7 +117,8 @@ public class OpenSearchDataService {
 
         final int maxSplitDepth = computeMaxSplitDepth(documents.size());
 
-        record Work<T>(List<T> docs, int depth) {}
+        record Work<T>(List<T> docs, int depth) {
+        }
 
         var stack = new java.util.ArrayDeque<Work<T>>();
         stack.push(new Work<>(documents, 0));
@@ -186,7 +161,7 @@ public class OpenSearchDataService {
                 int mid = batch.size() / 2;
 
                 // IMPORTANT: subList() is a view; copy to avoid retaining huge backing list
-                List<T> left  = new ArrayList<>(batch.subList(0, mid));
+                List<T> left = new ArrayList<>(batch.subList(0, mid));
                 List<T> right = new ArrayList<>(batch.subList(mid, batch.size()));
 
                 try {
@@ -197,7 +172,7 @@ public class OpenSearchDataService {
 
                 // push right then left so left is processed first (LIFO)
                 stack.push(new Work<>(right, depth + 1));
-                stack.push(new Work<>(left,  depth + 1));
+                stack.push(new Work<>(left, depth + 1));
 
             } catch (IOException e) {
                 log.error("I/O error while bulk indexing documents in index '{}'", indexName, e);
@@ -218,7 +193,6 @@ public class OpenSearchDataService {
 
 
     // Builds the bulk request from the given documents
-
     private <T> void executeBulk(String indexName, List<T> documents) throws IOException {
         ArrayList<BulkOperation> ops = new ArrayList<>();
 
@@ -253,87 +227,6 @@ public class OpenSearchDataService {
             throw new OpenSearchDataAccessException(
                     String.format("Bulk indexing completed with errors for index '%s': %s", indexName, errorMessages)
             );
-        }
-    }
-
-    //  OTHER METHODS (search, delete, refresh...)
-
-    public <T> Optional<T> getDocument(String indexName, String id, Class<T> documentClass) {
-        validateIndexName(indexName);
-        Objects.requireNonNull(id, "id must not be null");
-        Objects.requireNonNull(documentClass, "documentClass must not be null");
-
-        try {
-            GetRequest request = new GetRequest.Builder()
-                    .index(indexName)
-                    .id(id)
-                    .build();
-
-            GetResponse<T> response = openSearchClient.get(request, documentClass);
-
-            if (!response.found()) {
-                log.debug("Document with id '{}' not found in index '{}'", id, indexName);
-                return Optional.empty();
-            }
-
-            return Optional.ofNullable(response.source());
-        } catch (Exception e) {
-            log.error("Unexpected error while getting document with id '{}' from index '{}'", id, indexName, e);
-            throw new OpenSearchDataAccessException(
-                    String.format("Unexpected error while getting document with id '%s' from index '%s'", id, indexName), e);
-        }
-    }
-
-    public <T> List<T> searchByField(String indexName, String fieldName, String fieldValue, Class<T> documentClass) {
-        validateIndexName(indexName);
-        Objects.requireNonNull(fieldName, "fieldName must not be null");
-        Objects.requireNonNull(fieldValue, "fieldValue must not be null");
-        Objects.requireNonNull(documentClass, "documentClass must not be null");
-
-        try {
-            SearchRequest request = new SearchRequest.Builder()
-                    .index(indexName)
-                    .query(q -> q
-                            .match(m -> m
-                                    .field(fieldName)
-                                    .query(FieldValue.of(fieldValue))
-                            )
-                    )
-                    .build();
-
-            SearchResponse<T> response = openSearchClient.search(request, documentClass);
-
-            return response.hits()
-                    .hits()
-                    .stream()
-                    .map(Hit::source)
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            log.error("Unexpected error while searching in index '{}' on field '{}' with value '{}'",
-                    indexName, fieldName, fieldValue, e);
-            throw new OpenSearchDataAccessException(
-                    String.format("Unexpected error while searching in index '%s' on field '%s' with value '%s'",
-                            indexName, fieldName, fieldValue), e);
-        }
-    }
-
-    public void deleteDocument(String indexName, String id) {
-        validateIndexName(indexName);
-        Objects.requireNonNull(id, "id must not be null");
-
-        try {
-            DeleteRequest request = new DeleteRequest.Builder()
-                    .index(indexName)
-                    .id(id)
-                    .build();
-
-            openSearchClient.delete(request);
-
-            log.info("Deleted document with id '{}' from index '{}'", id, indexName);
-        } catch (Exception e) {
-            log.error("Unexpected error while deleting document with id '{}' from index '{}'", id, indexName, e);
-            throw new OpenSearchDataAccessException(
-                    String.format("Unexpected error while deleting document with id '%s' from index '%s'", id, indexName), e);
         }
     }
 
