@@ -65,13 +65,6 @@ public class TestdataPreloadService {
         // Clamp to dynamic max
         if (computed > maxBatchSize) computed = maxBatchSize;
 
-        log.debug(
-                "Auto-computed batchSize={} for totalCount={} (configuredBatchSize={})",
-                computed,
-                totalCount,
-                dataGenerationProperties.getBatchSize()
-        );
-
         return computed;
     }
 

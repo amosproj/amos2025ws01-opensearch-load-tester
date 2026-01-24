@@ -20,10 +20,6 @@ public class DataGenerationProperties {
 
     private Mode mode;
     private DocumentType documentType;
-    private String outputPath;
     @Min(1)
     private int count;
-    @Min(1)
-    private int batchSize=1000;
-
 }
