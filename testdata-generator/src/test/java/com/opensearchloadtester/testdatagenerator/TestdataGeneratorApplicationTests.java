@@ -1,6 +1,6 @@
 package com.opensearchloadtester.testdatagenerator;
 
-import com.opensearchloadtester.testdatagenerator.config.DataGenerationProperties.DocumentType;
+import com.opensearchloadtester.testdatagenerator.model.DocumentType;
 import com.opensearchloadtester.testdatagenerator.model.ano.AnoDocument;
 import com.opensearchloadtester.testdatagenerator.model.Document;
 import com.opensearchloadtester.testdatagenerator.service.DynamicDataGenerator;
