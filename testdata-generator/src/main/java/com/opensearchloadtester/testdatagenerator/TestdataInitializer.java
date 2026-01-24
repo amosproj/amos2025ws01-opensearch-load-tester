@@ -5,7 +5,7 @@ import com.opensearchloadtester.testdatagenerator.model.Index;
 import com.opensearchloadtester.testdatagenerator.model.ano.AnoIndex;
 import com.opensearchloadtester.testdatagenerator.model.duo.DuoIndex;
 import com.opensearchloadtester.testdatagenerator.service.OpenSearchDataService;
-import com.opensearchloadtester.testdatagenerator.service.TestdataPreloadService;
+import com.opensearchloadtester.testdatagenerator.service.DataGenerationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -18,7 +18,7 @@ public class TestdataInitializer implements CommandLineRunner {
 
     private final DataGenerationProperties dataGenerationProperties;
     private final OpenSearchDataService openSearchDataService;
-    private final TestdataPreloadService testdataPreloadService;
+    private final DataGenerationService dataGenerationService;
 
     @Override
     public void run(String... args) {
@@ -32,7 +32,7 @@ public class TestdataInitializer implements CommandLineRunner {
                 dataGenerationProperties.getDocumentType());
 
         openSearchDataService.createIndex(index.getName(), index.getSettings(), index.getMapping());
-        testdataPreloadService.generateAndIndexTestData(dataGenerationProperties, index);
+        dataGenerationService.generateAndIndexTestData(dataGenerationProperties, index);
         openSearchDataService.refreshIndex(index.getName());
 
         log.info("Finished test data initialization successfully");
