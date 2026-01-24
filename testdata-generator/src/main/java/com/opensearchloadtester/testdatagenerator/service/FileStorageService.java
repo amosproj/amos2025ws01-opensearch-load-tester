@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.opensearchloadtester.testdatagenerator.exception.FileStorageException;
 import com.opensearchloadtester.testdatagenerator.model.Document;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,8 +47,7 @@ public class FileStorageService {
 
             objectMapper.writeValue(file, data);
         } catch (IOException e) {
-            log.error("Failed to save data to file '{}': {}", outputPath, e.getMessage());
-            throw new RuntimeException(String.format("Failed to save data to file '%s'", outputPath), e);
+            throw new FileStorageException(String.format("Failed to save data to file '%s'", outputPath), e);
         }
     }
 
@@ -73,8 +73,7 @@ public class FileStorageService {
             List<? extends Document> tmp = objectMapper.readValue(file, collectionType);
             return new ArrayList<>(tmp);
         } catch (IOException e) {
-            log.error("Failed to read or parse from file '{}': {}", outputPath, e.getMessage());
-            throw new RuntimeException(String.format("Failed to read or parse from file '%s'", outputPath), e);
+            throw new FileStorageException(String.format("Failed to read or parse from file '%s'", outputPath), e);
         }
     }
 }
