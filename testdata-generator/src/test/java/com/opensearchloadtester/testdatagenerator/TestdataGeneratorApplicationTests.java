@@ -49,8 +49,7 @@ class TestdataGeneratorApplicationTests {
          * Here there is no distinction, whether there already exists data or not.
          */
         PersistentDataGenerator persistentGen = new PersistentDataGenerator(
-                new FileStorageService(),
-                "data/testdata.json",
+                new FileStorageService("data/testdata.json"),
                 new DynamicDataGenerator());
         int numData = 10;
         List<Document> list = persistentGen.generateData(DocumentType.ANO, numData);
