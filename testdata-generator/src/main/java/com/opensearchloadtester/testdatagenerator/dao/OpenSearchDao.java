@@ -1,4 +1,4 @@
-package com.opensearchloadtester.testdatagenerator.service;
+package com.opensearchloadtester.testdatagenerator.dao;
 
 import com.opensearchloadtester.testdatagenerator.exception.OpenSearchDataAccessException;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class OpenSearchDataService {
+public class OpenSearchDao {
 
     private final OpenSearchClient openSearchClient;
 

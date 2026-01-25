@@ -1,6 +1,7 @@
 package com.opensearchloadtester.testdatagenerator.service;
 
 import com.opensearchloadtester.testdatagenerator.config.DataGenerationProperties;
+import com.opensearchloadtester.testdatagenerator.dao.OpenSearchDao;
 import com.opensearchloadtester.testdatagenerator.exception.OpenSearchDataAccessException;
 import com.opensearchloadtester.testdatagenerator.model.Document;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +17,7 @@ import java.util.List;
 public class DataGenerationService {
 
     private final DataGenerator dataGenerator;
-    private final OpenSearchDataService openSearchDataService;
+    private final OpenSearchDao openSearchDao;
     private final DataGenerationProperties dataGenerationProperties;
 
     public void generateAndIndexTestData(String indexName) {
@@ -45,7 +46,7 @@ public class DataGenerationService {
                         currentBatchSize
                 );
 
-                openSearchDataService.bulkIndexDocuments(indexName, documents);
+                openSearchDao.bulkIndexDocuments(indexName, documents);
             } catch (OpenSearchDataAccessException e) {
                 Throwable cause = e.getCause();
 
@@ -91,7 +92,7 @@ public class DataGenerationService {
 
             try {
                 List<Document> batch = documents.subList(offset, offset + currentBatchSize);
-                openSearchDataService.bulkIndexDocuments(indexName, batch);
+                openSearchDao.bulkIndexDocuments(indexName, batch);
             } catch (OpenSearchDataAccessException e) {
                 Throwable cause = e.getCause();
 
