@@ -1,15 +1,13 @@
 package com.opensearchloadtester.testdatagenerator.service;
 
 import com.opensearchloadtester.testdatagenerator.config.DataGenerationProperties;
+import com.opensearchloadtester.testdatagenerator.exception.OpenSearchDataAccessException;
 import com.opensearchloadtester.testdatagenerator.model.Document;
-import com.opensearchloadtester.testdatagenerator.model.DocumentType;
-import com.opensearchloadtester.testdatagenerator.model.Index;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.opensearch.client.transport.httpclient5.ResponseException;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 @Slf4j
@@ -17,147 +15,110 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DataGenerationService {
 
-    private static final int MIN_BATCH_SIZE = 1_000;
-    private static final int TARGET_BATCHES = 20;
-
     private final DataGenerator dataGenerator;
     private final OpenSearchDataService openSearchDataService;
+    private final DataGenerationProperties dataGenerationProperties;
 
-    public void generateAndIndexTestData(DataGenerationProperties dataGenerationProperties, Index index) {
+    public void generateAndIndexTestData(String indexName) {
+        log.info("Starting test data generation");
 
         switch (dataGenerationProperties.getMode()) {
-            case DYNAMIC -> preloadDynamic(dataGenerationProperties.getDocumentType(),
-                    dataGenerationProperties.getCount(),
-                    index);
-            case PERSISTENT -> preloadPersistent(dataGenerationProperties.getDocumentType(),
-                    dataGenerationProperties.getCount(),
-                    index);
+            case DYNAMIC -> executeDynamicMode(indexName);
+            case PERSISTENT -> executePersistentMode(indexName);
+        }
+
+        log.info("Finished test data generation");
+    }
+
+    private void executeDynamicMode(String indexName) {
+        int generatedDocs = 0;
+        int batchSize = dataGenerationProperties.getBatchSize();
+        int totalCount = dataGenerationProperties.getCount();
+
+        while (generatedDocs < totalCount) {
+            int remainingDocs = totalCount - generatedDocs;
+            int currentBatchSize = Math.min(batchSize, remainingDocs);
+
+            try {
+                List<Document> documents = dataGenerator.generateData(
+                        dataGenerationProperties.getDocumentType(),
+                        currentBatchSize
+                );
+
+                openSearchDataService.bulkIndexDocuments(indexName, documents);
+            } catch (OpenSearchDataAccessException e) {
+                Throwable cause = e.getCause();
+
+                if (cause instanceof ResponseException responseException) {
+                    int statusCode = responseException.status();
+
+                    if (statusCode == 413 || statusCode == 429) {
+                        int newBatchSize = Math.max(1, batchSize / 2);
+
+                        log.warn("OpenSearch returned HTTP {}. Adjusted batch size from {} to {}",
+                                statusCode, batchSize, newBatchSize);
+
+                        batchSize = newBatchSize;
+
+                        try {
+                            Thread.sleep(200);
+                        } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                        }
+                        continue;
+                    }
+                }
+                throw e;
+            }
+
+            generatedDocs += currentBatchSize;
+            log.debug("Generated and indexed {}/{} documents", generatedDocs, totalCount);
         }
     }
 
-    private int dynamicMaxBatchSize(int totalCount) {
-        if (totalCount <= 200_000) return 10_000;
-        if (totalCount <= 1_000_000) return 15_000;
-        return 35_000;
-    }
+    private void executePersistentMode(String indexName) {
+        int offset = 0;
+        int batchSize = dataGenerationProperties.getBatchSize();
 
-    /**
-     * Computes a batch size from totalCount aiming for ~TARGET_BATCHES batches,
-     * clamped to [min(totalCount, MIN_BATCH_SIZE), dynamicMaxBatchSize(totalCount)].
-     */
-    private int resolveBatchSize(int totalCount) {
-        int maxBatchSize = dynamicMaxBatchSize(totalCount);
-
-        int computed = (int) Math.ceil((double) totalCount / TARGET_BATCHES);
-
-        // Clamp to at least MIN_BATCH_SIZE, but never exceed totalCount (small datasets)
-        int minBatch = Math.min(MIN_BATCH_SIZE, totalCount);
-        if (computed < minBatch) computed = minBatch;
-
-        // Clamp to dynamic max
-        if (computed > maxBatchSize) computed = maxBatchSize;
-
-        return computed;
-    }
-
-    private void preloadDynamic(DocumentType documentType, int totalCount, Index index) {
-        final int initialBatchSize = resolveBatchSize(totalCount);
-
-        log.debug(
-                "Starting DYNAMIC batch pre-loading. documentType={}, totalCount={}, batchSize={}",
-                documentType,
-                totalCount,
-                initialBatchSize
+        List<Document> documents = dataGenerator.generateData(
+                dataGenerationProperties.getDocumentType(),
+                dataGenerationProperties.getCount()
         );
 
-        preloadLoop(documentType, index, totalCount, initialBatchSize, null);
+        while (offset < documents.size()) {
+            int remainingDocs = documents.size() - offset;
+            int currentBatchSize = Math.min(batchSize, remainingDocs);
 
-        log.info("Finished DYNAMIC batch pre-loading successfully for index='{}' (count={})",
-                index.getName(), totalCount);
-    }
+            try {
+                List<Document> batch = documents.subList(offset, offset + currentBatchSize);
+                openSearchDataService.bulkIndexDocuments(indexName, batch);
+            } catch (OpenSearchDataAccessException e) {
+                Throwable cause = e.getCause();
 
-    private void preloadPersistent(DocumentType documentType, int totalCount, Index index) {
-        final int initialBatchSize = resolveBatchSize(totalCount);
+                if (cause instanceof ResponseException responseException) {
+                    int statusCode = responseException.status();
 
-        log.info(
-                "Starting PERSISTENT batch pre-loading. documentType={}, totalCount={}, batchSize={}",
-                documentType,
-                totalCount,
-                initialBatchSize
-        );
+                    if (statusCode == 413 || statusCode == 429) {
+                        int newBatchSize = Math.max(1, batchSize / 2);
 
-        List<Document> allDocuments = dataGenerator.generateData(
-                documentType,
-                totalCount
-        );
+                        log.warn("OpenSearch returned HTTP {}. Adjusted batch size from {} to {}",
+                                statusCode, batchSize, newBatchSize);
 
-        if (allDocuments.size() != totalCount) {
-            throw new IllegalStateException(String.format(
-                    "Persistent dataset size (%d) does not match configured count (%d). Aborting preload.",
-                    allDocuments.size(), totalCount
-            ));
-        }
-        preloadLoop(documentType, index, totalCount, initialBatchSize, allDocuments.iterator());
+                        batchSize = newBatchSize;
 
-        log.info(
-                "Finished PERSISTENT batch pre-loading successfully for index='{}' (count={})",
-                index.getName(),
-                totalCount
-        );
-    }
-
-
-    private void preloadLoop(DocumentType documentType, Index index, int totalCount, int initialBatchSize, Iterator<Document> persistentIt) {
-        int batchNumber = 0;
-        int generatedSoFar = 0;
-        int effectiveBatchSize = initialBatchSize;
-
-        while (generatedSoFar < totalCount) {
-            batchNumber++;
-
-            int remaining = totalCount - generatedSoFar;
-
-            int dynamicLimit = openSearchDataService.getDynamicBatchLimit();
-            if (dynamicLimit < effectiveBatchSize) {
-                int adapted = Math.max(dynamicLimit, MIN_BATCH_SIZE);
-                if (adapted != effectiveBatchSize) {
-                    log.debug(
-                            "Adapting dynamic batch size from {} to {} based on OpenSearch feedback (remaining={})",
-                            effectiveBatchSize,
-                            adapted,
-                            remaining
-                    );
-                    effectiveBatchSize = adapted;
+                        try {
+                            Thread.sleep(200);
+                        } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                        }
+                        continue;
+                    }
                 }
-            }
-            int currentBatchSize = Math.min(effectiveBatchSize, remaining);
-
-            List<Document> batch;
-            if (persistentIt == null) {
-                batch = dataGenerator.generateData(documentType, currentBatchSize);
-            } else {
-                batch = new ArrayList<>(currentBatchSize);
-                while (persistentIt.hasNext() && batch.size() < currentBatchSize) {
-                    batch.add(persistentIt.next());
-                }
+                throw e;
             }
 
-            if (batch.size() != currentBatchSize) {
-                throw new IllegalStateException(String.format(
-                        "Generator returned %d documents for batch %d but expected %d. Aborting preload.",
-                        batch.size(), batchNumber, currentBatchSize
-                ));
-            }
-
-            openSearchDataService.bulkIndexDocuments(index.getName(), batch);
-            generatedSoFar += currentBatchSize;
-
-            log.debug(
-                    "Finished batch {}. generatedSoFar={}/{}",
-                    batchNumber,
-                    generatedSoFar,
-                    totalCount
-            );
+            offset += currentBatchSize;
+            log.debug("Indexed {}/{} documents", offset, documents.size());
         }
     }
 }

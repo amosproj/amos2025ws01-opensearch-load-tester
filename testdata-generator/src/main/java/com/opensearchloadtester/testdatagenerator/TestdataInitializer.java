@@ -32,7 +32,7 @@ public class TestdataInitializer implements CommandLineRunner {
                 dataGenerationProperties.getDocumentType());
 
         openSearchDataService.createIndex(index.getName(), index.getSettings(), index.getMapping());
-        dataGenerationService.generateAndIndexTestData(dataGenerationProperties, index);
+        dataGenerationService.generateAndIndexTestData(index.getName());
         openSearchDataService.refreshIndex(index.getName());
 
         log.info("Finished test data initialization successfully");
