@@ -7,12 +7,11 @@
     <parent>
         <groupId>com.opensearchloadtester</groupId>
         <artifactId>opensearch-load-tester-parent</artifactId>
-        <version>4.0.0</version>
+        <version>5.0.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>ui</artifactId>
-    <version>4.0.0</version>
     <name>ui</name>
 
     <properties>

@@ -282,19 +282,6 @@ public class StartController {
         }
     }
 
-    private void dockerStop() {
-        System.out.println("Stopping Docker containers...");
-        processBuilder.command("sh", "-c", "docker compose down");
-        try {
-            processBuilder.start().waitFor();
-        } catch (Exception e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error stopping Docker containers");
-            alert.setContentText("An error occurred: " + e.getMessage());
-            alert.showAndWait();
-        }
-    }
-
     private void dockerClean() {
         System.out.println("Cleaning old Docker containers, volumes, and images...");
         processBuilder.command("sh", "-c", "docker compose down --volumes --rmi local --remove-orphans");
