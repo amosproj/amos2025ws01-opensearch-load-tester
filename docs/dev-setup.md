@@ -68,6 +68,28 @@ public void test() {
 
 ---
 
+## CLI Formatting (Optional)
+
+If your IDE formatting is off or you want a quick check in CI, use Spotless:
+
+```bash
+mvn -f common-core/pom.xml spotless:apply
+mvn -f load-generator/pom.xml spotless:apply
+mvn -f metrics-reporter/pom.xml spotless:apply
+mvn -f testdata-generator/pom.xml spotless:apply
+```
+
+Check formatting without changing files:
+
+```bash
+mvn -f common-core/pom.xml -P lint validate
+mvn -f load-generator/pom.xml -P lint validate
+mvn -f metrics-reporter/pom.xml -P lint validate
+mvn -f testdata-generator/pom.xml -P lint validate
+```
+
+---
+
 ## Troubleshooting
 
 **Code style not applied?**
