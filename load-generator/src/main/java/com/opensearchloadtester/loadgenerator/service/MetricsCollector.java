@@ -16,9 +16,22 @@ public class MetricsCollector {
 
     private final MetricsReporterClient metricsReporterClient;
     private final int batchSize;
-    private final boolean enabled;
+    private final boolean recording;
 
     private final List<MetricsDto> buffer = new ArrayList<>();
+
+    // TODO: Kann raus?
+//    @Autowired
+//    public MetricsCollector(MetricsReporterClient metricsReporterClient,
+//                            @Value("${metrics.batch.size:100}") int batchSize) {
+//        this(metricsReporterClient, batchSize, true);
+//    }
+//
+//    public MetricsCollector(MetricsReporterClient metricsReporterClient, int batchSize, boolean recording) {
+//        this.metricsReporterClient = metricsReporterClient;
+//        this.batchSize = batchSize;
+//        this.recording = recording;
+//    }
 
     @Autowired
     public MetricsCollector(
@@ -27,18 +40,18 @@ public class MetricsCollector {
     ) {
         this.metricsReporterClient = metricsReporterClient;
         this.batchSize = batchSize;
-        this.enabled = true;
+        this.recording = true;
     }
 
     // Extra constructor for warm-up, enabled configurable
     public MetricsCollector(MetricsReporterClient metricsReporterClient, int batchSize, boolean enabled) {
         this.metricsReporterClient = metricsReporterClient;
         this.batchSize = batchSize;
-        this.enabled = enabled;
+        this.recording = enabled;
     }
 
     public void appendMetrics(MetricsDto metricsDto) {
-        if (!enabled) return;
+        if (!recording) return;
 
         List<MetricsDto> toSend = null;
 
@@ -56,7 +69,7 @@ public class MetricsCollector {
     }
 
     public void flush() {
-        if (!enabled) return;
+        if (!recording) return;
 
         List<MetricsDto> toSend;
 

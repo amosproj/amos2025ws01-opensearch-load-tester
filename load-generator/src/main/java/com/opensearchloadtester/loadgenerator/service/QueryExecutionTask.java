@@ -36,13 +36,9 @@ public class QueryExecutionTask implements Runnable {
 
     @Override
     public void run() {
-        //log.debug("Executing query in thread '{}'", Thread.currentThread().getName());
-
         QueryType selectedQueryType = queryPool.get(ThreadLocalRandom.current().nextInt(queryPool.size()));
         Query query = selectedQueryType.createRandomQuery();
         String queryAsJson = query.toJsonString();
-
-        // log.debug("Generated query of type '{}': {}", selectedQueryType.name(), queryAsJson);
 
         // Send query to OpenSearch and measure end-to-end client-side round-trip time
         Request request = Requests.builder()

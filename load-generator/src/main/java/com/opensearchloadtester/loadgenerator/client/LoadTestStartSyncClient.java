@@ -46,7 +46,15 @@ public class LoadTestStartSyncClient {
     }
 
     public void registerReady(String loadGeneratorId) {
+
+        // TODO: Validate loadGeneratorId format
+
         String encodedId = URLEncoder.encode(loadGeneratorId, StandardCharsets.UTF_8);
+
+        // TODO: Validate encodedId format
+
+        // TODO: Validate url format
+
         String url = syncEndpointUrl + "/ready/" + encodedId;
 
         try {

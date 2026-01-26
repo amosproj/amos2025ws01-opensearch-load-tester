@@ -6,6 +6,9 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.opensearchloadtester.loadgenerator.model.QueryType;
 import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -21,10 +24,15 @@ import java.util.HashSet;
 @Configuration
 public class ScenarioConfigLoader {
 
+    @NotBlank @NotNull
     @Value("${scenario.config.path}")
     private String scenarioConfigPath;
+
+    @NotBlank @NotNull
     @Value("${scenario.config}")
     private String scenarioConfig;
+
+    @Min(1) // TODO IllegalStateException "Invalid configuration: load generator replicas must be > 0."
     @Value("${load.generator.replicas}")
     private int numberLoadGenerators;
 
@@ -44,12 +52,6 @@ public class ScenarioConfigLoader {
 
             validateQueryMix(config);
 
-            if (numberLoadGenerators <= 0) {
-                throw new IllegalStateException(
-                        "Invalid configuration: load generator replicas must be > 0."
-                );
-            }
-
             if (config.getQueriesPerSecond() < numberLoadGenerators) {
                 throw new IllegalStateException(
                         "Invalid scenario configuration: queriesPerSecond must be >= load generator replicas."
@@ -62,7 +64,6 @@ public class ScenarioConfigLoader {
             throw new RuntimeException(String.format("Failed to read or parse from file '%s'", path), e);
         }
     }
-    private static final int MAX_POOL_SIZE = 10_000;
 
     private void validateQueryMix(ScenarioConfig config) {
         JsonNode mix = config.getQueryMix();
@@ -84,8 +85,17 @@ public class ScenarioConfigLoader {
             if (entry.isTextual()) {
                 // short form: "query_mix:- ANO_PAYROLL_RANGE"
                 type = QueryType.valueOf(entry.asText());
-                weight = 1;
-            } else if (entry.isObject()) {
+
+                if (totalWeight > 0) {
+                    throw new IllegalArgumentException(
+                            "Cannot mix short and long form entries in query_mix. " +
+                                    "Either use all short form or all long form!"
+                    );
+                }
+
+            }
+
+            if (entry.isObject()) {
                 // long form: "query_mix: - type: ANO_MULTI_REGEX percent: 80"
 
                 JsonNode typeNode = entry.get("type");
@@ -101,8 +111,17 @@ public class ScenarioConfigLoader {
                 type = QueryType.valueOf(typeNode.asText());
                 weight = percentNode.asInt();
 
-                if (weight <= 0) {
-                    throw new IllegalArgumentException("query_mix weights must be > 0 for type: " + type);
+                if (weight == 100 || weight <= 0){
+                    throw new IllegalArgumentException("query_mix weights must be between " +
+                            "0 ans 100 for long form entries.");
+                }
+
+                totalWeight += weight;
+                if (totalWeight > 100) {
+                    throw new IllegalArgumentException(
+                            "query_mix weights sum too large (" + totalWeight + "). " +
+                                    "Please use smaller ratios (e.g. 20:50:30)."
+                    );
                 }
             } else {
                 throw new IllegalArgumentException("Invalid query_mix entry: " + entry);
@@ -111,16 +130,6 @@ public class ScenarioConfigLoader {
             if (!seen.add(type)) {
                 throw new IllegalArgumentException("Duplicate query_mix entry for type: " + type);
             }
-
-            totalWeight += weight;
-            if (totalWeight > MAX_POOL_SIZE) {
-                throw new IllegalArgumentException(
-                        "query_mix weights sum too large (" + totalWeight + "). Please use smaller ratios (e.g. 2:5:3)."
-                );
-            }
         }
     }
-
-
-
 }

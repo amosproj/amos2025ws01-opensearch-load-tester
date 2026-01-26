@@ -6,15 +6,18 @@ import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public final class QueryPoolBuilder {
 
     private QueryPoolBuilder() {}
 
     public static List<QueryType> build(ScenarioConfig config) {
+        Objects.requireNonNull(config, "ScenarioConfig must not be null");
         JsonNode mix = config.getQueryMix();
 
         if (mix == null || !mix.isArray() || mix.isEmpty()) {
+            // TODO: Better exception text?
             throw new IllegalStateException("ScenarioConfig must be validated before building query pool");
         }
 
@@ -50,6 +53,10 @@ public final class QueryPoolBuilder {
                     pool.add(type);
                 }
             }
+        }
+
+        if (pool.size() != totalWeight) {
+            throw new IllegalStateException("Internal error building query pool: expected size=" + totalWeight + ", actual=" + pool.size());
         }
 
         return pool;
