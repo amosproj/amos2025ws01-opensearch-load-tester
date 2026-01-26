@@ -1,0 +1,86 @@
+{
+  "size": 50,
+  "track_total_hits": true,
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "range": {
+            "dssCustomMetadataDuo.invoiceDate": {
+              "gte": "{{invoice_date_from}}",
+              "lte": "{{invoice_date_to}}"
+            }
+          }
+        },
+        {
+          "term": {
+            "dssCustomMetadataDuo.documentCategory.raw": "{{category}}"
+          }
+        },
+        {
+          "term": {
+            "dssCustomMetadataDuo.paidStatus.raw": "{{paid_status}}"
+          }
+        }
+      ],
+      "must": [
+        {
+          "dis_max": {
+            "tie_breaker": 0.2,
+            "queries": [
+              {
+                "term": {
+                  "dssCustomMetadataDuo.invoiceNumber.raw": "{{invoice_number}}"
+                }
+              },
+              {
+                "wildcard": {
+                  "dssCustomMetadataDuo.invoiceNumber.raw": "*{{invoice_number}}*"
+                }
+              },
+              {
+                "term": {
+                  "dssCustomMetadataDuo.invoiceBusinessPartner.raw": "{{business_partner}}"
+                }
+              },
+              {
+                "match_phrase": {
+                  "customAll": {
+                    "query": "{{business_partner}}",
+                    "slop": 2
+                  }
+                }
+              },
+              {
+                "match": {
+                  "customAll": {
+                    "query": "{{search_terms}}",
+                    "operator": "and",
+                    "fuzziness": "AUTO"
+                  }
+                }
+              },
+              {
+                "match_phrase": {
+                  "customAll": {
+                    "query": "{{search_terms}}",
+                    "slop": 3
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "_source": [
+    "dssDocumentName",
+    "dssCustomMetadataDuo.invoiceBusinessPartner",
+    "dssCustomMetadataDuo.invoiceNumber",
+    "dssCustomMetadataDuo.invoiceDate",
+    "dssCustomMetadataDuo.totalGrossAmount",
+    "dssCustomMetadataDuo.paidStatus",
+    "dssCustomMetadataDuo.documentApprovalState"
+  ]
+}
