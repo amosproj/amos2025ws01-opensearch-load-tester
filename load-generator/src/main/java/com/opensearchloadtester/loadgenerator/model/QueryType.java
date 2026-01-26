@@ -17,7 +17,7 @@ public enum QueryType {
     DUO_BOOKING_BY_COSTCENTER_AND_DATE(DuoBookingByCostcenterAndDateQuery::random),
     DUO_BOOKING_BY_AMOUNT_RANGE(DuoBookingByAmountRangeQuery::random),
     DUO_INVOICE_DIS_MAX(DuoInvoiceDisMax::random),
-    DUO_INVOICE_DIS_MAX_2(DuoInvoiceDisMax2::random),
+    DUO_INVOICE_DIS_MAX_EXPENSIVE(DuoInvoiceDisMaxExpensive::random),
     DUO_COMPLEX(DuoComplexQuery::random),
     DOCNAME_REGEX(DocNameRegexQuery::random),
     ANO_MULTI_REGEX(AnoMultiRegexQuery::random),

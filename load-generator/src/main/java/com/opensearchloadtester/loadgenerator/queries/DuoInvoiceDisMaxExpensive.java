@@ -6,13 +6,13 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-public class DuoInvoiceDisMax2 extends AbstractQuery {
+public class DuoInvoiceDisMaxExpensive extends AbstractQuery {
 
-    private DuoInvoiceDisMax2(Map<String, String> queryParams, String queryTemplatePath) {
+    private DuoInvoiceDisMaxExpensive(Map<String, String> queryParams, String queryTemplatePath) {
         super(queryParams, queryTemplatePath);
     }
 
-    public static DuoInvoiceDisMax2 random() {
+    public static DuoInvoiceDisMaxExpensive random() {
         String invoiceNumber = String.format(
                 "%d/%d",
                 faker().number().numberBetween(10000, 99999),
@@ -46,6 +46,6 @@ public class DuoInvoiceDisMax2 extends AbstractQuery {
                 "paid_status", paidStatus
         );
 
-        return new DuoInvoiceDisMax2(queryParams, "queries/compound/q2_duo_dis_max.json");
+        return new DuoInvoiceDisMaxExpensive(queryParams, "queries/compound/q2_duo_dis_max.json");
     }
 }
