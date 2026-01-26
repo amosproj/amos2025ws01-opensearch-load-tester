@@ -12,6 +12,7 @@ public enum QueryType {
     ANO_CLIENTS_AGGREGATION(AnoClientsAggregationQuery::random),
     ANO_CLIENT_BY_YEAR(AnoClientByYearQuery::random),
     ANO_DIS_MAX(AnoDisMaxQuery::random),
+    ANO_DIS_MAX_EXPENSIVE(AnoDisMaxExpensiveQuery::random),
     DUO_CLIENT_BY_CUSTOMER_NUMBER(DuoClientByCustomerNumberQuery::random),
     DUO_CLIENT_BY_NAME_AND_STATE(DuoClientByNameAndStateQuery::random),
     ANO_PAYROLL_TYPE_LANGUAGE(AnoPayrollTypeLanguageQuery::random),
