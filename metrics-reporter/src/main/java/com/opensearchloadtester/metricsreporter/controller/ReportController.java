@@ -1,12 +1,14 @@
 package com.opensearchloadtester.metricsreporter.controller;
 
+import com.opensearchloadtester.common.dto.FinishLoadTestDto;
 import com.opensearchloadtester.common.dto.MetricsDto;
 import com.opensearchloadtester.metricsreporter.config.ShutdownAfterResponseInterceptor;
 import com.opensearchloadtester.metricsreporter.dto.StatisticsDto;
 import com.opensearchloadtester.metricsreporter.service.ReportService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,28 +23,28 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 @RestController
 @RequestMapping("/api")
+@RequiredArgsConstructor
 public class ReportController {
 
-    // Load generators that have sent at least one metrics batch
-    private final Set<String> reportedInstances = ConcurrentHashMap.newKeySet();
+    // Load Generators that have submitted at least one metrics batch
+    private final Set<String> reportedLoadGenerators = ConcurrentHashMap.newKeySet();
 
-    // Load generators that have completed sending all batches
-    private final Set<String> finishedInstances = ConcurrentHashMap.newKeySet();
-    private boolean finalized = false;
+    // Load Generators that have finished their run, either successfully or with an error
+    private final ConcurrentHashMap<String, FinishLoadTestDto> finishedLoadGenerators = new ConcurrentHashMap<>();
 
-    @Value("${load.generator.replicas:1}")
-    private int expectedReplicas;
+    @Value("${load.generator.replicas}")
+    private int expectedLoadGenerators;
 
-    @Value("${report.export.json.enabled:true}")
+    @Value("${report.export.json.enabled}")
     private boolean jsonExportEnabled;
 
-    @Autowired
-    private ReportService reportService;
+    private final ReportService reportService;
+    private boolean loadTestFinished = false;
 
     /**
      * This Post request saves the received metrics to thread-safe storage.
      * Stores incoming metrics batches. Does not finalize the run.
-     * Finalization happens only after all replicas call /finish/{loadGeneratorId}.
+     * Finalization happens only after all replicas call /finish.
      *
      */
     @PostMapping("/metrics")
@@ -50,7 +52,7 @@ public class ReportController {
         Set<String> loadGeneratorIds = new HashSet<>();
 
         // Reject late batches after finalization
-        if (finalized) {
+        if (loadTestFinished) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body("Run already finalized; metrics batch rejected\n");
         }
@@ -93,96 +95,99 @@ public class ReportController {
         }
 
         // Track that this load generator has reported at least one batch
-        reportedInstances.addAll(loadGeneratorIds);
-        int reportedCount = reportedInstances.size();
+        reportedLoadGenerators.addAll(loadGeneratorIds);
+        int reportedCount = reportedLoadGenerators.size();
 
         log.info("Stored metrics from {}. Reported {}/{} replicas. Batch size: {}",
                 loadGeneratorIds,
                 reportedCount,
-                expectedReplicas,
+                expectedLoadGenerators,
                 metricsList.size());
 
         // Finalization happens only after all replicas call /finish/{id}.
         return ResponseEntity.ok(
                 String.format("Metrics stored successfully. Reported replicas (%d/%d). Waiting for finish signals.\n",
-                        reportedCount, expectedReplicas)
+                        reportedCount, expectedLoadGenerators)
         );
-
     }
+
     /**
-     * Called by each load generator when it has finished sending all metrics batches.
-     * Generates reports only once all expected replicas have finished.
+     * Called by each Load Generator after finishing its run, either successfully or with an error.
+     * Generates reports once all expected Load Generators have finished.
      */
-    @PostMapping("/finish/{loadGeneratorId}")
-    public synchronized ResponseEntity<String> finish(@PathVariable String loadGeneratorId,
+    @PostMapping("/finish")
+    public synchronized ResponseEntity<String> finish(@Valid @RequestBody FinishLoadTestDto finishLoadTestDto,
                                                       HttpServletRequest request) {
-        if (loadGeneratorId == null || loadGeneratorId.isBlank()) {
-            return ResponseEntity.badRequest().body("Invalid loadGeneratorId\n");
+
+        // Idempotency guard: prevents generating the reports more than once
+        if (loadTestFinished) {
+            return ResponseEntity.ok().build();
         }
 
-        // If the run is already finalized, finish is idempotent: return 200 (OK)
-        if (finalized) {
-            log.info("Finish received from {} but run is already finalized - returning 200 OK", loadGeneratorId);
-            return ResponseEntity.ok("Run already finalized\n");
+        if (finishedLoadGenerators.containsKey(finishLoadTestDto.getLoadGeneratorId())) {
+            log.debug("Load Generator with id '{}' was already marked as FINISHED",
+                    finishLoadTestDto.getLoadGeneratorId());
+            return ResponseEntity.ok().build();
         }
 
-        boolean alreadyFinished = finishedInstances.contains(loadGeneratorId);
-        if (!alreadyFinished) {
-            finishedInstances.add(loadGeneratorId);
-        }
-        int finishedCount = finishedInstances.size();
+        finishedLoadGenerators.put(finishLoadTestDto.getLoadGeneratorId(), finishLoadTestDto);
 
-        if (alreadyFinished) {
-            log.info("Duplicate finish received from {}. Finished {}/{}",
-                    loadGeneratorId, finishedCount, expectedReplicas);
-        } else {
-            log.info("Received finish from {}. Finished {}/{}",
-                    loadGeneratorId, finishedCount, expectedReplicas);
-        }
+        log.info("Load Generator with id '{}' marked as FINISHED with {} ({}/{})",
+                finishLoadTestDto.getLoadGeneratorId(),
+                finishLoadTestDto.isSuccess() ? "SUCCESS" : "ERROR",
+                finishedLoadGenerators.size(),
+                expectedLoadGenerators);
 
-        // Only finalize once all replicas have explicitly finished sending batches
-        if (finishedCount >= expectedReplicas) {
-            log.info("All {} replicas finished. Generating reports...", expectedReplicas);
+        // Generate reports only after all load generators have finished their run
+        if (finishedLoadGenerators.size() == expectedLoadGenerators) {
+            loadTestFinished = true;
 
-            finalized = true; // idempotency guard: prevent double-finalize
+            log.info("All {} Load Generators finished their run. Generating reports...",
+                    finishedLoadGenerators.size());
+
+            List<FinishLoadTestDto> failedLoadGenerators = finishedLoadGenerators.values().stream()
+                    .filter(dto -> !dto.isSuccess())
+                    .toList();
+
+            if (!failedLoadGenerators.isEmpty()) {
+                logFailedLoadGenerators(failedLoadGenerators);
+            }
+
             try {
-                StatisticsDto summary = reportService.finalizeReports(reportedInstances);
+                StatisticsDto summary = reportService.finalizeReports(reportedLoadGenerators);
 
                 StringBuilder message = new StringBuilder(String.format(
-                        "All load generators finished (%d/%d). Reports generated successfully!\n" +
-                                "Total load generators: %d\n" +
-                                "Total queries: %d\n",
-                        finishedCount, expectedReplicas,
-                        summary.getLoadGeneratorInstances().size(),
+                        "Reports generated successfully!\n" +
+                                "Total Load Generators: %d/%d\n" +
+                                "Total Queries executed: %d\n",
+                        summary.getLoadGeneratorInstances().size(), expectedLoadGenerators,
                         summary.getTotalQueries()
                 ));
 
                 if (jsonExportEnabled) {
                     message.append("Results JSON report: ").append(reportService.getResultsJsonPath()).append("\n");
-                    message.append("Statistics JSON: ").append(reportService.getStatisticsReportPath()).append("\n");
+                    message.append("Statistics JSON: ").append(reportService.getStatisticsReportPath());
                 }
+
+                log.info(message.toString());
 
                 // Mark request for application shutdown AFTER response completed
                 request.setAttribute(ShutdownAfterResponseInterceptor.SHUTDOWN_AFTER_RESPONSE, true);
+                int exitCode = failedLoadGenerators.isEmpty()
+                        ? ShutdownAfterResponseInterceptor.EXIT_OK
+                        : ShutdownAfterResponseInterceptor.EXIT_LOAD_GENERATOR_FAILED;
+                request.setAttribute(ShutdownAfterResponseInterceptor.EXIT_CODE, exitCode);
 
-                return ResponseEntity.ok(message.toString());
-
+                return ResponseEntity.ok().build();
             } catch (IOException e) {
                 log.error("Failed to generate reports", e);
-                finalized = false;
+                loadTestFinished = false;
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body("Finish received but failed to generate reports: " + e.getMessage() + "\n");
             }
         }
 
-        if (alreadyFinished) {
-            return ResponseEntity.ok("Finish already received\n");
-        }
-
-        return ResponseEntity.ok(
-                String.format("Finish stored. Waiting for remaining load generators (%d/%d)\n",
-                        finishedCount, expectedReplicas)
-        );
+        return ResponseEntity.ok().build();
     }
 
     /**
@@ -215,6 +220,26 @@ public class ReportController {
             return "httpStatusCode is out of range";
         }
         return null;
+    }
+
+    private void logFailedLoadGenerators(List<FinishLoadTestDto> failedLoadGenerators) {
+        StringBuilder warning = new StringBuilder();
+        warning.append("The following Load Generators finished with an error:\n");
+
+        for (FinishLoadTestDto dto : failedLoadGenerators) {
+            warning.append("- Load Generator '")
+                    .append(dto.getLoadGeneratorId())
+                    .append("': ")
+                    .append(dto.getErrorMessage() != null ? dto.getErrorMessage() : "No error message provided")
+                    .append("\n");
+        }
+
+        warning.append(
+                "The load test may not have been executed at the fullest configured load, " +
+                        "and the generated reports may not contain all expected metrics."
+        );
+
+        log.warn(warning.toString());
     }
 
 }

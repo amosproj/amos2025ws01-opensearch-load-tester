@@ -1,5 +1,6 @@
 package com.opensearchloadtester.metricsreporter.controller;
 
+import com.opensearchloadtester.common.dto.FinishLoadTestDto;
 import com.opensearchloadtester.common.dto.MetricsDto;
 import com.opensearchloadtester.metricsreporter.config.ShutdownAfterResponseInterceptor;
 import com.opensearchloadtester.metricsreporter.dto.StatisticsDto;
@@ -36,7 +37,7 @@ class ReportControllerTest {
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(reportController, "expectedReplicas", 1);
+        ReflectionTestUtils.setField(reportController, "expectedLoadGenerators", 1);
         ReflectionTestUtils.setField(reportController, "jsonExportEnabled", false);
     }
 
@@ -54,7 +55,7 @@ class ReportControllerTest {
 
     @Test
     void submitMetrics_waitsUntilAllReplicasReport() throws Exception {
-        ReflectionTestUtils.setField(reportController, "expectedReplicas", 2);
+        ReflectionTestUtils.setField(reportController, "expectedLoadGenerators", 2);
 
         List<MetricsDto> metrics = List.of(
                 new MetricsDto(LOAD_GENERATOR_ID, "query_type_test", 120L, 80L, 5, 200)
@@ -67,7 +68,7 @@ class ReportControllerTest {
 
     @Test
     void finish_generatesReports_whenAllReplicasFinished() throws Exception {
-        ReflectionTestUtils.setField(reportController, "expectedReplicas", 1);
+        ReflectionTestUtils.setField(reportController, "expectedLoadGenerators", 1);
         ReflectionTestUtils.setField(reportController, "jsonExportEnabled", true);
 
         List<MetricsDto> metrics = List.of(
@@ -90,8 +91,9 @@ class ReportControllerTest {
 
         HttpServletRequest request = mock(HttpServletRequest.class);
         ResponseEntity<String> submitResponse = reportController.submitMetrics(metrics);
-        ResponseEntity<String> finishResponse = reportController.finish(LOAD_GENERATOR_ID, request);
-
+        ResponseEntity<String> finishResponse = reportController.finish(
+                new FinishLoadTestDto(LOAD_GENERATOR_ID, true, null),
+                request);
         assertThat(submitResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(finishResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
 
