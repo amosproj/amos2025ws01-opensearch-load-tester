@@ -1,6 +1,7 @@
 package com.opensearchloadtester.loadgenerator;
 
 import com.opensearchloadtester.loadgenerator.client.LoadTestStartSyncClient;
+import com.opensearchloadtester.loadgenerator.exception.MetricsReporterAccessException;
 import com.opensearchloadtester.loadgenerator.model.QueryType;
 import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
 import com.opensearchloadtester.loadgenerator.service.*;
@@ -50,20 +51,36 @@ public class TestScenarioInitializer implements CommandLineRunner {
     public void run(String... args) {
         log.info("Initializing load test with scenario {}", scenarioConfig.getName());
 
-        // 1) Optional warm-up
-        if (scenarioConfig.isWarmUpEnabled()) {
-            runWarmUp();
-        }
+        try {
+            // 1) Optional warm-up
+            if (scenarioConfig.isWarmUpEnabled()) {
+                runWarmUp();
+            }
 
-        // 2) Sync load test start with other Load Generators
-        if (numberLoadGenerators > 1) {
-            synchronizeStart();
-        }
+            // 2) Sync load test start with other Load Generators
+            if (numberLoadGenerators > 1) {
+                synchronizeStart();
+            }
 
-        // 3) Execute load test
-        log.info("Starting load test");
-        loadRunner.executeScenario(scenarioConfig);
-        log.info("Finished load test successfully");
+            // 3) Execute load test
+            log.info("Starting load test");
+            loadRunner.executeScenario(scenarioConfig);
+            log.info("Finished load test successfully");
+
+            // 4) Notify Metrics Reporter about successful finish
+            metricsReporterClient.finish(loadGeneratorId, true, null);
+        } catch (Exception e) {
+            log.error("Load test failed", e);
+
+            // Notify Metrics Reporter about failure before exiting
+            try {
+                metricsReporterClient.finish(loadGeneratorId, false, e.getMessage());
+            } catch (MetricsReporterAccessException ex) {
+                log.warn("Failed to notify Metrics Reporter about failure", ex);
+            }
+
+            throw e;
+        }
     }
 
     private void runWarmUp() {

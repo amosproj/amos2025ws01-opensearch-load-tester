@@ -38,6 +38,11 @@
             <optional>true</optional>
         </dependency>
 
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+        </dependency>
+
         <!-- Jackson -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
