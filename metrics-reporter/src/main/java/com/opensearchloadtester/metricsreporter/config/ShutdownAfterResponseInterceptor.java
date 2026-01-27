@@ -31,6 +31,7 @@ public class ShutdownAfterResponseInterceptor implements HandlerInterceptor {
 
     // Exit Codes
     public static final int EXIT_OK = 0;
+    public static final int EXIT_INTERNAL_ERROR = 1;
     public static final int EXIT_LOAD_GENERATOR_FAILED = 2;
 
     private final ConfigurableApplicationContext context;

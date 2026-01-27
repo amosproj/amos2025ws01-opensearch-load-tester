@@ -5,5 +5,5 @@ schedule_duration: PT10S
 queries_per_second: 30
 query_response_timeout: PT1M
 enable_warm_up: true
-query_types:
+query_mix:
   - ANO_PAYROLL_RANGE
