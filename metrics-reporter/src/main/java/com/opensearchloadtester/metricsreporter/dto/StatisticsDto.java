@@ -36,10 +36,10 @@ public class StatisticsDto {
     private DurationStats queryDurationMs;
 
     @JsonProperty("total_queries")
-    private Integer totalQueries;
+    private Long totalQueries;
 
     @JsonProperty("total_errors")
-    private Integer totalErrors;
+    private Long totalErrors;
 
     @JsonProperty("load_generator_instances")
     private List<String> loadGeneratorInstances;

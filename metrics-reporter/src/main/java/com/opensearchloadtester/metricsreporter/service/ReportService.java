@@ -21,7 +21,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -203,79 +202,4 @@ public class ReportService {
         }
     }
 
-    @lombok.Getter
-    private static class StatsAccumulator {
-        // total query count must stay below 2.147.483.647 (int max value) else we will have to use long for this field
-        private int totalQueries = 0;
-        private int totalErrors = 0;
-
-        private long requestDurationCount = 0;
-        private long requestDurationSum = 0;
-        private long requestDurationMin = Long.MAX_VALUE;
-        private long requestDurationMax = Long.MIN_VALUE;
-
-        private long queryDurationCount = 0;
-        private long queryDurationSum = 0;
-        private long queryDurationMin = Long.MAX_VALUE;
-        private long queryDurationMax = Long.MIN_VALUE;
-
-        void update(List<MetricsDto> results) {
-            for (MetricsDto result : results) {
-                totalQueries++;
-
-                if (result.getHttpStatusCode() >= 400) {
-                    totalErrors++;
-                }
-
-                Long requestDurationMs = result.getRequestDurationMillis();
-                if (requestDurationMs != null) {
-                    requestDurationCount++;
-                    requestDurationSum += requestDurationMs;
-                    requestDurationMin = Math.min(requestDurationMin, requestDurationMs);
-                    requestDurationMax = Math.max(requestDurationMax, requestDurationMs);
-                }
-
-                Long queryDurationMs = result.getQueryDurationMillis();
-                if (queryDurationMs != null && queryDurationMs >= 0) {
-                    queryDurationCount++;
-                    queryDurationSum += queryDurationMs;
-                    queryDurationMin = Math.min(queryDurationMin, queryDurationMs);
-                    queryDurationMax = Math.max(queryDurationMax, queryDurationMs);
-                }
-            }
-        }
-
-        StatisticsDto toStatistics(LocalDateTime generatedAt, Set<String> loadGeneratorInstances) {
-            StatisticsDto.DurationStats requestDuration = new StatisticsDto.DurationStats();
-            if (requestDurationCount > 0) {
-                requestDuration.setAverage(requestDurationSum / (double) requestDurationCount);
-                requestDuration.setMin(requestDurationMin);
-                requestDuration.setMax(requestDurationMax);
-            } else {
-                requestDuration.setAverage(0.0);
-                requestDuration.setMin(0L);
-                requestDuration.setMax(0L);
-            }
-
-            StatisticsDto.DurationStats queryDuration = new StatisticsDto.DurationStats();
-            if (queryDurationCount > 0) {
-                queryDuration.setAverage(queryDurationSum / (double) queryDurationCount);
-                queryDuration.setMin(queryDurationMin);
-                queryDuration.setMax(queryDurationMax);
-            } else {
-                queryDuration.setAverage(0.0);
-                queryDuration.setMin(0L);
-                queryDuration.setMax(0L);
-            }
-
-            return new StatisticsDto(
-                    generatedAt,
-                    requestDuration,
-                    queryDuration,
-                    totalQueries,
-                    totalErrors,
-                    new ArrayList<>(loadGeneratorInstances)
-            );
-        }
-    }
 }
