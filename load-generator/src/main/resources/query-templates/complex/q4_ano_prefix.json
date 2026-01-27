@@ -7,15 +7,15 @@
         {
           "prefix": {
             "dssOriginalFilename.raw": {
-              "value": "Brutto"
+              "value": "{{prefix}}"
             }
           }
         },
         {
           "match": {
             "customAll": {
-              "query": "abrechnung brutto netto",
-              "operator": "and"
+              "query": "{{match_query}}",
+              "operator": "or"
             }
           }
         }

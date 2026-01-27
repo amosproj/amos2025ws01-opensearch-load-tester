@@ -4,8 +4,8 @@
   "query": {
     "range": {
       "dssCustomMetadataDuo.invoiceDate": {
-        "gte": "2020-01-01",
-        "lte": "2026-12-31"
+        "gte": "{{gte}}",
+        "lte": "{{lte}}"
       }
     }
   },

@@ -30,7 +30,12 @@ public enum QueryType {
     DUO_SPAN_NEAR(DuoSpanNearQuery::random),
     // More-Like-This Query
     ANO_MORE_LIKE_THIS(AnoMoreLikeThisQuery::random),
-    DUO_MORE_LIKE_THIS(DuoMoreLikeThisQuery::random);
+    DUO_MORE_LIKE_THIS(DuoMoreLikeThisQuery::random),
+
+    ANO_PREFIX_RANGE(AnoPrefixRangeQuery::random),
+    DUO_MULTI_PREFIX_SORT(DuoMultiPrefixSortQuery::random),
+    DUO_DATE_RANGE(DuoDateRangeQuery::random),
+    ANO_PREFIX_MATCH(AnoPrefixMatchQuery::random);
 
     private final Supplier<? extends Query> supplier;
 
