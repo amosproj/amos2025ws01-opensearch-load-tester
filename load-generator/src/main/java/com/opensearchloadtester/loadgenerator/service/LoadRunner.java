@@ -2,6 +2,7 @@ package com.opensearchloadtester.loadgenerator.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opensearchloadtester.loadgenerator.client.MetricsReporterClient;
+import com.opensearchloadtester.loadgenerator.model.QueryType;
 import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.opensearch.generic.OpenSearchGenericClient;
@@ -130,11 +131,6 @@ public class LoadRunner {
                 } catch (Exception e) {
                     log.warn("Failed to flush metrics for {}", loadGeneratorId, e);
                 }
-                try {
-                    metricsReporterClient.finish(loadGeneratorId);
-                } catch (Exception e) {
-                    log.warn("Failed to finish metrics reporting for {}", loadGeneratorId, e);
-                }
 
                 log.info("Scenario '{}' completed successfully. All threads finished.", scenarioConfig.getName());
                 log.info("Schedule duration: {}s, Total duration: {}s",
@@ -145,7 +141,7 @@ public class LoadRunner {
                         scenarioConfig.getName(), String.format("%.2f", actualDurationSeconds));
             }
         } catch (Exception e) {
-            log.error("Error executing queries:", e);
+            throw new RuntimeException("Error executing queries", e);
         } finally {
             // Fallback cleanup if an exception skipped the normal shutdown path.
             if (scheduledTaskForCleanup != null) scheduledTaskForCleanup.cancel(false);

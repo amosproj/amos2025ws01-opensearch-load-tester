@@ -3,6 +3,7 @@ package com.opensearchloadtester.loadgenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opensearchloadtester.loadgenerator.client.LoadTestStartSyncClient;
 import com.opensearchloadtester.loadgenerator.client.MetricsReporterClient;
+import com.opensearchloadtester.loadgenerator.exception.MetricsReporterAccessException;
 import com.opensearchloadtester.loadgenerator.model.QueryType;
 import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
 import com.opensearchloadtester.loadgenerator.service.LoadRunner;
@@ -57,17 +58,32 @@ public class TestScenarioInitializer implements CommandLineRunner {
     public void run(String... args) {
         log.info("Initializing load test with scenario {}", scenarioConfig.getName());
 
-        if (scenarioConfig.getWarmUpEnabled()) {
-            runWarmUp();
-        }
+        try {
+            if (scenarioConfig.getWarmUpEnabled()) {
+                runWarmUp();
+            }
 
-        if (numberLoadGenerators > 1) {
-            synchronizeStart();
-        }
+            if (numberLoadGenerators > 1) {
+                synchronizeStart();
+            }
 
-        log.info("Starting load test");
-        loadRunner.executeScenario(scenarioConfig);
-        log.info("Finished load test successfully");
+            log.info("Starting load test");
+            loadRunner.executeScenario(scenarioConfig);
+            log.info("Finished load test successfully");
+
+            metricsReporterClient.finish(loadGeneratorId, true, null);
+        } catch (Exception e) {
+            log.error("Load test failed", e);
+
+            // Notify Metrics Reporter about failure before exiting
+            try {
+                metricsReporterClient.finish(loadGeneratorId, false, e.getMessage());
+            } catch (MetricsReporterAccessException ex) {
+                log.warn("Failed to notify Metrics Reporter about failure", ex);
+            }
+
+            throw e;
+        }
     }
 
     private void runWarmUp() {
