@@ -3,13 +3,13 @@ package com.opensearchloadtester.loadgenerator.queries;
 import java.util.List;
 import java.util.Map;
 
-public class DuoInvoiceDisMax extends AbstractQuery {
+public class DuoInvoiceDisMaxQuery extends AbstractQuery {
 
-    private DuoInvoiceDisMax(Map<String, String> queryParams, String queryTemplatePath) {
+    private DuoInvoiceDisMaxQuery(Map<String, String> queryParams, String queryTemplatePath) {
         super(queryParams, queryTemplatePath);
     }
 
-    public static DuoInvoiceDisMax random() {
+    public static DuoInvoiceDisMaxQuery random() {
         String invoiceNumber = String.format(
                 "%d/%d",
                 faker().number().numberBetween(10000, 99999),
@@ -29,6 +29,6 @@ public class DuoInvoiceDisMax extends AbstractQuery {
                 "search_terms", searchTerms
         );
 
-        return new DuoInvoiceDisMax(queryParams, "queries/compound/q1_duo_dis_max.json");
+        return new DuoInvoiceDisMaxQuery(queryParams, "queries/compound/q1_duo_dis_max.json");
     }
 }
