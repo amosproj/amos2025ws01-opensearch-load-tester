@@ -1,9 +1,0 @@
----
-name: default-scenario
-document_type: ANO
-schedule_duration: PT5S
-queries_per_second: 20
-query_response_timeout: PT30M
-enable_warm_up: true
-query_mix:
-  - ANO_MULTI_REGEX

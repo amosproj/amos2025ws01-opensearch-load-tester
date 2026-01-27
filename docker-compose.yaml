@@ -34,7 +34,7 @@ services:
     deploy:
       replicas: ${LOAD_GENERATOR_REPLICAS:-1}
     volumes:
-      - ./load-generator/scenarios:/app/scenarios:ro
+      - ./load-generator/src/main/resources/scenarios:/app/src/main/resources/scenarios:ro
     environment:
       - SPRING_APPLICATION_NAME=load-generator
       - OPENSEARCH_URL=${OPENSEARCH_URL:-http://test-target-opensearch:9200}
@@ -42,7 +42,7 @@ services:
       - LOAD_GENERATOR_REPLICAS=${LOAD_GENERATOR_REPLICAS:-1}
       - LOGGING_LEVEL_COM_OPENSEARCHLOADTESTER_LOADGENERATOR=${LOGGING_LVL_LOAD_GEN:-INFO}
       - METRICS_BATCH_SIZE=${METRICS_BATCH_SIZE:-100}
-      - SCENARIO_CONFIG_PATH=${SCENARIO_CONFIG_PATH:-scenarios/}
+      - SCENARIO_CONFIG_PATH=${SCENARIO_CONFIG_PATH:-src/main/resources/scenarios/}
       - SCENARIO_CONFIG=${SCENARIO_CONFIG:-default-scenario.yaml}
     networks:
       - opensearch-loadtester-network
