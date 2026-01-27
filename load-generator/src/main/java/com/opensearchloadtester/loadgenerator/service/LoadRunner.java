@@ -1,14 +1,13 @@
 package com.opensearchloadtester.loadgenerator.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opensearchloadtester.loadgenerator.client.MetricsReporterClient;
-import com.opensearchloadtester.loadgenerator.model.QueryType;
 import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.opensearch.generic.OpenSearchGenericClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -21,20 +20,22 @@ public class LoadRunner {
     private final OpenSearchGenericClient openSearchClient;
     private final MetricsReporterClient metricsReporterClient;
     private final MetricsCollector metricsCollector;
-
+    private final ObjectMapper objectMapper;
 
     public LoadRunner(
             @Value("${HOSTNAME}") String loadGeneratorId,
             @Value("${load.generator.replicas}") int numberLoadGenerators,
             OpenSearchGenericClient openSearchClient,
             MetricsReporterClient metricsReporterClient,
-            MetricsCollector metricsCollector
+            MetricsCollector metricsCollector,
+            ObjectMapper objectMapper
     ) {
         this.loadGeneratorId = loadGeneratorId;
         this.numberLoadGenerators = numberLoadGenerators;
         this.openSearchClient = openSearchClient;
         this.metricsReporterClient = metricsReporterClient;
         this.metricsCollector = metricsCollector;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -46,17 +47,15 @@ public class LoadRunner {
         log.info("Executing '{}' (expected duration: {} sec)",
                 scenarioConfig.getName(), scenarioConfig.getScheduleDuration().getSeconds());
 
-        log.info("Timout {}s", scenarioConfig.getQueryResponseTimeout().toSeconds());
-
-        List<QueryType> queryPool = QueryPoolBuilder.build(scenarioConfig);
+        log.info("Timeout {}s", scenarioConfig.getQueryResponseTimeout().toSeconds());
 
         QueryExecutionTask query = new QueryExecutionTask(
                 loadGeneratorId,
                 scenarioConfig.getDocumentType().getIndex(),
-                queryPool,
+                QueryPoolBuilder.build(scenarioConfig),
                 openSearchClient,
                 metricsCollector,
-                scenarioConfig.getQueryResponseTimeout()
+                objectMapper
         );
 
         // Track overall test start time
@@ -96,7 +95,7 @@ public class LoadRunner {
                 scheduler.shutdown();
             }, durationNs, TimeUnit.NANOSECONDS);
 
-            boolean schedulerStopped = false;
+            boolean schedulerStopped;
             try {
                 // Wait for the scheduler to stop because it populates worker threads
                 schedulerStopped = scheduler.awaitTermination(
@@ -112,7 +111,7 @@ public class LoadRunner {
 
             // Now stop workers
             workers.shutdown();
-            boolean workersStopped = awaitExecutorServiceTermination(workers, "workers");
+            boolean workersStopped = awaitExecutorServiceTermination(workers);
 
             // Check if QPS fulfilled
             if (queryCounter.get() < qpsPerLoadGen * scenarioConfig.getScheduleDuration().toSeconds()) {
@@ -136,6 +135,7 @@ public class LoadRunner {
                 } catch (Exception e) {
                     log.warn("Failed to finish metrics reporting for {}", loadGeneratorId, e);
                 }
+
                 log.info("Scenario '{}' completed successfully. All threads finished.", scenarioConfig.getName());
                 log.info("Schedule duration: {}s, Total duration: {}s",
                         scenarioConfig.getScheduleDuration().getSeconds(),
@@ -176,15 +176,15 @@ public class LoadRunner {
         }
     }
 
-    private boolean awaitExecutorServiceTermination(ExecutorService executorService, String executorName) {
+    private boolean awaitExecutorServiceTermination(ExecutorService executorService) {
         try {
             while (!executorService.awaitTermination(30, TimeUnit.SECONDS)) {
-                log.info("Still waiting for {} to complete...", executorName);
+                log.info("Still waiting for workers to complete...");
             }
             return true;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            log.warn("Interrupted while waiting for {} to complete", executorName, e);
+            log.warn("Interrupted while waiting for workers to complete", e);
             return false;
         }
     }

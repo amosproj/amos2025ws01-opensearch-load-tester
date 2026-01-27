@@ -1,5 +1,6 @@
 package com.opensearchloadtester.loadgenerator;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opensearchloadtester.loadgenerator.client.LoadTestStartSyncClient;
 import com.opensearchloadtester.loadgenerator.exception.LoadTestStartSyncException;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
@@ -10,6 +11,7 @@ import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.io.HttpClientResponseHandler;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.mockito.MockedStatic;
 
 import java.io.IOException;
@@ -19,6 +21,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 public class LoadTestStartSyncClientTests {
+
+    @Mock
+    private ObjectMapper objectMapperMock;
 
     @Test
     void happyPath_registerReady_and_awaitStartPermission() throws IOException {
@@ -45,7 +50,8 @@ public class LoadTestStartSyncClientTests {
                         return h.handleResponse(resp);
                     });
 
-            LoadTestStartSyncClient client = new LoadTestStartSyncClient("http://metrics-reporter");
+            LoadTestStartSyncClient client = new LoadTestStartSyncClient("http://metrics-reporter",
+                    http, objectMapperMock);
 
             assertDoesNotThrow(() -> client.registerReady("lg-1"));
             assertDoesNotThrow(client::awaitStartPermission);
@@ -59,7 +65,8 @@ public class LoadTestStartSyncClientTests {
         try (MockedStatic<HttpClients> mocked = mockStatic(HttpClients.class)) {
             mocked.when(HttpClients::createDefault).thenReturn(http);
 
-            LoadTestStartSyncClient client = new LoadTestStartSyncClient("http://metrics-reporter");
+            LoadTestStartSyncClient client = new LoadTestStartSyncClient("http://metrics-reporter",
+                    http, objectMapperMock);
 
             // registerReady(): return 500
             when(http.execute(any(HttpPost.class), any(HttpClientResponseHandler.class))).thenReturn(500);

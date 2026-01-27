@@ -10,7 +10,7 @@ public class AnoClientByYearQuery extends AbstractQuery {
 
     public static AnoClientByYearQuery random() {
         String clientName = faker().name().fullName();
-        String year = String.valueOf(faker().number().numberBetween(2015, 2026));
+        String year = getRandomYear();
 
         Map<String, String> queryParams = Map.of(
                 "client_name", clientName,

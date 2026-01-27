@@ -4,11 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opensearchloadtester.common.dto.MetricsDto;
 import com.opensearchloadtester.loadgenerator.exception.MetricsReporterAccessException;
-import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.io.entity.StringEntity;
@@ -23,18 +23,16 @@ import java.util.List;
 public class MetricsReporterClient {
 
     private final String metricsEndpointUrl;
-    private final CloseableHttpClient httpClient;
-    private final ObjectMapper objectMapper = new ObjectMapper();
     private final String finishEndpointBaseUrl;
+    private final CloseableHttpClient httpClient;
+    private final ObjectMapper objectMapper;
 
-    public MetricsReporterClient(@Value("${metrics-reporter.url}") String metricsReporterBaseUrl) {
+    public MetricsReporterClient(@Value("${metrics-reporter.url}") String metricsReporterBaseUrl,
+                                 ObjectMapper objectMapper, CloseableHttpClient httpClient) {
         this.metricsEndpointUrl = metricsReporterBaseUrl + "/metrics";
         this.finishEndpointBaseUrl = metricsReporterBaseUrl + "/finish";
-        try {
-            this.httpClient = HttpClients.createDefault();
-        } catch (RuntimeException e) {
-            throw new MetricsReporterAccessException(e.getMessage());
-        }
+        this.objectMapper = objectMapper;
+        this.httpClient = httpClient;
     }
 
     /**
@@ -91,23 +89,15 @@ public class MetricsReporterClient {
         }
     }
 
-    @PreDestroy
-    private void close() {
-        try {
-            httpClient.close();
-        } catch (IOException e) {
-            log.warn("Failed to close HTTP client", e);
-        }
-    }
-
     public void finish(String loadGeneratorId) {
         String url = finishEndpointBaseUrl + "/" + loadGeneratorId;
         HttpPost postRequest = new HttpPost(url);
 
         log.info("Sending finish signal to Metrics Reporter at '{}'", url);
 
-        try {
-            int status = httpClient.execute(postRequest, HttpResponse::getCode);
+        try (ClassicHttpResponse response =
+                     httpClient.executeOpen(null, postRequest, HttpClientContext.create())) {
+            int status = response.getCode();
             if (status < 200 || status >= 300) {
                 throw new MetricsReporterAccessException("Finish call failed (HTTP: " + status + ")");
             }

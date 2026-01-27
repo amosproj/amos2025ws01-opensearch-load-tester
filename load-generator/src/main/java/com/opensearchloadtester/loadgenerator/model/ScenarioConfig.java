@@ -2,7 +2,6 @@ package com.opensearchloadtester.loadgenerator.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -19,24 +18,24 @@ import java.time.Duration;
 @AllArgsConstructor
 public class ScenarioConfig {
 
-    @NotBlank(message = "scenario name must not be blank")
+    @NotBlank(message = "please provide a name for the scenario")
     private String name;
     @NotNull(message = "documentType must be ANO or DUO")
     private DocumentType documentType;
-    @NotNull(message = "scheduleDuration must not be null")
+    @NotNull
     private Duration scheduleDuration;
-    @NotNull(message = "queryResponseTimeout must not be null")
+    @NotNull
     private Duration queryResponseTimeout;
 
+    @NotNull
     @Min(1)
-    private int queriesPerSecond;
+    private Integer queriesPerSecond;
 
-    // TODO: Add validation to ensure queryMix is not null/empty
+    @NotNull
     @JsonProperty("enable_warm_up")
-    private boolean warmUpEnabled;
+    private Boolean warmUpEnabled;
 
-    // TODO: Add validation to ensure queryMix is not null/empty
-    @Valid
+    @NotNull(message = "please specify query_mix")
     @JsonProperty("query_mix")
     private JsonNode queryMix;
 }

@@ -1,6 +1,7 @@
 package com.opensearchloadtester.loadgenerator.queries;
 
 import com.opensearchloadtester.common.utils.TimeFormatter;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;

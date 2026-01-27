@@ -21,13 +21,13 @@ public enum QueryType {
     ANO_MULTI_REGEX(AnoMultiRegexQuery::random),
     DUO_MULTI_REGEX(DuoMultiRegexQuery::random);
 
-    private final Supplier<? extends Query> supplier;
+    private final Supplier<? extends AbstractQuery> supplier;
 
-    QueryType(Supplier<? extends Query> supplier) {
+    QueryType(Supplier<? extends AbstractQuery> supplier) {
         this.supplier = supplier;
     }
 
-    public Query createRandomQuery() {
+    public AbstractQuery createRandomQuery() {
         return supplier.get();
     }
 }

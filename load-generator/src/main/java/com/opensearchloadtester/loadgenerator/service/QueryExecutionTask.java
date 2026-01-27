@@ -5,14 +5,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opensearchloadtester.common.dto.MetricsDto;
 import com.opensearchloadtester.loadgenerator.model.QueryType;
-import com.opensearchloadtester.loadgenerator.queries.Query;
+import com.opensearchloadtester.loadgenerator.queries.AbstractQuery;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.opensearch.generic.*;
 import org.opensearch.client.transport.httpclient5.ResponseException;
 
 import java.net.SocketTimeoutException;
-import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -30,14 +29,12 @@ public class QueryExecutionTask implements Runnable {
     private final List<QueryType> queryPool;
     private final OpenSearchGenericClient openSearchClient;
     private final MetricsCollector metricsCollector;
-    private final Duration timeout;
-
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper;
 
     @Override
     public void run() {
         QueryType selectedQueryType = queryPool.get(ThreadLocalRandom.current().nextInt(queryPool.size()));
-        Query query = selectedQueryType.createRandomQuery();
+        AbstractQuery query = selectedQueryType.createRandomQuery();
         String queryAsJson = query.toJsonString();
 
         // Send query to OpenSearch and measure end-to-end client-side round-trip time
@@ -51,7 +48,6 @@ public class QueryExecutionTask implements Runnable {
         Response response = null;
         int status;
         try {
-
             response = openSearchClient.execute(request);
             status = response.getStatus();
         } catch (Exception e) {
@@ -59,8 +55,7 @@ public class QueryExecutionTask implements Runnable {
             if (e.getCause() instanceof TimeoutException
                     || e.getCause() instanceof SocketTimeoutException) {
                 status = 408;
-            } else if (e.getCause() instanceof ResponseException) {
-                ResponseException exep = (ResponseException) e.getCause();
+            } else if (e.getCause() instanceof ResponseException exep) {
                 status = exep.status();
             } else {
                 log.error("Error while executing query: ", e);
@@ -94,6 +89,7 @@ public class QueryExecutionTask implements Runnable {
         }
 
         // Collect performance metrics
+        assert response != null;
         String responseBodyAsString = response.getBody()
                 .map(Body::bodyAsString)
                 .orElseThrow(() -> new IllegalStateException("Response body is missing"));

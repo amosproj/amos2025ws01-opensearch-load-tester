@@ -38,6 +38,9 @@ class MetricsReporterClientTests {
     @Mock
     private CloseableHttpClient httpClientMock;
 
+    @Mock
+    private ObjectMapper objectMapperMock;
+
 
     private ArrayList<MetricsDto> getTestMetrics() {
         ArrayList<MetricsDto> metrics = new ArrayList<>();
@@ -85,7 +88,9 @@ class MetricsReporterClientTests {
 
         try (MockedStatic<HttpClients> mocked = Mockito.mockStatic(HttpClients.class)) {
             mocked.when(HttpClients::createDefault).thenReturn(httpClientMock);
-            client = new MetricsReporterClient("http://metrics/");
+            client = new MetricsReporterClient("http://metrics/",
+                    objectMapperMock,
+                    httpClientMock);
 
             assertDoesNotThrow(() -> client.sendMetrics(metrics));
 
@@ -136,7 +141,9 @@ class MetricsReporterClientTests {
 
         try (MockedStatic<HttpClients> mocked = Mockito.mockStatic(HttpClients.class)) {
             mocked.when(HttpClients::createDefault).thenReturn(httpClientMock);
-            client = new MetricsReporterClient("http://metrics/");
+            client = new MetricsReporterClient("http://metrics/",
+                    objectMapperMock,
+                    httpClientMock);
 
             assertDoesNotThrow(() -> client.sendMetrics(metrics));
 
@@ -175,7 +182,9 @@ class MetricsReporterClientTests {
                 .thenThrow(new JsonProcessingException("boom") {
                 });
 
-        client = new MetricsReporterClient("http://metrics/");
+        client = new MetricsReporterClient("http://metrics/",
+                objectMapperMock,
+                httpClientMock);
         ReflectionTestUtils.setField(client, "objectMapper", mapperMock);
 
         assertThrows(MetricsReporterAccessException.class,
@@ -222,7 +231,9 @@ class MetricsReporterClientTests {
 
         try (MockedStatic<HttpClients> mocked = Mockito.mockStatic(HttpClients.class)) {
             mocked.when(HttpClients::createDefault).thenReturn(httpClientMock);
-            client = new MetricsReporterClient("http://metrics/");
+            client = new MetricsReporterClient("http://metrics/",
+                    objectMapperMock,
+                    httpClientMock);
 
             assertThrows(MetricsReporterAccessException.class,
                     () -> client.sendMetrics(metrics));
@@ -270,7 +281,9 @@ class MetricsReporterClientTests {
 
         try (MockedStatic<HttpClients> mocked = Mockito.mockStatic(HttpClients.class)) {
             mocked.when(HttpClients::createDefault).thenReturn(httpClientMock);
-            client = new MetricsReporterClient("http://metrics/");
+            client = new MetricsReporterClient("http://metrics/",
+                    objectMapperMock,
+                    httpClientMock);
 
             assertThrows(MetricsReporterAccessException.class,
                     () -> client.sendMetrics(metrics));
@@ -307,7 +320,9 @@ class MetricsReporterClientTests {
             mocked.when(HttpClients::createDefault)
                     .thenThrow(new RuntimeException("boom"));
             assertThrows(MetricsReporterAccessException.class,
-                    () -> client = new MetricsReporterClient("http://metrics/"));
+                    () -> client = new MetricsReporterClient("http://metrics/",
+                            objectMapperMock,
+                            httpClientMock));
         }
     }
 
@@ -331,11 +346,14 @@ class MetricsReporterClientTests {
      */
     @Test
     void testSendMetrics_closeClientThrowsIOException() throws Exception {
+
         Mockito.doThrow(new IOException("close fail")).when(httpClientMock).close();
 
         try (MockedStatic<HttpClients> mocked = Mockito.mockStatic(HttpClients.class)) {
             mocked.when(HttpClients::createDefault).thenReturn(httpClientMock);
-            client = new MetricsReporterClient("http://metrics/");
+            client = new MetricsReporterClient("http://metrics/",
+                    objectMapperMock,
+                    httpClientMock);
 
             // track stdout
             ByteArrayOutputStream errContent = new ByteArrayOutputStream();

@@ -1,15 +1,19 @@
 package com.opensearchloadtester.loadgenerator;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opensearchloadtester.loadgenerator.client.LoadTestStartSyncClient;
+import com.opensearchloadtester.loadgenerator.client.MetricsReporterClient;
 import com.opensearchloadtester.loadgenerator.model.QueryType;
 import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
-import com.opensearchloadtester.loadgenerator.service.*;
+import com.opensearchloadtester.loadgenerator.service.LoadRunner;
+import com.opensearchloadtester.loadgenerator.service.MetricsCollector;
+import com.opensearchloadtester.loadgenerator.service.QueryExecutionTask;
+import com.opensearchloadtester.loadgenerator.service.QueryPoolBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.opensearch.generic.OpenSearchGenericClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
-import com.opensearchloadtester.loadgenerator.client.MetricsReporterClient;
 
 import java.util.List;
 
@@ -27,6 +31,7 @@ public class TestScenarioInitializer implements CommandLineRunner {
     private final OpenSearchGenericClient openSearchClient;
     private final LoadTestStartSyncClient loadTestStartSyncClient;
     private final MetricsReporterClient metricsReporterClient;
+    private final ObjectMapper objectMapper;
 
     public TestScenarioInitializer(
             @Value("${HOSTNAME}") String loadGeneratorId,
@@ -35,7 +40,8 @@ public class TestScenarioInitializer implements CommandLineRunner {
             LoadRunner loadRunner,
             OpenSearchGenericClient openSearchClient,
             LoadTestStartSyncClient loadTestStartSyncClient,
-            MetricsReporterClient metricsReporterClient
+            MetricsReporterClient metricsReporterClient,
+            ObjectMapper objectMapper
     ) {
         this.loadGeneratorId = loadGeneratorId;
         this.numberLoadGenerators = numberLoadGenerators;
@@ -44,23 +50,21 @@ public class TestScenarioInitializer implements CommandLineRunner {
         this.openSearchClient = openSearchClient;
         this.loadTestStartSyncClient = loadTestStartSyncClient;
         this.metricsReporterClient = metricsReporterClient;
+        this.objectMapper = objectMapper;
     }
 
     @Override
     public void run(String... args) {
         log.info("Initializing load test with scenario {}", scenarioConfig.getName());
 
-        // 1) Optional warm-up
-        if (scenarioConfig.isWarmUpEnabled()) {
+        if (scenarioConfig.getWarmUpEnabled()) {
             runWarmUp();
         }
 
-        // 2) Sync load test start with other Load Generators
         if (numberLoadGenerators > 1) {
             synchronizeStart();
         }
 
-        // 3) Execute load test
         log.info("Starting load test");
         loadRunner.executeScenario(scenarioConfig);
         log.info("Finished load test successfully");
@@ -72,7 +76,7 @@ public class TestScenarioInitializer implements CommandLineRunner {
 
         long warmupStart = System.currentTimeMillis();
 
-        MetricsCollector warmupCollector = new MetricsCollector(metricsReporterClient, 1, false);
+        MetricsCollector warmupCollector = new MetricsCollector(metricsReporterClient, false);
         List<QueryType> queryPool = QueryPoolBuilder.build(scenarioConfig);
 
         QueryExecutionTask warmupTask = new QueryExecutionTask(
@@ -81,26 +85,19 @@ public class TestScenarioInitializer implements CommandLineRunner {
                 queryPool,
                 openSearchClient,
                 warmupCollector,// warm-up metrics are ignored
-                scenarioConfig.getQueryResponseTimeout()
-
+                objectMapper
         );
 
-        int successCount = 0;
-        int failureCount = 0;
+        boolean atLeastOneSuccessful = false;
         int totalRequests = 0;
 
-        // Continue sending warm-up requests while:
-        //  - The minimum warm-up time has not been reached, OR
-        //  - The minimum number of warm-up requests has not yet been executed
         while ((System.currentTimeMillis() - warmupStart) < MIN_WARMUP_DURATION_MS
                 || totalRequests < WARMUP_REQUEST_COUNT) {
 
             try {
                 warmupTask.run();
-                successCount++;
+                atLeastOneSuccessful = true;
             } catch (RuntimeException ex) {
-                // Count failed warm-up executions, but do not stop the warm-up.
-                failureCount++;
                 log.debug("Warm-up request {} failed: {}", totalRequests, ex.getMessage());
             }
 
@@ -110,15 +107,15 @@ public class TestScenarioInitializer implements CommandLineRunner {
         long elapsedMs = System.currentTimeMillis() - warmupStart;
 
         // Define "warm-up successful": at least one successful OpenSearch query.
-        if (successCount == 0) {
+        if (!atLeastOneSuccessful) {
             throw new IllegalStateException(
                     String.format("Warm-up failed: 0 successful requests out of %s (%s ms total)",
                             totalRequests, elapsedMs)
             );
         }
 
-        log.info("Warm-up completed in {} ms: {} successful, {} failed ({} total)",
-                elapsedMs, successCount, failureCount, totalRequests);
+        log.info("Warm-up completed in {} ms ({} total requests)",
+                elapsedMs, totalRequests);
     }
 
     private void synchronizeStart() {
