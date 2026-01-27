@@ -1,0 +1,18 @@
+---
+name: duo-long-scenario
+document_type: DUO
+schedule_duration: PT5M
+queries_per_second: 5
+query_response_timeout: PT5M
+enable_warm_up: false
+query_mix:
+  - DUO_INVOICE_CATEGORY
+  - DUO_STATE_LOCATION
+  - DUO_BOOKING_BY_CLIENT_AND_STATE
+  - DUO_CLIENT_BY_CUSTOMER_NUMBER
+  - DUO_CLIENT_BY_NAME_AND_STATE
+  - DUO_BOOKING_BY_COSTCENTER_AND_DATE
+  - DUO_BOOKING_BY_AMOUNT_RANGE
+  - DUO_COMPLEX
+  - DUO_MULTI_REGEX
+  - DOCNAME_REGEX
