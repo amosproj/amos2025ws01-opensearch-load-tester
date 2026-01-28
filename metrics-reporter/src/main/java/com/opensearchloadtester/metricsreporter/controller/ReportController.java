@@ -180,10 +180,14 @@ public class ReportController {
 
                 return ResponseEntity.ok().build();
             } catch (IOException e) {
-                log.error("Failed to generate reports", e);
-                loadTestFinished = false;
+                log.error("Failed to generate reports. Aborting application.", e);
+
+                request.setAttribute(ShutdownAfterResponseInterceptor.SHUTDOWN_AFTER_RESPONSE, true);
+                request.setAttribute(ShutdownAfterResponseInterceptor.EXIT_CODE,
+                        ShutdownAfterResponseInterceptor.EXIT_INTERNAL_ERROR);
+
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body("Finish received but failed to generate reports: " + e.getMessage() + "\n");
+                        .body("Fatal error: failed to generate reports. Application will shut down.");
             }
         }
 

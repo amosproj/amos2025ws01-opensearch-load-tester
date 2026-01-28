@@ -17,6 +17,6 @@ public class AnoClientByYearQuery extends AbstractQuery {
                 "year", year
         );
 
-        return new AnoClientByYearQuery(queryParams, "queries/q6_ano_client_by_year.json");
+        return new AnoClientByYearQuery(queryParams, "query-templates/q6_ano_client_by_year.json");
     }
 }

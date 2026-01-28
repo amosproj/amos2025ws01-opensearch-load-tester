@@ -18,6 +18,6 @@ public class DuoClientByCustomerNumberQuery extends AbstractQuery {
         );
 
         return new DuoClientByCustomerNumberQuery(queryParams,
-                "queries/q7_duo_client_by_customer_number.json");
+                "query-templates/q7_duo_client_by_customer_number.json");
     }
 }

@@ -47,6 +47,6 @@ public class DuoComplexQuery extends AbstractQuery {
                 "category_3", categories.get(2)
         );
 
-        return new DuoComplexQuery(queryParams, "queries/complex/q1_duo_complex.json");
+        return new DuoComplexQuery(queryParams, "query-templates/complex/q1_duo_complex.json");
     }
 }

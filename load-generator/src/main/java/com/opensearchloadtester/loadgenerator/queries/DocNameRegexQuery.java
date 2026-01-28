@@ -15,6 +15,6 @@ public class DocNameRegexQuery extends AbstractQuery {
                 "year", year
         );
 
-        return new DocNameRegexQuery(queryParams, "queries/leaf/q1_docName_regex.json");
+        return new DocNameRegexQuery(queryParams, "query-templates/leaf/q1_docName_regex.json");
     }
 }

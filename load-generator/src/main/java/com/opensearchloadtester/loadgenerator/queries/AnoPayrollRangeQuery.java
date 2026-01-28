@@ -17,6 +17,6 @@ public class AnoPayrollRangeQuery extends AbstractQuery {
                 "to_year", toYear
         );
 
-        return new AnoPayrollRangeQuery(queryParams, "queries/q1_ano_payroll_range.json");
+        return new AnoPayrollRangeQuery(queryParams, "query-templates/q1_ano_payroll_range.json");
     }
 }

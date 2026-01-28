@@ -18,6 +18,6 @@ public class DuoBookingByClientAndStateQuery extends AbstractQuery {
         );
 
         return new DuoBookingByClientAndStateQuery(queryParams,
-                "queries/q4_duo_booking_by_client_and_state.json");
+                "query-templates/q4_duo_booking_by_client_and_state.json");
     }
 }

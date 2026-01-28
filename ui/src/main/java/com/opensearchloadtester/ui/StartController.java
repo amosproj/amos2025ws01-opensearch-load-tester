@@ -64,22 +64,34 @@ public class StartController {
     private final Path CUSTOM_SCENARIO_PATH = Path.of("./load-generator/src/main/resources/scenarios/custom-scenario.yaml");
     private final ProcessBuilder processBuilder = new ProcessBuilder();
 
-    private static final List<String> QUERY_TYPES = List.of(
+    public static final List<String> QUERY_TYPES = List.of(
             "ANO_PAYROLL_RANGE",
             "DUO_INVOICE_CATEGORY",
             "DUO_STATE_LOCATION",
             "DUO_BOOKING_BY_CLIENT_AND_STATE",
             "ANO_CLIENTS_AGGREGATION",
             "ANO_CLIENT_BY_YEAR",
+            "ANO_DIS_MAX",
+            "ANO_DIS_MAX_EXPENSIVE",
             "DUO_CLIENT_BY_CUSTOMER_NUMBER",
             "DUO_CLIENT_BY_NAME_AND_STATE",
             "ANO_PAYROLL_TYPE_LANGUAGE",
             "DUO_BOOKING_BY_COSTCENTER_AND_DATE",
             "DUO_BOOKING_BY_AMOUNT_RANGE",
+            "DUO_INVOICE_DIS_MAX",
+            "DUO_INVOICE_DIS_MAX_EXPENSIVE",
             "DUO_COMPLEX",
             "DOCNAME_REGEX",
             "ANO_MULTI_REGEX",
-            "DUO_MULTI_REGEX"
+            "DUO_MULTI_REGEX",
+            "ANO_SPAN_NEAR",
+            "DUO_SPAN_NEAR",
+            "ANO_MORE_LIKE_THIS",
+            "DUO_MORE_LIKE_THIS",
+            "ANO_PREFIX_RANGE",
+            "DUO_MULTI_PREFIX_SORT",
+            "DUO_DATE_RANGE",
+            "ANO_PREFIX_MATCH"
     );
 
     @FXML

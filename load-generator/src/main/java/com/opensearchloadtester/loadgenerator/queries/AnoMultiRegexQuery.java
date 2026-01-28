@@ -15,6 +15,6 @@ public class AnoMultiRegexQuery extends AbstractQuery {
                 "year", year
         );
 
-        return new AnoMultiRegexQuery(queryParams, "queries/leaf/q2_ano_multi_regex.json");
+        return new AnoMultiRegexQuery(queryParams, "query-templates/leaf/q2_ano_multi_regex.json");
     }
 }
