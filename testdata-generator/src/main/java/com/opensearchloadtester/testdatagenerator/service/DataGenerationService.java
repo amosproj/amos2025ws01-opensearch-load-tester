@@ -95,6 +95,11 @@ public class DataGenerationService {
             if (status == 413 || status == 429) {
                 int newBatchSize = Math.max(1, currentBatchSize / 2);
 
+                if (newBatchSize == currentBatchSize) {
+                    log.error("Batch size cannot be reduced further. Already at minimum ({}).", currentBatchSize);
+                    throw e;
+                }
+
                 log.warn("OpenSearch returned HTTP {}. Reducing batch size from {} to {}",
                         status, currentBatchSize, newBatchSize);
 
