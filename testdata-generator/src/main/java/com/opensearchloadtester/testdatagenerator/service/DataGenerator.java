@@ -1,7 +1,7 @@
 package com.opensearchloadtester.testdatagenerator.service;
 
-import com.opensearchloadtester.testdatagenerator.config.DataGenerationProperties.DocumentType;
 import com.opensearchloadtester.testdatagenerator.model.Document;
+import com.opensearchloadtester.testdatagenerator.model.DocumentType;
 
 import java.util.List;
 

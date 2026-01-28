@@ -10,7 +10,6 @@ public class DuoBookingByClientAndStateQuery extends AbstractQuery {
 
     public static DuoBookingByClientAndStateQuery random() {
         String clientName = faker().name().fullName();
-        // TODO: rethink if we need more than the examples have
         String bookingState = "TO_BOOK";
 
         Map<String, String> queryParams = Map.of(

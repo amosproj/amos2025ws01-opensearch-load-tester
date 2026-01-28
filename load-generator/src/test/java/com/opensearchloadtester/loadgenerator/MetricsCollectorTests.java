@@ -6,6 +6,7 @@ import com.opensearchloadtester.loadgenerator.service.MetricsCollector;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +27,7 @@ class MetricsCollectorTests {
     void setUp() {
         mockClient = mock(MetricsReporterClient.class);
         // Use batch size of 1 so metrics are sent immediately for easier testing
-        metricsCollector = new MetricsCollector(mockClient, 1, true);
+        metricsCollector = new MetricsCollector(mockClient, true);
     }
 
     /**
@@ -136,7 +137,8 @@ class MetricsCollectorTests {
     void testAppendMetrics_batching() {
         // Create collector with batch size of 5
         MetricsReporterClient batchClient = mock(MetricsReporterClient.class);
-        MetricsCollector batchCollector = new MetricsCollector(batchClient, 5, true);
+        MetricsCollector batchCollector = new MetricsCollector(batchClient, true);
+        ReflectionTestUtils.setField(batchCollector, "batchSize", 5);
 
         // Add 4 metrics - should not trigger send yet
         for (int i = 0; i < 4; i++) {
@@ -160,7 +162,8 @@ class MetricsCollectorTests {
     void testFlush() {
         // Create collector with batch size of 10 (won't be reached)
         MetricsReporterClient flushClient = mock(MetricsReporterClient.class);
-        MetricsCollector flushCollector = new MetricsCollector(flushClient, 10, true);
+        MetricsCollector flushCollector = new MetricsCollector(flushClient, true);
+        ReflectionTestUtils.setField(flushCollector, "batchSize", 10);
 
         // Add 3 metrics - won't trigger automatic send
         for (int i = 0; i < 3; i++) {
@@ -183,7 +186,7 @@ class MetricsCollectorTests {
     @Test
     void testDisabledCollector() {
         MetricsReporterClient disabledClient = mock(MetricsReporterClient.class);
-        MetricsCollector disabledCollector = new MetricsCollector(disabledClient, 1, false);
+        MetricsCollector disabledCollector = new MetricsCollector(disabledClient, false);
 
         disabledCollector.appendMetrics(new MetricsDto());
         disabledCollector.flush();
