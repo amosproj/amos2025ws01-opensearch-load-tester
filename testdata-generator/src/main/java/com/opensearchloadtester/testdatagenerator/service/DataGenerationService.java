@@ -16,25 +16,27 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DataGenerationService {
 
+    private static final long RETRY_DELAY_MS = 200;
+
     private final DataGenerator dataGenerator;
     private final OpenSearchDao openSearchDao;
     private final DataGenerationProperties dataGenerationProperties;
 
     public void generateAndIndexTestData(String indexName) {
-        log.info("Starting test data generation");
+        log.info("Starting test data generation (mode: {})", dataGenerationProperties.getMode());
 
         switch (dataGenerationProperties.getMode()) {
-            case DYNAMIC -> executeDynamicMode(indexName);
-            case PERSISTENT -> executePersistentMode(indexName);
+            case DYNAMIC -> generateDynamic(indexName);
+            case PERSISTENT -> generatePersistent(indexName);
         }
 
         log.info("Finished test data generation");
     }
 
-    private void executeDynamicMode(String indexName) {
+    private void generateDynamic(String indexName) {
         int generatedDocs = 0;
-        int batchSize = dataGenerationProperties.getBatchSize();
         int totalCount = dataGenerationProperties.getCount();
+        int batchSize = dataGenerationProperties.getBatchSize();
 
         while (generatedDocs < totalCount) {
             int remainingDocs = totalCount - generatedDocs;
@@ -45,39 +47,17 @@ public class DataGenerationService {
                         dataGenerationProperties.getDocumentType(),
                         currentBatchSize
                 );
-
                 openSearchDao.bulkIndexDocuments(indexName, documents);
+                generatedDocs += currentBatchSize;
+
+                log.debug("Generated and indexed {}/{} documents", generatedDocs, totalCount);
             } catch (OpenSearchDataAccessException e) {
-                Throwable cause = e.getCause();
-
-                if (cause instanceof ResponseException responseException) {
-                    int statusCode = responseException.status();
-
-                    if (statusCode == 413 || statusCode == 429) {
-                        int newBatchSize = Math.max(1, batchSize / 2);
-
-                        log.warn("OpenSearch returned HTTP {}. Adjusted batch size from {} to {}",
-                                statusCode, batchSize, newBatchSize);
-
-                        batchSize = newBatchSize;
-
-                        try {
-                            Thread.sleep(200);
-                        } catch (InterruptedException ie) {
-                            Thread.currentThread().interrupt();
-                        }
-                        continue;
-                    }
-                }
-                throw e;
+                batchSize = handleRetryOrThrow(e, batchSize);
             }
-
-            generatedDocs += currentBatchSize;
-            log.debug("Generated and indexed {}/{} documents", generatedDocs, totalCount);
         }
     }
 
-    private void executePersistentMode(String indexName) {
+    private void generatePersistent(String indexName) {
         int offset = 0;
         int batchSize = dataGenerationProperties.getBatchSize();
 
@@ -93,33 +73,41 @@ public class DataGenerationService {
             try {
                 List<Document> batch = documents.subList(offset, offset + currentBatchSize);
                 openSearchDao.bulkIndexDocuments(indexName, batch);
+                offset += currentBatchSize;
+
+                log.debug("Indexed {}/{} documents", offset, documents.size());
             } catch (OpenSearchDataAccessException e) {
-                Throwable cause = e.getCause();
-
-                if (cause instanceof ResponseException responseException) {
-                    int statusCode = responseException.status();
-
-                    if (statusCode == 413 || statusCode == 429) {
-                        int newBatchSize = Math.max(1, batchSize / 2);
-
-                        log.warn("OpenSearch returned HTTP {}. Adjusted batch size from {} to {}",
-                                statusCode, batchSize, newBatchSize);
-
-                        batchSize = newBatchSize;
-
-                        try {
-                            Thread.sleep(200);
-                        } catch (InterruptedException ie) {
-                            Thread.currentThread().interrupt();
-                        }
-                        continue;
-                    }
-                }
-                throw e;
+                batchSize = handleRetryOrThrow(e, batchSize);
             }
-
-            offset += currentBatchSize;
-            log.debug("Indexed {}/{} documents", offset, documents.size());
         }
+    }
+
+    /**
+     * Handles retryable OpenSearch errors (413 / 429).
+     * Returns the adjusted batch size or throws the exception if not retryable.
+     */
+    private int handleRetryOrThrow(OpenSearchDataAccessException e, int currentBatchSize) {
+        Throwable cause = e.getCause();
+
+        if (cause instanceof ResponseException responseException) {
+            int status = responseException.status();
+
+            if (status == 413 || status == 429) {
+                int newBatchSize = Math.max(1, currentBatchSize / 2);
+
+                log.warn("OpenSearch returned HTTP {}. Reducing batch size from {} to {}",
+                        status, currentBatchSize, newBatchSize);
+
+                try {
+                    Thread.sleep(RETRY_DELAY_MS);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                }
+
+                return newBatchSize;
+            }
+        }
+
+        throw e;
     }
 }
