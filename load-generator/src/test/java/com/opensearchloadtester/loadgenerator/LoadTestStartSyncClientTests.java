@@ -1,5 +1,6 @@
 package com.opensearchloadtester.loadgenerator;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opensearchloadtester.loadgenerator.client.LoadTestStartSyncClient;
 import com.opensearchloadtester.loadgenerator.exception.LoadTestStartSyncException;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
@@ -19,6 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 public class LoadTestStartSyncClientTests {
+
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
     void happyPath_registerReady_and_awaitStartPermission() throws IOException {
@@ -45,7 +48,8 @@ public class LoadTestStartSyncClientTests {
                         return h.handleResponse(resp);
                     });
 
-            LoadTestStartSyncClient client = new LoadTestStartSyncClient("http://metrics-reporter");
+            LoadTestStartSyncClient client = new LoadTestStartSyncClient("http://metrics-reporter",
+                    http, objectMapper);
 
             assertDoesNotThrow(() -> client.registerReady("lg-1"));
             assertDoesNotThrow(client::awaitStartPermission);
@@ -59,7 +63,8 @@ public class LoadTestStartSyncClientTests {
         try (MockedStatic<HttpClients> mocked = mockStatic(HttpClients.class)) {
             mocked.when(HttpClients::createDefault).thenReturn(http);
 
-            LoadTestStartSyncClient client = new LoadTestStartSyncClient("http://metrics-reporter");
+            LoadTestStartSyncClient client = new LoadTestStartSyncClient("http://metrics-reporter",
+                    http, objectMapper);
 
             // registerReady(): return 500
             when(http.execute(any(HttpPost.class), any(HttpClientResponseHandler.class))).thenReturn(500);

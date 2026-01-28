@@ -1,6 +1,7 @@
 package com.opensearchloadtester.loadgenerator.config;
 
 import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
+import jakarta.validation.constraints.NotNull;
 import org.apache.hc.client5.http.config.ConnectionConfig;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.impl.nio.PoolingAsyncClientConnectionManager;
@@ -21,13 +22,12 @@ import java.net.URI;
 @Configuration
 public class OpenSearchClientConfig {
 
-    @Value("${opensearch.url}")
     private final String openSearchUrl;
     private final ScenarioConfig scenarioConfig;
 
     public OpenSearchClientConfig(
-            @Value("${opensearch.url}") String openSearchUrl,
-            ScenarioConfig scenarioConfig) {
+            @NotNull @Value("${opensearch.url}") String openSearchUrl,
+            @NotNull ScenarioConfig scenarioConfig) {
         this.openSearchUrl = openSearchUrl;
         this.scenarioConfig = scenarioConfig;
     }
@@ -38,7 +38,7 @@ public class OpenSearchClientConfig {
         URI uri = URI.create(openSearchUrl);
         HttpHost host = new HttpHost(uri.getScheme(), uri.getHost(), uri.getPort());
 
-        long TIMEOUT_SECONDS = scenarioConfig.getQueryResponseTimeout().toSeconds();
+        final long TIMEOUT_SECONDS = scenarioConfig.getQueryResponseTimeout().toSeconds();
 
         OpenSearchTransport transport = ApacheHttpClient5TransportBuilder
                 .builder(host)

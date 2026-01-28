@@ -5,11 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opensearchloadtester.common.dto.FinishLoadTestDto;
 import com.opensearchloadtester.common.dto.MetricsDto;
 import com.opensearchloadtester.loadgenerator.exception.MetricsReporterAccessException;
-import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.io.entity.StringEntity;
@@ -25,17 +23,15 @@ public class MetricsReporterClient {
 
     private final String metricsEndpointUrl;
     private final CloseableHttpClient httpClient;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
     private final String finishEndpointUrl;
 
-    public MetricsReporterClient(@Value("${metrics-reporter.url}") String metricsReporterBaseUrl) {
+    public MetricsReporterClient(@Value("${metrics-reporter.url}") String metricsReporterBaseUrl,
+                                 ObjectMapper objectMapper, CloseableHttpClient httpClient) {
         this.metricsEndpointUrl = metricsReporterBaseUrl + "/metrics";
         this.finishEndpointUrl = metricsReporterBaseUrl + "/finish";
-        try {
-            this.httpClient = HttpClients.createDefault();
-        } catch (RuntimeException e) {
-            throw new MetricsReporterAccessException(e.getMessage());
-        }
+        this.objectMapper = objectMapper;
+        this.httpClient = httpClient;
     }
 
     /**
@@ -89,15 +85,6 @@ public class MetricsReporterClient {
                     );
                 }
             }
-        }
-    }
-
-    @PreDestroy
-    private void close() {
-        try {
-            httpClient.close();
-        } catch (IOException e) {
-            log.warn("Failed to close HTTP client", e);
         }
     }
 

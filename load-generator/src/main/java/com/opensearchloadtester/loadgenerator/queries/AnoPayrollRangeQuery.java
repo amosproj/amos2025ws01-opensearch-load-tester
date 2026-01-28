@@ -9,9 +9,8 @@ public class AnoPayrollRangeQuery extends AbstractQuery {
     }
 
     public static AnoPayrollRangeQuery random() {
-        int startYear = faker().number().numberBetween(2015, 2026);
-        String fromYear = String.valueOf(startYear);
-        String toYear = String.valueOf(faker().number().numberBetween(startYear, 2026));
+        String fromYear = getRandomYear();
+        String toYear = getRandomYearAfter(fromYear);
 
         Map<String, String> queryParams = Map.of(
                 "from_year", fromYear,
