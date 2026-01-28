@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.opensearchloadtester</groupId>
         <artifactId>opensearch-load-tester-parent</artifactId>
-        <version>5.0.0</version>
+        <version>5.1.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -36,6 +36,11 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
         </dependency>
 
         <!-- Jackson -->

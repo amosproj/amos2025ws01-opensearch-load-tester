@@ -12,7 +12,14 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Shuts down the Metrics Reporter after the current HTTP request has fully completed.
+ * Intercepts HTTP requests to trigger a controlled shutdown of the Metrics Reporter
+ * after the response has been fully sent to the client.
+ *
+ * <p>
+ * The shutdown is initiated only when explicitly requested via a request attribute
+ * and supports custom exit codes to distinguish between successful runs,
+ * load generator failures, and internal reporter errors.
+ * </p>
  */
 @Slf4j
 @Component
@@ -20,6 +27,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class ShutdownAfterResponseInterceptor implements HandlerInterceptor {
 
     public static final String SHUTDOWN_AFTER_RESPONSE = "metricsReporter.shutdownAfterResponse";
+    public static final String EXIT_CODE = "metricsReporter.exitCode";
+
+    // Exit Codes
+    public static final int EXIT_OK = 0;
+    public static final int EXIT_INTERNAL_ERROR = 1;
+    public static final int EXIT_LOAD_GENERATOR_FAILED = 2;
 
     private final ConfigurableApplicationContext context;
     private final AtomicBoolean shutdownInitiated = new AtomicBoolean(false);
@@ -30,21 +43,23 @@ public class ShutdownAfterResponseInterceptor implements HandlerInterceptor {
                                 Object handler,
                                 Exception ex) {
 
-        Object flag = request.getAttribute(SHUTDOWN_AFTER_RESPONSE);
-        boolean shouldShutdown = Boolean.TRUE.equals(flag);
+        boolean shouldShutdown = Boolean.TRUE.equals(request.getAttribute(SHUTDOWN_AFTER_RESPONSE));
 
         if (!shouldShutdown) {
             return;
         }
 
         if (!shutdownInitiated.compareAndSet(false, true)) {
-            return; // already shutting down
+            return; // shutdown already initiated
         }
+
+        Integer exitCodeAttr = (Integer) request.getAttribute(EXIT_CODE);
+        int exitCode = exitCodeAttr != null ? exitCodeAttr : EXIT_OK;
 
         // Run shutdown outside request thread
         new Thread(() -> {
-            log.info("Shutting down Metrics Reporter");
-            int exitCode = SpringApplication.exit(context, () -> 0);
+            log.info("Shutting down Metrics Reporter with exit code '{}'", exitCode);
+            SpringApplication.exit(context, () -> exitCode);
             System.exit(exitCode);
         }, "metrics-reporter-shutdown").start();
     }

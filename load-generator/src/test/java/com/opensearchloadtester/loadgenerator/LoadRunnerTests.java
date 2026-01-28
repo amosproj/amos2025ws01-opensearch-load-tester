@@ -308,7 +308,7 @@ class LoadRunnerTests {
                 QueryType.ANO_PAYROLL_RANGE,
                 Duration.ofSeconds(1),
                 Duration.ofMinutes(3),
-                1,
+                10,
                 false
         );
 

@@ -14,7 +14,7 @@
 
     <groupId>com.opensearchloadtester</groupId>
     <artifactId>opensearch-load-tester-parent</artifactId>
-    <version>5.0.0</version>
+    <version>5.1.0</version>
     <packaging>pom</packaging>
 
     <name>opensearch-load-tester-parent</name>
@@ -28,6 +28,12 @@
         <mockito-core.version>5.12.0</mockito-core.version>
         <mockito-inline.version>5.2.0</mockito-inline.version>
     </properties>
+
+    <modules>
+        <module>common-core</module>
+        <module>load-generator</module>
+        <module>ui</module>
+    </modules>
 
     <dependencyManagement>
         <dependencies>
