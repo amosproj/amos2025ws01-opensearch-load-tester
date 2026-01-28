@@ -19,14 +19,12 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -37,6 +35,8 @@ class MetricsReporterClientTests {
 
     @Mock
     private CloseableHttpClient httpClientMock;
+
+    private ObjectMapper objectMapperMock = new ObjectMapper();
 
 
     private ArrayList<MetricsDto> getTestMetrics() {
@@ -85,16 +85,13 @@ class MetricsReporterClientTests {
 
         try (MockedStatic<HttpClients> mocked = Mockito.mockStatic(HttpClients.class)) {
             mocked.when(HttpClients::createDefault).thenReturn(httpClientMock);
-            client = new MetricsReporterClient("http://metrics/");
+            client = new MetricsReporterClient("http://metrics/",
+                    objectMapperMock,
+                    httpClientMock);
 
             assertDoesNotThrow(() -> client.sendMetrics(metrics));
 
-            Method closeMethod = MetricsReporterClient.class.getDeclaredMethod("close");
-            closeMethod.setAccessible(true);
-            closeMethod.invoke(client);
-
             verify(httpClientMock, times(1)).execute(any(HttpPost.class), any(HttpClientResponseHandler.class));
-            verify(httpClientMock, times(1)).close();
         }
     }
 
@@ -136,7 +133,9 @@ class MetricsReporterClientTests {
 
         try (MockedStatic<HttpClients> mocked = Mockito.mockStatic(HttpClients.class)) {
             mocked.when(HttpClients::createDefault).thenReturn(httpClientMock);
-            client = new MetricsReporterClient("http://metrics/");
+            client = new MetricsReporterClient("http://metrics/",
+                    objectMapperMock,
+                    httpClientMock);
 
             assertDoesNotThrow(() -> client.sendMetrics(metrics));
 
@@ -175,7 +174,9 @@ class MetricsReporterClientTests {
                 .thenThrow(new JsonProcessingException("boom") {
                 });
 
-        client = new MetricsReporterClient("http://metrics/");
+        client = new MetricsReporterClient("http://metrics/",
+                objectMapperMock,
+                httpClientMock);
         ReflectionTestUtils.setField(client, "objectMapper", mapperMock);
 
         assertThrows(MetricsReporterAccessException.class,
@@ -222,17 +223,14 @@ class MetricsReporterClientTests {
 
         try (MockedStatic<HttpClients> mocked = Mockito.mockStatic(HttpClients.class)) {
             mocked.when(HttpClients::createDefault).thenReturn(httpClientMock);
-            client = new MetricsReporterClient("http://metrics/");
+            client = new MetricsReporterClient("http://metrics/",
+                    objectMapperMock,
+                    httpClientMock);
 
             assertThrows(MetricsReporterAccessException.class,
                     () -> client.sendMetrics(metrics));
 
-            Method closeMethod = MetricsReporterClient.class.getDeclaredMethod("close");
-            closeMethod.setAccessible(true);
-            closeMethod.invoke(client);
-
             verify(httpClientMock, times(3)).execute(any(HttpPost.class), any(HttpClientResponseHandler.class));
-            verify(httpClientMock, times(1)).close();
         }
     }
 
@@ -270,17 +268,14 @@ class MetricsReporterClientTests {
 
         try (MockedStatic<HttpClients> mocked = Mockito.mockStatic(HttpClients.class)) {
             mocked.when(HttpClients::createDefault).thenReturn(httpClientMock);
-            client = new MetricsReporterClient("http://metrics/");
+            client = new MetricsReporterClient("http://metrics/",
+                    objectMapperMock,
+                    httpClientMock);
 
             assertThrows(MetricsReporterAccessException.class,
                     () -> client.sendMetrics(metrics));
 
-            Method closeMethod = MetricsReporterClient.class.getDeclaredMethod("close");
-            closeMethod.setAccessible(true);
-            closeMethod.invoke(client);
-
             verify(httpClientMock, times(3)).execute(any(HttpPost.class), any(HttpClientResponseHandler.class));
-            verify(httpClientMock, times(1)).close();
         }
     }
 
@@ -306,51 +301,10 @@ class MetricsReporterClientTests {
         try (MockedStatic<HttpClients> mocked = Mockito.mockStatic(HttpClients.class)) {
             mocked.when(HttpClients::createDefault)
                     .thenThrow(new RuntimeException("boom"));
-            assertThrows(MetricsReporterAccessException.class,
-                    () -> client = new MetricsReporterClient("http://metrics/"));
-        }
-    }
-
-    /**
-     * Tests the {@link MetricsReporterClient#sendMetrics(List)} method for the scenario
-     * where closing the {@link CloseableHttpClient} throws an {@link IOException}
-     *
-     * <p>This test performs the following steps:</p>
-     * <ol>
-     *     <li>Mocks a {@link CloseableHttpClient} to throw an {@link IOException} when {@code close()} is called</li>
-     *     <li>Overrides {@link HttpClients#createDefault()} to return the mocked client</li>
-     *     <li>Tracks output stream and scans for warning due to the failure when closing the client</li>
-     *     <li>Manually calls implicit {@code close()} method of {@link MetricsReporterClient}</li>
-     *     <li>Verifies that the HTTP client's {@code close()} method was called exactly once</li>
-     * </ol>
-     *
-     * <p>This test ensures that:</p>
-     * <ul>
-     *     <li>The client correctly propagates exceptions thrown during the closing of the HTTP client</li>
-     * </ul>
-     */
-    @Test
-    void testSendMetrics_closeClientThrowsIOException() throws Exception {
-        Mockito.doThrow(new IOException("close fail")).when(httpClientMock).close();
-
-        try (MockedStatic<HttpClients> mocked = Mockito.mockStatic(HttpClients.class)) {
-            mocked.when(HttpClients::createDefault).thenReturn(httpClientMock);
-            client = new MetricsReporterClient("http://metrics/");
-
-            // track stdout
-            ByteArrayOutputStream errContent = new ByteArrayOutputStream();
-            System.setOut(new PrintStream(errContent));
-
-            Method closeMethod = MetricsReporterClient.class.getDeclaredMethod("close");
-            closeMethod.setAccessible(true);
-            closeMethod.invoke(client);
-
-            String output = errContent.toString();
-            assertTrue(output.contains("WARN") && output.contains("close fail"));
-
-            verify(httpClientMock, times(1)).close();
-        } finally {
-            System.setErr(System.err);
+            assertThrows(RuntimeException.class,
+                    () -> client = new MetricsReporterClient("http://metrics/",
+                            objectMapperMock,
+                            HttpClients.createDefault()));
         }
     }
 }

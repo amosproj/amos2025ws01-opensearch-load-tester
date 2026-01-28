@@ -1,6 +1,0 @@
-package com.opensearchloadtester.loadgenerator.queries;
-
-public interface Query {
-
-    String toJsonString();
-}

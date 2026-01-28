@@ -41,13 +41,13 @@ public enum QueryType {
     DUO_DATE_RANGE(DuoDateRangeQuery::random),
     ANO_PREFIX_MATCH(AnoPrefixMatchQuery::random);
 
-    private final Supplier<? extends Query> supplier;
+    private final Supplier<? extends AbstractQuery> supplier;
 
-    QueryType(Supplier<? extends Query> supplier) {
+    QueryType(Supplier<? extends AbstractQuery> supplier) {
         this.supplier = supplier;
     }
 
-    public Query createRandomQuery() {
+    public AbstractQuery createRandomQuery() {
         return supplier.get();
     }
 }
