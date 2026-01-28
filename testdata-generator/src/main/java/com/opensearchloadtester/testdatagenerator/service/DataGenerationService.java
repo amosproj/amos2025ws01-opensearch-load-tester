@@ -16,6 +16,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DataGenerationService {
 
+    private static final int HTTP_PAYLOAD_TOO_LARGE = 413;
+    private static final int HTTP_TOO_MANY_REQUESTS = 429;
     private static final long RETRY_DELAY_MS = 200;
 
     private final DataGenerator dataGenerator;
@@ -92,7 +94,7 @@ public class DataGenerationService {
         if (cause instanceof ResponseException responseException) {
             int status = responseException.status();
 
-            if (status == 413 || status == 429) {
+            if (status == HTTP_PAYLOAD_TOO_LARGE || status == HTTP_TOO_MANY_REQUESTS) {
                 int newBatchSize = Math.max(1, currentBatchSize / 2);
 
                 if (newBatchSize == currentBatchSize) {
