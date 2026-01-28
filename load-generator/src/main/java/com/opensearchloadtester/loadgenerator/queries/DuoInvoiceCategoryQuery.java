@@ -17,7 +17,7 @@ public class DuoInvoiceCategoryQuery extends AbstractQuery {
                 "category", documentCategory
         );
 
-        return new DuoInvoiceCategoryQuery(queryParams, "queries/q2_duo_invoice_category.json");
+        return new DuoInvoiceCategoryQuery(queryParams, "query-templates/q2_duo_invoice_category.json");
     }
 }
 

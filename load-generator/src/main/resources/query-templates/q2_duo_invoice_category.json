@@ -1,0 +1,20 @@
+{
+  "size": 10,
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "term": {
+            "dssCustomMetadataDuo.documentCategory.raw": "{{category}}"
+          }
+        }
+      ]
+    }
+  },
+  "_source": [
+    "dssDocumentName",
+    "dssCustomMetadataDuo.documentCategory",
+    "dssCustomMetadataDuo.invoiceDate"
+  ]
+}
+

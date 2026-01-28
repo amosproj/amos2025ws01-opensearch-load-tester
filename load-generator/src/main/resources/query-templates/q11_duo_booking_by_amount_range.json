@@ -1,0 +1,27 @@
+{
+  "size": 50,
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "range": {
+            "dssCustomMetadataDuo.totalGrossAmount": {
+              "gte": "{{amount_min}}",
+              "lte": "{{amount_max}}"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "_source": [
+    "dssDocumentName",
+    "dssCustomMetadataDuo.invoiceBusinessPartner",
+    "dssCustomMetadataDuo.invoiceNumber",
+    "dssCustomMetadataDuo.invoiceDate",
+    "dssCustomMetadataDuo.totalGrossAmount",
+    "dssCustomMetadataDuo.documentApprovalState",
+    "dssCustomMetadataDuo.paidStatus"
+  ]
+}
+

@@ -2,6 +2,7 @@ package com.opensearchloadtester.loadgenerator.client;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.opensearchloadtester.common.dto.FinishLoadTestDto;
 import com.opensearchloadtester.common.dto.MetricsDto;
 import com.opensearchloadtester.loadgenerator.exception.MetricsReporterAccessException;
 import jakarta.annotation.PreDestroy;
@@ -25,10 +26,16 @@ public class MetricsReporterClient {
     private final String metricsEndpointUrl;
     private final CloseableHttpClient httpClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final String finishEndpointUrl;
 
     public MetricsReporterClient(@Value("${metrics-reporter.url}") String metricsReporterBaseUrl) {
         this.metricsEndpointUrl = metricsReporterBaseUrl + "/metrics";
-        this.httpClient = HttpClients.createDefault();
+        this.finishEndpointUrl = metricsReporterBaseUrl + "/finish";
+        try {
+            this.httpClient = HttpClients.createDefault();
+        } catch (RuntimeException e) {
+            throw new MetricsReporterAccessException(e.getMessage());
+        }
     }
 
     /**
@@ -93,4 +100,30 @@ public class MetricsReporterClient {
             log.warn("Failed to close HTTP client", e);
         }
     }
+
+    public void finish(String loadGeneratorId, boolean success, String errorMessage) {
+        FinishLoadTestDto finishDto = new FinishLoadTestDto(loadGeneratorId, success, errorMessage);
+
+        String jsonBody;
+        try {
+            jsonBody = objectMapper.writeValueAsString(finishDto);
+        } catch (JsonProcessingException e) {
+            throw new MetricsReporterAccessException("Failed to serialize finish signal to JSON", e);
+        }
+
+        HttpPost postRequest = new HttpPost(finishEndpointUrl);
+        postRequest.setEntity(new StringEntity(jsonBody, ContentType.APPLICATION_JSON));
+
+        log.info("Sending finish signal to Metrics Reporter at '{}'", finishEndpointUrl);
+
+        try {
+            int status = httpClient.execute(postRequest, HttpResponse::getCode);
+            if (status >= 400) {
+                throw new MetricsReporterAccessException("Finish call failed (HTTP: " + status + ")");
+            }
+        } catch (IOException e) {
+            throw new MetricsReporterAccessException("I/O error while sending finish signal", e);
+        }
+    }
+
 }

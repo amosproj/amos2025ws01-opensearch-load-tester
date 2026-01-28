@@ -1,12 +1,14 @@
 package com.opensearchloadtester.loadgenerator.service;
 
 import com.opensearchloadtester.loadgenerator.client.MetricsReporterClient;
+import com.opensearchloadtester.loadgenerator.model.QueryType;
 import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.opensearch.generic.OpenSearchGenericClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -19,6 +21,7 @@ public class LoadRunner {
     private final OpenSearchGenericClient openSearchClient;
     private final MetricsReporterClient metricsReporterClient;
     private final MetricsCollector metricsCollector;
+
 
     public LoadRunner(
             @Value("${HOSTNAME}") String loadGeneratorId,
@@ -41,33 +44,40 @@ public class LoadRunner {
      */
     public void executeScenario(ScenarioConfig scenarioConfig) {
         log.info("Executing '{}' (expected duration: {} sec)",
-                scenarioConfig.getName(), scenarioConfig.getDuration().getSeconds());
+                scenarioConfig.getName(), scenarioConfig.getScheduleDuration().getSeconds());
+
+        log.info("Timout {}s", scenarioConfig.getQueryResponseTimeout().toSeconds());
+
+        List<QueryType> queryPool = QueryPoolBuilder.build(scenarioConfig);
 
         QueryExecutionTask query = new QueryExecutionTask(
                 loadGeneratorId,
                 scenarioConfig.getDocumentType().getIndex(),
-                scenarioConfig.getQueryTypes(),
+                queryPool,
                 openSearchClient,
-                metricsCollector
+                metricsCollector,
+                scenarioConfig.getQueryResponseTimeout()
         );
 
         // Track overall test start time
         long testStartTime = System.currentTimeMillis();
 
-        ScheduledExecutorService executorService = Executors
+        ScheduledExecutorService scheduler = Executors
                 .newSingleThreadScheduledExecutor();
         ExecutorService workers = Executors.newCachedThreadPool();
 
+        ScheduledFuture<?> scheduledTaskForCleanup = null;
+
         try {
-            long durationNs = scenarioConfig.getDuration().toNanos();
+            long durationNs = scenarioConfig.getScheduleDuration().toNanos();
             int qpsTotal = scenarioConfig.getQueriesPerSecond();
             int qpsPerLoadGen = qpsTotal / numberLoadGenerators;
-            long durationPerQuery = 1000_000_000L / qpsPerLoadGen;
+            long durationPerQuery = 1_000_000_000L / qpsPerLoadGen;
             AtomicInteger queryCounter = new AtomicInteger();
             log.debug("Schedule delay:  {} ns  ", durationPerQuery);
 
             // Start scheduled query execution
-            ScheduledFuture<?> future = executorService.scheduleAtFixedRate(() -> {
+            final ScheduledFuture<?> scheduledTask = scheduler.scheduleAtFixedRate(() -> {
                         try {
                             workers.submit(query);
                             queryCounter.getAndIncrement();
@@ -79,17 +89,33 @@ public class LoadRunner {
                     durationPerQuery / 2,
                     durationPerQuery,
                     TimeUnit.NANOSECONDS);
-            executorService.schedule(() -> future.cancel(false), durationNs, TimeUnit.NANOSECONDS);
+            scheduledTaskForCleanup = scheduledTask;
+            // After the scenario duration, stop the periodic scheduling (already submitted tasks may still run).
+            scheduler.schedule(() -> {
+                scheduledTask.cancel(false);
+                scheduler.shutdown();
+            }, durationNs, TimeUnit.NANOSECONDS);
 
-            // TODO: Wait for all threads to complete
-            log.info("Waiting for all threads to complete");
-            boolean completed = true;
-            executorService.awaitTermination(durationNs + 10_000_000_000L, TimeUnit.NANOSECONDS);
-            // TODO: Set a timeout per queryExecution
-            // boolean completed = latch.await(10, TimeUnit.MINUTES);
+            boolean schedulerStopped = false;
+            try {
+                // Wait for the scheduler to stop because it populates worker threads
+                schedulerStopped = scheduler.awaitTermination(
+                        durationNs + TimeUnit.SECONDS.toNanos(10),
+                        TimeUnit.NANOSECONDS);
+                if (!schedulerStopped) {
+                    log.warn("Scheduler did not stop in time; proceeding with worker shutdown");
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.warn("Interrupted while waiting for scheduler to stop", e);
+            }
+
+            // Now stop workers
+            workers.shutdown();
+            boolean workersStopped = awaitExecutorServiceTermination(workers, "workers");
 
             // Check if QPS fulfilled
-            if (queryCounter.get() != qpsPerLoadGen * scenarioConfig.getDuration().toSeconds()) {
+            if (queryCounter.get() < qpsPerLoadGen * scenarioConfig.getScheduleDuration().toSeconds()) {
                 log.warn("Load Generator can't keep up with QPS... please increase REPLICA amount!");
             }
 
@@ -97,24 +123,30 @@ public class LoadRunner {
             long actualDurationMs = testEndTime - testStartTime;
             double actualDurationSeconds = actualDurationMs / 1000.0;
 
-            if (completed) {
+            if (workersStopped) {
                 log.info("Calling MetricsReporterClient");
-                metricsReporterClient.sendMetrics(metricsCollector.getMetricsList());
+
+                try {
+                    metricsCollector.flush();
+                } catch (Exception e) {
+                    log.warn("Failed to flush metrics for {}", loadGeneratorId, e);
+                }
+
                 log.info("Scenario '{}' completed successfully. All threads finished.", scenarioConfig.getName());
-                log.info("Test duration - Expected: {} ({}s), Actual: {}s",
-                        scenarioConfig.getDuration(),
-                        scenarioConfig.getDuration().getSeconds(),
+                log.info("Schedule duration: {}s, Total duration: {}s",
+                        scenarioConfig.getScheduleDuration().getSeconds(),
                         String.format("%.2f", actualDurationSeconds));
             } else {
-                log.warn("Timeout waiting for execution threads to complete");
-                log.warn("Scenario '{}' did not complete within expected duration. Actual runtime: {}s",
+                log.warn("Scenario '{}' was interrupted while waiting for worker threads to finish. Actual runtime: {}s",
                         scenarioConfig.getName(), String.format("%.2f", actualDurationSeconds));
             }
-
         } catch (Exception e) {
-            log.error("Error executing queries:", e);
+            throw new RuntimeException("Error executing queries", e);
         } finally {
-            shutdownExecutorService(executorService);
+            // Fallback cleanup if an exception skipped the normal shutdown path.
+            if (scheduledTaskForCleanup != null) scheduledTaskForCleanup.cancel(false);
+            shutdownExecutorService(scheduler);
+            shutdownExecutorService(workers);
         }
     }
 
@@ -139,4 +171,18 @@ public class LoadRunner {
             Thread.currentThread().interrupt();
         }
     }
+
+    private boolean awaitExecutorServiceTermination(ExecutorService executorService, String executorName) {
+        try {
+            while (!executorService.awaitTermination(30, TimeUnit.SECONDS)) {
+                log.info("Still waiting for {} to complete...", executorName);
+            }
+            return true;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.warn("Interrupted while waiting for {} to complete", executorName, e);
+            return false;
+        }
+    }
+
 }

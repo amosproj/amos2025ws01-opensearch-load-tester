@@ -1,0 +1,42 @@
+auth_enabled: false
+
+ingester:
+  chunk_idle_period: 3m
+  max_chunk_age: 1h
+  wal:
+    dir: "/tmp/wal"
+  lifecycler:
+    ring:
+      kvstore:
+        store: inmemory
+      replication_factor: 1
+
+limits_config:
+  max_query_length: 0
+  max_entries_limit_per_query: 1000000
+  reject_old_samples: false
+  max_query_lookback: 0s
+
+schema_config:
+  configs:
+    - from: 2026-01-01
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+server:
+  http_listen_port: 3100
+  log_level: error
+
+compactor:
+  working_directory: /tmp/compactor
+
+storage_config:
+  tsdb_shipper:
+    active_index_directory: /loki/tsdb-index
+    cache_location: /loki/tsdb-cache
+  filesystem:
+    directory: /loki/chunks
