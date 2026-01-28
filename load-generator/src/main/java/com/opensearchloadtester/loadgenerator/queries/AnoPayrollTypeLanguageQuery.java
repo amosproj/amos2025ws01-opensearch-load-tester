@@ -28,6 +28,6 @@ public class AnoPayrollTypeLanguageQuery extends AbstractQuery {
         );
 
         return new AnoPayrollTypeLanguageQuery(queryParams,
-                "queries/q9_ano_payroll_type_language.json");
+                "query-templates/q9_ano_payroll_type_language.json");
     }
 }

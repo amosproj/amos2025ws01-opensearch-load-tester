@@ -10,6 +10,6 @@ public class AnoClientsAggregationQuery extends AbstractQuery {
     }
 
     public static AnoClientsAggregationQuery random() {
-        return new AnoClientsAggregationQuery(new HashMap<>(), "queries/q5_ano_clients_aggregation.json");
+        return new AnoClientsAggregationQuery(new HashMap<>(), "query-templates/q5_ano_clients_aggregation.json");
     }
 }
