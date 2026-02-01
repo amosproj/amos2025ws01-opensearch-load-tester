@@ -16,6 +16,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.opensearch.client.opensearch.generic.OpenSearchGenericClient;
 import org.opensearch.client.opensearch.generic.Response;
+import org.springframework.test.util.ReflectionTestUtils;
+
 import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.ExecutorService;
@@ -41,16 +43,21 @@ class LoadRunnerTests {
     private MetricsCollector metricsCollector;
     private LoadRunner loadRunner;
 
+    @Mock
+    private ObjectMapper objectMapperMock;
+
     @BeforeEach
     void setUp() {
-        metricsCollector = new MetricsCollector(metricsReporterClient, METRICS_BATCH_SIZE, true);
+        metricsCollector = new MetricsCollector(metricsReporterClient, true);
+        ReflectionTestUtils.setField(metricsCollector, "batchSize", METRICS_BATCH_SIZE);
 
         loadRunner = new LoadRunner(
                 "test-loadgen",
                 NUMBER_LOAD_GENERATORS,
                 openSearchClient,
                 metricsReporterClient,
-                metricsCollector
+                metricsCollector,
+                objectMapperMock
         );
     }
 
@@ -256,7 +263,7 @@ class LoadRunnerTests {
     }
 
     @Test
-    void rejectedExecutionException_insideQueryTask_doesNotCrashRunner() throws Exception  {
+    void rejectedExecutionException_insideQueryTask_doesNotCrashRunner() throws Exception {
         // This simulates an exception inside QueryExecutionTask
         ScenarioConfig scenario = createScenario(
                 "rejected-exec",
@@ -299,7 +306,8 @@ class LoadRunnerTests {
                 2,
                 openSearchClient,
                 metricsReporterClient,
-                metricsCollector
+                metricsCollector,
+                objectMapperMock
         );
 
         ScenarioConfig scenario = createScenario(

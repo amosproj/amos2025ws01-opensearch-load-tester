@@ -45,9 +45,13 @@
         <ComboBox fx:id="testdataGenerationMode" prefWidth="290.0"
                   promptText="Please select test-data generation mode"/>
 
-        <Label text="Please type test-data generation count:"/>
+        <Label text="Please enter test-data generation count:"/>
         <TextField fx:id="testdataGenerationCount" prefHeight="26.0" prefWidth="208.0"
                    promptText="Please enter test-data generation count"/>
+
+        <Label text="Please enter test-data generation batch size:"/>
+        <TextField fx:id="testdataGenerationBatchSize" prefHeight="26.0" prefWidth="208.0"
+                   promptText="Please enter test-data generation batch size"/>
 
         <Label text="Please select the scenario, that should be executed:"/>
         <ComboBox fx:id="scenarioConfig" prefWidth="290.0" promptText="Please enter scenario"/>
@@ -89,11 +93,11 @@
             <VBox fx:id="dynamicCheckboxWrapper" alignment="CENTER" spacing="10.0"/>
         </VBox>
 
-        <Label text="Please type load-generator replica amount:"/>
+        <Label text="Please enter load-generator replica amount:"/>
         <TextField fx:id="loadGeneratorReplicas" prefHeight="26.0" prefWidth="197.0"
                    promptText="Please enter load-generator replica amount"/>
 
-        <Label text="Please type metrics batch size:"/>
+        <Label text="Please enter metrics batch size:"/>
         <TextField fx:id="metricsBatchSize" prefHeight="26.0" prefWidth="197.0"
                    promptText="Please enter metrics batch size"/>
         <TextArea fx:id="outputText" editable="false" prefHeight="200.0" prefWidth="200.0" visible="false"/>

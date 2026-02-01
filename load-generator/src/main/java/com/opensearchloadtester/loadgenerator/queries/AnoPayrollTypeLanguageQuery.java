@@ -16,9 +16,8 @@ public class AnoPayrollTypeLanguageQuery extends AbstractQuery {
         List<String> lang = List.of("German", "English", "Spanish", "French");
         String language = lang.get(faker().random().nextInt(type.size()));
 
-        int startYear = faker().number().numberBetween(2015, 2026);
-        String year_from = String.valueOf(startYear);
-        String year_to = String.valueOf(faker().number().numberBetween(startYear, 2026));
+        String year_from = getRandomYear();
+        String year_to = getRandomYearAfter(year_from);
 
         Map<String, String> queryParams = Map.of(
                 "payroll_type", payrollType,
@@ -28,6 +27,6 @@ public class AnoPayrollTypeLanguageQuery extends AbstractQuery {
         );
 
         return new AnoPayrollTypeLanguageQuery(queryParams,
-                "queries/q9_ano_payroll_type_language.json");
+                "query-templates/q9_ano_payroll_type_language.json");
     }
 }

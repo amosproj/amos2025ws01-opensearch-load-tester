@@ -1,5 +1,6 @@
 package com.opensearchloadtester.loadgenerator;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opensearchloadtester.loadgenerator.client.LoadTestStartSyncClient;
 import com.opensearchloadtester.loadgenerator.client.MetricsReporterClient;
 import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
@@ -26,11 +27,13 @@ public class TestScenarioInitializerTests {
     private LoadTestStartSyncClient loadTestStartSyncClient;
     @Mock
     private MetricsReporterClient metricsReporterClient;
+    @Mock
+    private ObjectMapper objectMapperMock;
 
     @Test
     void run_warmupDisabled_singleReplica_executesScenario_withoutSync() {
         when(scenarioConfig.getName()).thenReturn("test-scenario");
-        when(scenarioConfig.isWarmUpEnabled()).thenReturn(false);
+        when(scenarioConfig.getWarmUpEnabled()).thenReturn(false);
 
         TestScenarioInitializer initializer = new TestScenarioInitializer(
                 "lg-1",
@@ -39,7 +42,8 @@ public class TestScenarioInitializerTests {
                 loadRunner,
                 openSearchClient,
                 loadTestStartSyncClient,
-                metricsReporterClient
+                metricsReporterClient,
+                objectMapperMock
         );
 
         initializer.run();
@@ -51,7 +55,7 @@ public class TestScenarioInitializerTests {
     @Test
     void run_warmupDisabled_multipleReplicas_syncsThenExecutesScenario_inOrder() {
         when(scenarioConfig.getName()).thenReturn("test-scenario");
-        when(scenarioConfig.isWarmUpEnabled()).thenReturn(false);
+        when(scenarioConfig.getWarmUpEnabled()).thenReturn(false);
 
         TestScenarioInitializer initializer = new TestScenarioInitializer(
                 "lg-1",
@@ -60,7 +64,8 @@ public class TestScenarioInitializerTests {
                 loadRunner,
                 openSearchClient,
                 loadTestStartSyncClient,
-                metricsReporterClient
+                metricsReporterClient,
+                objectMapperMock
         );
 
         initializer.run();

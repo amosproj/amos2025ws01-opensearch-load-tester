@@ -13,14 +13,12 @@ public class DataGeneratorConfig {
 
     @Bean
     @Primary
-    public DataGenerator dataGenerator(DataGenerationProperties dataGenerationProperties,
-                                       FileStorageService fileStorageService) {
+    public DataGenerator dataGenerator(DataGenerationProperties dataGenerationProperties) {
 
         return switch (dataGenerationProperties.getMode()) {
             case DYNAMIC -> new DynamicDataGenerator();
             case PERSISTENT -> new PersistentDataGenerator(
-                    fileStorageService,
-                    dataGenerationProperties.getOutputPath(),
+                    new FileStorageService(dataGenerationProperties.getOutputPath()),
                     new DynamicDataGenerator()
             );
         };
