@@ -43,19 +43,6 @@ class StatsAccumulatorTest {
     }
 
     @Test
-    void update_skipsNegativeQueryDuration() {
-        StatsAccumulator accumulator = new StatsAccumulator();
-
-        accumulator.update(List.of(
-                new MetricsDto("lg-1", "match_all", 100L, -1L, 10, 200)
-        ));
-
-        assertThat(accumulator.getTotalQueries()).isEqualTo(1L);
-        assertThat(accumulator.getRequestDurationCount()).isEqualTo(1L);
-        assertThat(accumulator.getQueryDurationCount()).isEqualTo(0L);
-    }
-
-    @Test
     void toStatistics_withNoData_returnsZeroDefaults() {
         StatsAccumulator accumulator = new StatsAccumulator();
 

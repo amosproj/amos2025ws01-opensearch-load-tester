@@ -39,9 +39,6 @@ public class ReportController {
     @Value("${load.generator.replicas}")
     private int expectedLoadGenerators;
 
-    @Value("${report.export.json.enabled}")
-    private boolean jsonExportEnabled;
-
     private final ReportService reportService;
     private boolean loadTestFinished = false;
 
@@ -154,20 +151,19 @@ public class ReportController {
             try {
                 StatisticsDto summary = reportService.finalizeReports(reportedLoadGenerators);
 
-                StringBuilder message = new StringBuilder(String.format(
+                String message = String.format(
                         "Reports generated successfully!\n" +
                                 "Total Load Generators: %d/%d\n" +
-                                "Total Queries executed: %d\n",
+                                "Total Queries executed: %d\n" +
+                                "Results JSON report: %s\n" +
+                                "Statistics JSON: %s",
                         summary.getLoadGeneratorInstances().size(), expectedLoadGenerators,
-                        summary.getTotalQueries()
-                ));
+                        summary.getTotalQueries(),
+                        reportService.getResultsJsonPath(),
+                        reportService.getStatisticsReportPath()
+                );
 
-                if (jsonExportEnabled) {
-                    message.append("Results JSON report: ").append(reportService.getResultsJsonPath()).append("\n");
-                    message.append("Statistics JSON: ").append(reportService.getStatisticsReportPath());
-                }
-
-                log.info(message.toString());
+                log.info(message);
 
                 // Mark request for application shutdown AFTER response completed
                 request.setAttribute(ShutdownAfterResponseInterceptor.SHUTDOWN_AFTER_RESPONSE, true);
@@ -191,7 +187,7 @@ public class ReportController {
 
         return ResponseEntity.ok().build();
     }
-
+    
     /**
      * Health check endpoint.
      */

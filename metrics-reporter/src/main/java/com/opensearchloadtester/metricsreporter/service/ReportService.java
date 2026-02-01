@@ -9,17 +9,19 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.opensearchloadtester.common.dto.MetricsDto;
 import com.opensearchloadtester.metricsreporter.dto.StatisticsDto;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
-import java.io.FileWriter;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -115,12 +117,11 @@ public class ReportService {
     private void appendToNdjsonReport(List<MetricsDto> metricsList) throws IOException {
         Path ndjsonPath = resolveReportPath(ndjsonFilename);
 
-        try (FileWriter writer = new FileWriter(ndjsonPath.toFile(), true)) {
+        try (BufferedWriter writer = Files.newBufferedWriter(ndjsonPath, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND)) {
             for (MetricsDto metrics : metricsList) {
                 writer.write(ndjsonWriter.writeValueAsString(metrics));
                 writer.write("\n");
             }
-            writer.flush();
         }
 
         log.info("Appended {} metrics entries to NDJSON report", metricsList.size());
@@ -180,8 +181,8 @@ public class ReportService {
             return;
         }
 
-        try (BufferedReader reader = Files.newBufferedReader(ndjsonPath);
-             FileWriter writer = new FileWriter(resultsJsonPath.toFile())) {
+        try (BufferedReader reader = Files.newBufferedReader(ndjsonPath, StandardCharsets.UTF_8);
+             BufferedWriter writer = Files.newBufferedWriter(resultsJsonPath, StandardCharsets.UTF_8)) {
             JsonGenerator generator = objectMapper.getFactory().createGenerator(writer);
             generator.useDefaultPrettyPrinter();
             generator.writeStartArray();

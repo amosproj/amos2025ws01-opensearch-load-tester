@@ -63,7 +63,6 @@ class ReportServiceTest {
 
         assertThat(Files.exists(statsPath)).isTrue();
         assertThat(Files.exists(resultsJsonPath)).isTrue();
-//        assertThat(Files.exists(ndjsonPath)).isFalse();
 
         StatisticsDto writtenStats = objectMapper.readValue(statsPath.toFile(), StatisticsDto.class);
         assertThat(writtenStats.getTotalQueries()).isEqualTo(2L);

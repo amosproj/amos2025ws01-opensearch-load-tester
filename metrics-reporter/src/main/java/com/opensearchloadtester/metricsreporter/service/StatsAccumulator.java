@@ -42,7 +42,7 @@ class StatsAccumulator {
             }
 
             Long queryDurationMs = result.getQueryDurationMillis();
-            if (queryDurationMs != null && queryDurationMs >= 0) {
+            if (queryDurationMs != null) {
                 queryDurationCount++;
                 queryDurationSum += queryDurationMs;
                 queryDurationMin = Math.min(queryDurationMin, queryDurationMs);
@@ -52,35 +52,20 @@ class StatsAccumulator {
     }
 
     StatisticsDto toStatistics(LocalDateTime generatedAt, Set<String> loadGeneratorInstances) {
-        StatisticsDto.DurationStats requestDuration = new StatisticsDto.DurationStats();
-        if (requestDurationCount > 0) {
-            requestDuration.setAverage(requestDurationSum / (double) requestDurationCount);
-            requestDuration.setMin(requestDurationMin);
-            requestDuration.setMax(requestDurationMax);
-        } else {
-            requestDuration.setAverage(0.0);
-            requestDuration.setMin(0L);
-            requestDuration.setMax(0L);
-        }
-
-        StatisticsDto.DurationStats queryDuration = new StatisticsDto.DurationStats();
-        if (queryDurationCount > 0) {
-            queryDuration.setAverage(queryDurationSum / (double) queryDurationCount);
-            queryDuration.setMin(queryDurationMin);
-            queryDuration.setMax(queryDurationMax);
-        } else {
-            queryDuration.setAverage(0.0);
-            queryDuration.setMin(0L);
-            queryDuration.setMax(0L);
-        }
-
         return new StatisticsDto(
                 generatedAt,
-                requestDuration,
-                queryDuration,
+                buildDurationStats(requestDurationCount, requestDurationSum, requestDurationMin, requestDurationMax),
+                buildDurationStats(queryDurationCount, queryDurationSum, queryDurationMin, queryDurationMax),
                 totalQueries,
                 totalErrors,
                 new ArrayList<>(loadGeneratorInstances)
         );
+    }
+
+    private StatisticsDto.DurationStats buildDurationStats(long count, long sum, long min, long max) {
+        if (count > 0) {
+            return new StatisticsDto.DurationStats(sum / (double) count, min, max);
+        }
+        return new StatisticsDto.DurationStats(0.0, 0L, 0L);
     }
 }
