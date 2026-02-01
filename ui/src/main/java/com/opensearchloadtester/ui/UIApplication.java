@@ -9,7 +9,9 @@ import javafx.scene.image.Image;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 
+import java.awt.*;
 import java.io.IOException;
+import java.net.URL;
 
 public class UIApplication extends Application {
     @Override
@@ -32,6 +34,14 @@ public class UIApplication extends Application {
 
         stage.getIcons().add(new Image(UIApplication.class.getResourceAsStream("loadtester-logo.png")));
 
+        URL imageResource = UIApplication.class.getResource("loadtester-logo.png");
+        java.awt.Image image = Toolkit.getDefaultToolkit().getImage(imageResource);
+        Taskbar taskbar = Taskbar.getTaskbar();
+
+        if (Taskbar.isTaskbarSupported() && taskbar.isSupported(Taskbar.Feature.ICON_IMAGE)) {
+            taskbar.setIconImage(image);
+        }
+        
         stage.sizeToScene();
 
         stage.show();
