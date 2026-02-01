@@ -14,7 +14,7 @@
         </padding>
         <HBox alignment="CENTER_LEFT" spacing="10">
             <ImageView fitHeight="130.0" fitWidth="180.0" pickOnBounds="true" preserveRatio="true">
-                <Image url="@loadtester-logo.png"/>
+                <Image url="@loadtester-logo-transparent.png"/>
             </ImageView>
             <Region HBox.hgrow="ALWAYS"/>
 
