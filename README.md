@@ -1,10 +1,18 @@
-# OpenSearch Load Tester (AMOS WS 2025)
+<div style="text-align: center;">
+    <img src="https://github.com/user-attachments/assets/bca47974-651c-4e81-bd67-6e6cc4c3cf6b" alt="LoadTester Logo" width="300">
+</div>
 
-The **OpenSearch Load Tester** is a tool designed to evaluate the performance limits of a single OpenSearch instance. It consists of three separate Spring Boot projects:
+# OpenSearch Load Tester (AMOS WS 2025) 🔎⚡
 
-- **Test Data Manager** - Responsible for indexing test data into OpenSearch.
-- **Load Generator** - Executes the actual load by sending parallel queries to an OpenSearch instance.
-- **Metrics Reporter** - Responsible for collecting and exporting the test results.
+The **OpenSearch Load Tester** is a tool designed to evaluate the performance limits of a single OpenSearch instance. It consists of three separate Spring Boot projects and one JavaFX project:
+
+- **Test Data Generator (Spring-Boot)** - Responsible for generating testdata and indexing into OpenSearch.
+- **Load Generator (Spring-Boot)** - Executes the actual load by sending parallel queries to an OpenSearch instance.
+- **Metrics Reporter (Spring-Boot)** - Responsible for collecting and exporting the test results.
+- **UI (JavaFX)** - Graphical user interface to configure and start load tests.
+
+In addition, Docker Compose configurations are provided to facilitate easy deployment and management of the entire stack,
+including an optional integrated OpenSearch instance for testing purposes, as well as Grafana Stack (Alloy + Loki + Grafana) to visualize the results.
 
 ---
 
@@ -12,9 +20,10 @@ The **OpenSearch Load Tester** is a tool designed to evaluate the performance li
 
 ### Prerequisites
 
-- Java 25 or later
-- Maven
-- Docker & Docker Compose
+- Java 25 or later ☕
+- Maven 🛠️
+- Docker & Docker Compose 🐳
+- Make 🔧
 
 ### Clone the Repository
 
@@ -23,51 +32,48 @@ git clone https://github.com/amosproj/amos2025ws01-opensearch-load-tester.git
 cd amos2025ws01-opensearch-load-tester
 ```
 
-### Setup Git Hooks (once only)
+### Start the Load Testing via GUI 🖱️🖥️
 
-Install the Git hooks for automatic co-author management:
+To start load testing, you can use the UI by running the following command:
 
 ```bash
-cd scripts
-./setup-hooks.sh 
+bash ./start-ui.sh <rebuild>
 ```
 
-See [scripts/README.md](scripts/README.md) for details on using `@mentions` in commits.
+The `rebuild` flag triggers a complete rebuild of all components.
 
+Once launched, you can configure and initiate load tests using the dashboard.
 
----
-## Make
+**Execution and Results**
 
-For convenient operation, Makefile targets are provided to deploy the load-generator. 
-The following commands are available:
+Clicking the "Start Load Test" button triggers the build process for all required Docker images and launches the complete OpenSearch load-tester stack.
+You can view the results in Grafana:
 
-| Command         | Description                                       |
-|-----------------|---------------------------------------------------|
-| `make build`    | Builds the Docker images                          |
-| `make clean`    | Stops containers and removes                      |
-| `make curl`     | Attach an interactive shell to the Curl container |
-| `make help`     | Shows help with all available commands            |
-| `make loadtest` | Interactive load test setup                       |
-| `make logs`     | Follows container logs                            |
-| `make run`      | Starts all containers in the background           |
-| `make status`   | Shows CPU and memory usage of containers          |
-| `make stop`     | Stops all containers                              |   
+> URL: ¡http://localhost:3000
+>
+> Path: Dashboards → Load Testing → OpenSearch Load Test
 
-### Interactive Loadtest Setup
+### Start the Load Testing via CLI 🧑‍💻
+
+For convenient operation, Makefile targets are provided to deploy the load-generator on systems without GUI 🖥️❌.
+
+#### Interactive Loadtest Setup via CLI
 
 - `make loadtest`  
-  Interactive setup for load tests. Prompts for:
-    - `LOAD_GENERATOR_REPLICAS` (default: `3`) — updates the value in ` .env`
-    - `TEST_DATA_GENERATION_COUNT` (default: `1000`) — updates the value in ` .env`  
-  and then runs `make clean`, `make build`, `make run` and `make curl` to open shell to start loadtest.
+  Interactive setup for load tests 🛠️. Prompts for:
+    - `LOAD_GENERATOR_REPLICAS` (default: `3`)
+    - `TEST_DATA_GENERATION_COUNT` (default: `1000`)
+    - `TEST_DATA_GENERATION_DOCUMENT_TYPE` (default: `ANO`)
+
+  updates the value in `.env` and then runs `make clean`, `make build`, `make run` and `make curl` to open shell to start loadtest 🚀.
 
 ---
 
-## 🐳 Docker Setup (Recommended)
+## 🐳 Docker Setup
 
-### Run with Docker Compose
+### Run with Docker Compose ▶️
 
-The easiest way to start these three services with automatic port management:
+The easiest way to start the whole stack with automatic port management:
 
 ```bash
 docker-compose up --build -d
@@ -75,63 +81,31 @@ docker-compose up --build -d
 
 This will start:
 
-1. The import of test data via the **Test Data Manager**.
-2. The **Metrics Reporter** and one instance of the **Load Generator** after the test data has been imported.
+1. The generation of testdata via the **Test Data Generator**
+2. The **Metrics Reporter**
+3. The **Grafana Stack** (Alloy + Loki + Grafana) to visualize the results
+4. All **Load Generator** replicas after the testdata has been indexed.
 
-### Stop the Services
+### Stop the Services ⏹️
 
 ```bash
 docker-compose down
 ```
 
-### Scale Load Generators
-
-To run multiple Load Generator instances:
-
-```bash
-docker-compose up --build -d
-```
-
-### Run the Whole Stack with Integrated OpenSearch
-
-```bash
-docker-compose --profile opensearch up --build -d
-```
-
-Example Usage: `curl -X PUT "http://localhost:9200/test-index"`
-
 ### Remove all Docker Resources
 
 ```bash
-docker-compose --profile opensearch down --volumes --rmi local --remove-orphans
+docker-compose down --volumes --rmi local --remove-orphans
 ```
 
 ---
 
-## 💻 Manual Setup (Without Docker)
+## Further Documentation
 
-### Run the Test Manager
-
-Navigate to the `test-manager` directory:
-
-```bash
-cd test-manager
-./mvnw spring-boot:run
-```
-
-Once the application has started, the Test Manager API documentation can be accessed via Swagger UI in your browser:
-👉 **http://localhost:8080/test-manager-swagger-ui.html**
-
-### Run a Load Generator
-
-Navigate to the `load-generator` directory:
-
-```bash
-cd load-generator
-./mvnw spring-boot:run
-```
-
-Multiple Load Generators can be started simultaneously to increase the total load.
+- [User documentation](https://github.com/amosproj/amos2025ws01-opensearch-load-tester/wiki/User-Documentation) 🔗
+- [Build documentation](https://github.com/amosproj/amos2025ws01-opensearch-load-tester/wiki/Build-Documentation) 🔗
+- [Design documentation](https://github.com/amosproj/amos2025ws01-opensearch-load-tester/wiki/Design-Documentation) 🔗
+- [Developer documentation](https://github.com/amosproj/amos2025ws01-opensearch-load-tester/wiki/Developer-Documentation) 🔗
 
 ---
 
