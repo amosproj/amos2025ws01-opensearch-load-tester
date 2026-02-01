@@ -43,6 +43,8 @@ public class StartController {
     @FXML
     private TextField testdataGenerationCount;
     @FXML
+    private TextField testdataGenerationBatchSize;
+    @FXML
     private TextField loadGeneratorReplicas;
     @FXML
     private TextField metricsBatchSize;
@@ -132,6 +134,8 @@ public class StartController {
 
         testdataGenerationCount.textProperty().addListener(getDefaultListener(testdataGenerationCount));
 
+        testdataGenerationBatchSize.textProperty().addListener(getDefaultListener(testdataGenerationBatchSize));
+
         scenarioConfig.valueProperty().addListener((obs,
                                                     oldValue, newValue) -> {
             if (Objects.equals(newValue, "default-scenario.yaml")) {
@@ -139,6 +143,7 @@ public class StartController {
                 testdataGenerationDocumentType.setValue("ANO");
                 testdataGenerationMode.setValue("DYNAMIC");
                 testdataGenerationCount.setText("10000");
+                testdataGenerationBatchSize.setText("1000");
                 loadGeneratorReplicas.setText("1");
                 metricsBatchSize.setText("100");
 
@@ -241,6 +246,12 @@ public class StartController {
                 content,
                 "TEST_DATA_GENERATION_COUNT",
                 testdataGenerationCount.getText()
+        );
+
+        content = regexInEnv(
+                content,
+                "TEST_DATA_GENERATION_BATCH_SIZE",
+                testdataGenerationBatchSize.getText()
         );
 
         content = regexInEnv(
@@ -545,6 +556,7 @@ public class StartController {
         valid &= validateCombobox(testdataGenerationDocumentType);
         valid &= validateCombobox(testdataGenerationMode);
         valid &= validateNumericTextfield(testdataGenerationCount);
+        valid &= validateNumericTextfield(testdataGenerationBatchSize);
         valid &= validateCombobox(scenarioConfig);
         valid &= validateCustomScenario();
         valid &= validateNumericTextfield(loadGeneratorReplicas);

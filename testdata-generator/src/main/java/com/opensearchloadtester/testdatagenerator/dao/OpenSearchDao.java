@@ -74,7 +74,7 @@ public class OpenSearchDao {
         Objects.requireNonNull(documents, "documents list must not be null");
 
         if (documents.isEmpty()) {
-            log.info("Empty documents list provided, skipping bulk indexing");
+            log.debug("Empty documents list provided, skipping bulk indexing");
             return;
         }
 
@@ -114,7 +114,7 @@ public class OpenSearchDao {
                 );
             }
 
-            log.info("Bulk indexed {} documents in index '{}'", response.items().size(), indexName);
+            log.debug("Bulk indexed {} documents in index '{}'", response.items().size(), indexName);
         } catch (Exception e) {
             throw new OpenSearchDataAccessException(
                     String.format("Unexpected error while bulk indexing documents in index '%s'", indexName), e);
