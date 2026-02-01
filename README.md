@@ -1,6 +1,6 @@
-<div style="text-align: center;">
+<p align="center">
     <img src="https://github.com/user-attachments/assets/bca47974-651c-4e81-bd67-6e6cc4c3cf6b" alt="LoadTester Logo" width="300">
-</div>
+</p>
 
 # OpenSearch Load Tester (AMOS WS 2025) 🔎⚡
 
@@ -49,7 +49,7 @@ Once launched, you can configure and initiate load tests using the dashboard.
 Clicking the "Start Load Test" button triggers the build process for all required Docker images and launches the complete OpenSearch load-tester stack.
 You can view the results in Grafana:
 
-> URL: ¡http://localhost:3000
+> URL: http://localhost:3000
 >
 > Path: Dashboards → Load Testing → OpenSearch Load Test
 
