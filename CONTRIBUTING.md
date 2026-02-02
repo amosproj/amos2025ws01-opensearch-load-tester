@@ -1,6 +1,6 @@
 # Contributing to OpenSearch Load Tester
 
-Thank you for your interest in contributing to this project! 🎉
+Thank you for your interest in contributing to this project!
 
 ## 🚀 Getting Started
 
@@ -351,12 +351,12 @@ grep -i "username" .coauthors
 
 If you have questions or problems:
 
-1. **Git Hooks**: See [scripts/README.md](scripts/README.md)
+1. **Git Hooks**: See [Developer Documentation](https://github.com/amosproj/amos2025ws01-opensearch-load-tester/wiki/Developer-Documentation)
 2. **Team**: Ask in the team chat
 3. **Issues**: Create an issue on GitHub
-4. **Documentation**: Check [Documentation/README.md](Documentation/README.md)
+4. **Documentation**: Check the [Project Wiki](https://github.com/amosproj/amos2025ws01-opensearch-load-tester/wiki)
 
-## 📜 License
+## 📄 License
 
 This project is licensed under the MIT License - see [LICENSE](LICENSE) for details.
 
