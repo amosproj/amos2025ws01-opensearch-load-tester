@@ -55,6 +55,25 @@ class ReportServiceTest {
         List<String> ndjsonLines = Files.readAllLines(ndjsonPath);
 
         assertThat(ndjsonLines).hasSize(2);
+        assertThat(ndjsonLines.get(0)).isNotBlank();
+        assertThat(ndjsonLines.get(1)).isNotBlank();
+
+        JsonNode ndjsonEntry1 = objectMapper.readTree(ndjsonLines.get(0));
+        JsonNode ndjsonEntry2 = objectMapper.readTree(ndjsonLines.get(1));
+
+        assertThat(ndjsonEntry1.get("load_generator_id").asText()).isEqualTo(LOAD_GENERATOR_ID);
+        assertThat(ndjsonEntry1.get("query_type").asText()).isEqualTo("query_type_test");
+        assertThat(ndjsonEntry1.get("request_duration_millis").asLong()).isEqualTo(100L);
+        assertThat(ndjsonEntry1.get("query_duration_millis").asLong()).isEqualTo(50L);
+        assertThat(ndjsonEntry1.get("total_hits").asInt()).isEqualTo(10);
+        assertThat(ndjsonEntry1.get("http_status_code").asInt()).isEqualTo(200);
+
+        assertThat(ndjsonEntry2.get("load_generator_id").asText()).isEqualTo(LOAD_GENERATOR_ID);
+        assertThat(ndjsonEntry2.get("query_type").asText()).isEqualTo("query_type_test");
+        assertThat(ndjsonEntry2.get("request_duration_millis").asLong()).isEqualTo(300L);
+        assertThat(ndjsonEntry2.get("query_duration_millis").asLong()).isEqualTo(150L);
+        assertThat(ndjsonEntry2.get("total_hits").asInt()).isEqualTo(5);
+        assertThat(ndjsonEntry2.get("http_status_code").asInt()).isEqualTo(500);
 
         StatisticsDto statistics = reportService.finalizeReports(Set.of(LOAD_GENERATOR_ID));
 
@@ -83,5 +102,7 @@ class ReportServiceTest {
         JsonNode resultsJson = objectMapper.readTree(resultsJsonPath.toFile());
         assertThat(resultsJson.isArray()).isTrue();
         assertThat(resultsJson.size()).isEqualTo(2);
+        assertThat(resultsJson.get(0)).isEqualTo(ndjsonEntry1);
+        assertThat(resultsJson.get(1)).isEqualTo(ndjsonEntry2);
     }
 }
