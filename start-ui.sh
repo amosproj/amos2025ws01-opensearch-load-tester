@@ -2,7 +2,7 @@
 
 if [ "$1" = "rebuild" ]; then
     echo "Rebuilding LoadTesterUI..."
-    sudo rm -r ./LoadTesterUI
+    rm -rf ./LoadTesterUI
 fi
 
 if [ -d "LoadTesterUI" ]; then
