@@ -89,6 +89,13 @@
         <Label text="Please select test-data generation mode:"/>
         <ComboBox fx:id="testdataGenerationMode" prefWidth="290.0"
                   promptText="Please select test-data generation mode"/>
+        <Label fx:id="persistentModeWarning" managed="false" visible="false" wrapText="true"
+               style="-fx-text-fill: #D4A017; -fx-font-style: italic;"
+               text="⚠ Persistent mode is currently in beta. Using a very high test-data generation count may lead to memory issues. It is recommended to keep the count low or use DYNAMIC mode instead.">
+            <VBox.margin>
+                <Insets top="-10.0"/>
+            </VBox.margin>
+        </Label>
 
         <Label text="Please enter test-data generation count:"/>
         <TextField fx:id="testdataGenerationCount" prefHeight="26.0" prefWidth="208.0"

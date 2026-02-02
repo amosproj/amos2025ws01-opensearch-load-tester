@@ -37,6 +37,8 @@ public class StartController {
     @FXML
     private ComboBox<String> testdataGenerationMode;
     @FXML
+    private Label persistentModeWarning;
+    @FXML
     private ComboBox<String> testdataGenerationDocumentType;
     @FXML
     private ComboBox<String> scenarioConfig;
@@ -129,8 +131,16 @@ public class StartController {
 
         updateScenarioConfigForDocumentType("ANO");
 
-        testdataGenerationMode.getItems().addAll("DYNAMIC", "PERSISTENT");
-        testdataGenerationMode.valueProperty().addListener(getDefaultListener(testdataGenerationMode));
+        testdataGenerationMode.getItems().addAll("DYNAMIC", "PERSISTENT (Beta)");
+        testdataGenerationMode.valueProperty().addListener((observable, oldValue, newValue) -> {
+            testdataGenerationMode.setStyle("");
+            testdataGenerationMode.setTooltip(null);
+
+            // Show/hide persistent mode warning
+            boolean isPersistent = "PERSISTENT (Beta)".equals(newValue);
+            persistentModeWarning.setVisible(isPersistent);
+            persistentModeWarning.setManaged(isPersistent);
+        });
 
         testdataGenerationCount.textProperty().addListener(getDefaultListener(testdataGenerationCount));
 
