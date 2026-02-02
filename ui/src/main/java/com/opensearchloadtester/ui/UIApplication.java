@@ -34,14 +34,15 @@ public class UIApplication extends Application {
 
         stage.getIcons().add(new Image(UIApplication.class.getResourceAsStream("loadtester-logo.png")));
 
-        URL imageResource = UIApplication.class.getResource("loadtester-logo.png");
-        java.awt.Image image = Toolkit.getDefaultToolkit().getImage(imageResource);
-        Taskbar taskbar = Taskbar.getTaskbar();
-
-        if (Taskbar.isTaskbarSupported() && taskbar.isSupported(Taskbar.Feature.ICON_IMAGE)) {
-            taskbar.setIconImage(image);
+        if (Taskbar.isTaskbarSupported()) {
+            Taskbar taskbar = Taskbar.getTaskbar();
+            if (taskbar.isSupported(Taskbar.Feature.ICON_IMAGE)) {
+                URL imageResource = UIApplication.class.getResource("loadtester-logo.png");
+                java.awt.Image image = Toolkit.getDefaultToolkit().getImage(imageResource);
+                taskbar.setIconImage(image);
+            }
         }
-        
+
         stage.sizeToScene();
 
         stage.show();
