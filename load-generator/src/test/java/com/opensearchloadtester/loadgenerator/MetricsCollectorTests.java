@@ -42,7 +42,7 @@ class MetricsCollectorTests {
      */
     @Test
     void testAppendMetrics_singleAdd() {
-        MetricsDto dto = new MetricsDto();
+        MetricsDto dto = new MetricsDto("lg-1", "test-query", 10, 1L, 10, 200);
 
         metricsCollector.appendMetrics(dto);
 
@@ -71,7 +71,7 @@ class MetricsCollectorTests {
         ArrayList<MetricsDto> metricsList = new ArrayList<>();
 
         for (int i = 0; i < metricsAmount; i++) {
-            metricsList.add(new MetricsDto());
+            metricsList.add(new MetricsDto("lg-1", "test-query", 10, 1L, 10, 200));
         }
 
         for (int i = 0; i < metricsAmount; i++) {
@@ -107,7 +107,7 @@ class MetricsCollectorTests {
 
         for (int i = 0; i < threadCount; i++) {
             executor.submit(() -> {
-                metricsCollector.appendMetrics(new MetricsDto());
+                metricsCollector.appendMetrics(new MetricsDto("lg-1", "test-query", 10, 1L, 10, 200));
                 latch.countDown();
             });
         }
@@ -142,12 +142,12 @@ class MetricsCollectorTests {
 
         // Add 4 metrics - should not trigger send yet
         for (int i = 0; i < 4; i++) {
-            batchCollector.appendMetrics(new MetricsDto());
+            batchCollector.appendMetrics(new MetricsDto("lg-1", "test-query", 10, 1L, 10, 200));
         }
         verify(batchClient, never()).sendMetrics(any());
 
         // Add 5th metric - should trigger batch send
-        batchCollector.appendMetrics(new MetricsDto());
+        batchCollector.appendMetrics(new MetricsDto("lg-1", "test-query", 10, 1L, 10, 200));
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<List<MetricsDto>> captor = ArgumentCaptor.forClass(List.class);
@@ -167,7 +167,7 @@ class MetricsCollectorTests {
 
         // Add 3 metrics - won't trigger automatic send
         for (int i = 0; i < 3; i++) {
-            flushCollector.appendMetrics(new MetricsDto());
+            flushCollector.appendMetrics(new MetricsDto("lg-1", "test-query", 10, 1L, 10, 200));
         }
         verify(flushClient, never()).sendMetrics(any());
 
@@ -188,7 +188,7 @@ class MetricsCollectorTests {
         MetricsReporterClient disabledClient = mock(MetricsReporterClient.class);
         MetricsCollector disabledCollector = new MetricsCollector(disabledClient, false);
 
-        disabledCollector.appendMetrics(new MetricsDto());
+        disabledCollector.appendMetrics(new MetricsDto("lg-1", "test-query", 10, 1L, 10, 200));
         disabledCollector.flush();
 
         verify(disabledClient, never()).sendMetrics(any());

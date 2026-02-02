@@ -52,7 +52,7 @@ public class DataGenerationService {
                 openSearchDao.bulkIndexDocuments(indexName, documents);
                 generatedDocs += currentBatchSize;
 
-                log.debug("Generated and indexed {}/{} documents", generatedDocs, totalCount);
+                log.info("Generated and indexed {}/{} documents", generatedDocs, totalCount);
             } catch (OpenSearchDataAccessException e) {
                 batchSize = handleRetryOrThrow(e, batchSize);
             }

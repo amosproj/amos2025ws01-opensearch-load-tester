@@ -38,20 +38,10 @@ class ReportControllerTest {
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(reportController, "expectedLoadGenerators", 1);
-        ReflectionTestUtils.setField(reportController, "jsonExportEnabled", false);
     }
 
-    @Test
-    void submitMetrics_returnsBadRequest_forInvalidMetricsEntry() {
-        List<MetricsDto> metrics = List.of(
-                new MetricsDto("", "query_type_test", 10L, 10L, 3, 200)
-        );
-
-        ResponseEntity<String> response = reportController.submitMetrics(metrics);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        verifyNoInteractions(reportService);
-    }
+    // Note: Bean Validation tests (e.g., @NotBlank on loadGeneratorId) require
+    // Spring context (@WebMvcTest) and are covered by integration tests.
 
     @Test
     void submitMetrics_waitsUntilAllReplicasReport() throws Exception {
@@ -69,7 +59,6 @@ class ReportControllerTest {
     @Test
     void finish_generatesReports_whenAllReplicasFinished() throws Exception {
         ReflectionTestUtils.setField(reportController, "expectedLoadGenerators", 1);
-        ReflectionTestUtils.setField(reportController, "jsonExportEnabled", true);
 
         List<MetricsDto> metrics = List.of(
                 new MetricsDto(LOAD_GENERATOR_ID, "query_type_test", 100L, 50L, 4, 200),
@@ -80,8 +69,8 @@ class ReportControllerTest {
                 LocalDateTime.now(),
                 new StatisticsDto.DurationStats(140.0, 100L, 180L),
                 new StatisticsDto.DurationStats(70.0, 50L, 90L),
-                2,
-                1,
+                2L,
+                1L,
                 List.of(LOAD_GENERATOR_ID)
         );
 

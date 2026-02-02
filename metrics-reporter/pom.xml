@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.opensearchloadtester</groupId>
         <artifactId>opensearch-load-tester-parent</artifactId>
-        <version>5.1.0</version>
+        <version>6.0.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -39,8 +39,8 @@
         </dependency>
 
         <dependency>
-            <groupId>jakarta.validation</groupId>
-            <artifactId>jakarta.validation-api</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
         <!-- Jackson -->

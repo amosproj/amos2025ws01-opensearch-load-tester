@@ -13,8 +13,10 @@ import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -35,11 +37,15 @@ public class StartController {
     @FXML
     private ComboBox<String> testdataGenerationMode;
     @FXML
+    private Label persistentModeWarning;
+    @FXML
     private ComboBox<String> testdataGenerationDocumentType;
     @FXML
     private ComboBox<String> scenarioConfig;
     @FXML
     private TextField testdataGenerationCount;
+    @FXML
+    private TextField testdataGenerationBatchSize;
     @FXML
     private TextField loadGeneratorReplicas;
     @FXML
@@ -53,11 +59,15 @@ public class StartController {
     @FXML
     private ComboBox<String> customWarmup;
     @FXML
-    private TextField customScheduleDuration;
+    private TextField customScheduleDurationAmount;
+    @FXML
+    private ComboBox<String> customScheduleDurationUnit;
     @FXML
     private TextField customQps;
     @FXML
-    private TextField customQueryResponseTimeout;
+    private TextField customQueryResponseTimeoutAmount;
+    @FXML
+    private ComboBox<String> customQueryResponseTimeoutUnit;
 
 
     private final Path ENV_PATH = Path.of(".env");
@@ -121,10 +131,20 @@ public class StartController {
 
         updateScenarioConfigForDocumentType("ANO");
 
-        testdataGenerationMode.getItems().addAll("DYNAMIC", "PERSISTENT");
-        testdataGenerationMode.valueProperty().addListener(getDefaultListener(testdataGenerationMode));
+        testdataGenerationMode.getItems().addAll("DYNAMIC", "PERSISTENT (Beta)");
+        testdataGenerationMode.valueProperty().addListener((observable, oldValue, newValue) -> {
+            testdataGenerationMode.setStyle("");
+            testdataGenerationMode.setTooltip(null);
+
+            // Show/hide persistent mode warning
+            boolean isPersistent = "PERSISTENT (Beta)".equals(newValue);
+            persistentModeWarning.setVisible(isPersistent);
+            persistentModeWarning.setManaged(isPersistent);
+        });
 
         testdataGenerationCount.textProperty().addListener(getDefaultListener(testdataGenerationCount));
+
+        testdataGenerationBatchSize.textProperty().addListener(getDefaultListener(testdataGenerationBatchSize));
 
         scenarioConfig.valueProperty().addListener((obs,
                                                     oldValue, newValue) -> {
@@ -133,15 +153,19 @@ public class StartController {
                 testdataGenerationDocumentType.setValue("ANO");
                 testdataGenerationMode.setValue("DYNAMIC");
                 testdataGenerationCount.setText("10000");
+                testdataGenerationBatchSize.setText("1000");
                 loadGeneratorReplicas.setText("1");
                 metricsBatchSize.setText("100");
 
+                customScenarioConfigurationBox.setManaged(false);
                 customScenarioConfigurationBox.setVisible(false);
                 customScenarioConfigurationBox.setDisable(true);
             } else if (Objects.equals(newValue, "custom-scenario.yaml")) {
+                customScenarioConfigurationBox.setManaged(true);
                 customScenarioConfigurationBox.setVisible(true);
                 customScenarioConfigurationBox.setDisable(false);
             } else {
+                customScenarioConfigurationBox.setManaged(false);
                 customScenarioConfigurationBox.setVisible(false);
                 customScenarioConfigurationBox.setDisable(true);
             }
@@ -150,9 +174,13 @@ public class StartController {
             scenarioConfig.setTooltip(null);
         });
 
-        customScheduleDuration.textProperty().addListener(getDefaultListener(customScheduleDuration));
+        customScheduleDurationAmount.textProperty().addListener(getDefaultListener(customScheduleDurationAmount));
+        customScheduleDurationUnit.getItems().addAll("sec", "min", "hours", "days");
+        customScheduleDurationUnit.setValue("sec");
         customQps.textProperty().addListener(getDefaultListener(customQps));
-        customQueryResponseTimeout.textProperty().addListener(getDefaultListener(customQueryResponseTimeout));
+        customQueryResponseTimeoutAmount.textProperty().addListener(getDefaultListener(customQueryResponseTimeoutAmount));
+        customQueryResponseTimeoutUnit.getItems().addAll("sec", "min", "hours", "days");
+        customQueryResponseTimeoutUnit.setValue("sec");
         customWarmup.getItems().addAll("true", "false");
         customWarmup.valueProperty().addListener(getDefaultListener(customWarmup));
 
@@ -165,6 +193,7 @@ public class StartController {
     @FXML
     protected void onStartLoadTest() {
 
+        outputText.setManaged(true);
         outputText.setVisible(true);
 
         if (!validateUserInputs()) {
@@ -173,12 +202,9 @@ public class StartController {
         }
 
         outputText.setText(
-                "Starting OpenSearch Loadtester...\n" +
-                        "\n" +
-                        "Please wait until all steps are complete.\n" +
-                        "Once finished, visit your dashboard at http://localhost:3000\n" +
-                        "\n" +
-                        "Please do not close this application while the load test is running.\n\n"
+                "Starting OpenSearch Load Tester...\n\n" +
+                        "Please wait until all steps are complete.\n\n" +
+                        "Do not close this window while the load test is running.\n\n"
         );
         Thread thread = new Thread(() -> {
             String currScenario = scenarioConfig.getValue();
@@ -194,13 +220,17 @@ public class StartController {
                 executeTimed("Step 3: Building Docker images...", this::dockerBuild);
                 executeTimed("Step 4: Running Docker containers...", this::dockerRun);
             } else {
-                executeTimed("Step 2: Ensuring testdata amount...", this::ensureTestdataAmountInOpenSearch);
+                executeTimed("Step 2: Ensuring test-data amount...", this::ensureTestdataAmountInOpenSearch);
                 executeTimed("Step 3: Restarting Docker containers...", this::dockerRestart);
             }
-            Platform.runLater(() -> outputText.appendText("\n" + currScenario + " is running.\n"));
-        });
-        thread.start();
 
+            String scenarioName = currScenario.replace(".yaml", "");
+            Platform.runLater(() -> outputText.appendText("\n" + scenarioName + " is running.\n"));
+
+            // Wait for load test completion and print out result message
+            monitorMetricsReporterCompletion();
+        }, "load-test-runner");
+        thread.start();
     }
 
     @FXML
@@ -217,16 +247,27 @@ public class StartController {
             return;
         }
 
+        String modeValue = testdataGenerationMode.getValue();
+        if ("PERSISTENT (Beta)".equals(modeValue)) {
+            modeValue = "PERSISTENT";
+        }
+
         content = regexInEnv(
                 content,
                 "TEST_DATA_GENERATION_MODE",
-                testdataGenerationMode.getValue()
+                modeValue
         );
 
         content = regexInEnv(
                 content,
                 "TEST_DATA_GENERATION_COUNT",
                 testdataGenerationCount.getText()
+        );
+
+        content = regexInEnv(
+                content,
+                "TEST_DATA_GENERATION_BATCH_SIZE",
+                testdataGenerationBatchSize.getText()
         );
 
         content = regexInEnv(
@@ -461,6 +502,8 @@ public class StartController {
     private void addCheckboxes(List<String> options, int perRow) {
         dynamicCheckboxWrapper.getChildren().clear(); // alte HBoxes entfernen
 
+        if (testdataGenerationDocumentType.getValue() == null) return;
+
         HBox currentHBox = null;
         int count = 0;
 
@@ -493,9 +536,11 @@ public class StartController {
             CustomScenarioConfig config = mapper.readValue(customScenarioFile, CustomScenarioConfig.class);
 
             config.setDocument_type(testdataGenerationDocumentType.getValue());
-            config.setSchedule_duration(Duration.parse(customScheduleDuration.getText()));
+            config.setSchedule_duration(parseDuration(customScheduleDurationAmount.getText(),
+                    customScheduleDurationUnit.getValue()));
             config.setQueries_per_second(Integer.parseInt(customQps.getText()));
-            config.setQuery_response_timeout(Duration.parse(customQueryResponseTimeout.getText()));
+            config.setQuery_response_timeout(parseDuration(customQueryResponseTimeoutAmount.getText(),
+                    customQueryResponseTimeoutUnit.getValue()));
             config.setEnable_warm_up(Boolean.parseBoolean(customWarmup.getValue()));
 
             config.setQuery_mix(getSelectedQueryTypes());
@@ -521,12 +566,100 @@ public class StartController {
         return selected;
     }
 
+    private void monitorMetricsReporterCompletion() {
+        Thread monitorThread = new Thread(() -> {
+            Platform.runLater(() -> outputText.appendText("\nWaiting for load test to complete...\n"));
+
+            try {
+                // Wait for the metrics-reporter container to stop
+                ProcessBuilder waitBuilder = new ProcessBuilder(
+                        "sh", "-c", "docker wait metrics-reporter"
+                );
+                waitBuilder.redirectErrorStream(true);
+                Process waitProcess = waitBuilder.start();
+
+                String exitCodeStr;
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(waitProcess.getInputStream()))) {
+                    exitCodeStr = br.readLine();
+                }
+
+                waitProcess.waitFor();
+
+                if (exitCodeStr != null) {
+                    int exitCode = Integer.parseInt(exitCodeStr.trim());
+                    displayTestResult(exitCode);
+                } else {
+                    displayTestResult(-1);
+                }
+            } catch (Exception e) {
+                System.err.println("Error monitoring Metrics Reporter: " + e.getMessage());
+                Platform.runLater(() -> {
+                    appendResultSeparator();
+                    outputText.appendText("Could not determine load test result. Please check the logs manually.\n");
+                    appendResultFooter();
+                });
+            }
+        }, "metrics-reporter-monitor");
+        monitorThread.setDaemon(true);
+        monitorThread.start();
+    }
+
+    private void displayTestResult(int exitCode) {
+        Platform.runLater(() -> {
+            appendResultSeparator();
+
+            switch (exitCode) {
+                case 0:
+                    outputText.appendText("✅ SUCCESS\n\n");
+                    outputText.appendText("Load test completed successfully.\n\n");
+                    outputText.appendText("To view the results visit your dashboard at:\n");
+                    outputText.appendText("http://localhost:3000\n");
+                    break;
+                case 1:
+                    outputText.appendText("❌ ERROR\n\n");
+                    outputText.appendText("Load test failed.\n\n");
+                    outputText.appendText("An error occurred in the Metrics Reporter.\n");
+                    outputText.appendText("Please check the logs for details.\n\n");
+                    outputText.appendText("To view logs, run: docker logs metrics-reporter\n");
+                    break;
+                case 2:
+                    outputText.appendText("⚠ WARNING\n\n");
+                    outputText.appendText("The load test has finished, but one or more Load Generators encountered errors. ");
+                    outputText.appendText("The reported metrics may be incomplete and it cannot be guaranteed that the test ran at full load.\n\n");
+                    outputText.appendText("To view the (potentially partial) results visit your dashboard at:\n");
+                    outputText.appendText("http://localhost:3000\n\n");
+                    outputText.appendText("To view logs, run: make logs\n");
+                    break;
+                default:
+                    outputText.appendText("❓ UNKNOWN STATUS\n\n");
+                    outputText.appendText("The Metrics Reporter finished with an unexpected exit code: " + exitCode + ".\n");
+                    outputText.appendText("Please check the logs for details.\n\n");
+                    outputText.appendText("To view logs, run: make logs\n");
+                    break;
+            }
+
+            appendResultFooter();
+        });
+    }
+
+    private void appendResultSeparator() {
+        outputText.appendText("\n");
+        outputText.appendText("═══════════════════════════════════════════════════════════\n");
+        outputText.appendText("                      TEST RESULT                          \n");
+        outputText.appendText("═══════════════════════════════════════════════════════════\n\n");
+    }
+
+    private void appendResultFooter() {
+        outputText.appendText("\n═══════════════════════════════════════════════════════════\n");
+    }
+
     private boolean validateUserInputs() {
         boolean valid = true;
 
         valid &= validateCombobox(testdataGenerationDocumentType);
         valid &= validateCombobox(testdataGenerationMode);
         valid &= validateNumericTextfield(testdataGenerationCount);
+        valid &= validateNumericTextfield(testdataGenerationBatchSize);
         valid &= validateCombobox(scenarioConfig);
         valid &= validateCustomScenario();
         valid &= validateNumericTextfield(loadGeneratorReplicas);
@@ -543,9 +676,11 @@ public class StartController {
 
         boolean valid = true;
 
-        valid &= validateDurationTextfield(customScheduleDuration);
+        valid &= validateNumericTextfield(customScheduleDurationAmount);
+        valid &= validateCombobox(customScheduleDurationUnit);
         valid &= validateNumericTextfield(customQps);
-        valid &= validateDurationTextfield(customQueryResponseTimeout);
+        valid &= validateNumericTextfield(customQueryResponseTimeoutAmount);
+        valid &= validateCombobox(customQueryResponseTimeoutUnit);
         valid &= validateCombobox(customWarmup);
         valid &= validateQueryTypeSelection();
 
@@ -581,27 +716,6 @@ public class StartController {
         return true;
     }
 
-    private boolean validateDurationTextfield(TextField textField) {
-        if (textField.getText() == null
-                || textField.getText().isEmpty()) {
-            markError(textField);
-            return false;
-
-        } else {
-            try {
-                Duration duration = Duration.parse(textField.getText());
-                if (duration.isNegative() || duration.isZero()) {
-                    markError(textField);
-                    return false;
-                }
-            } catch (Exception e) {
-                markError(textField);
-                return false;
-            }
-        }
-        return true;
-    }
-
     private void markError(Control control) {
         control.setStyle("-fx-border-color: red; -fx-border-width: 2;");
         control.requestFocus();
@@ -617,5 +731,30 @@ public class StartController {
             return false;
         }
         return true;
+    }
+
+    private Duration parseDuration(String amountText, String unit) {
+        if (amountText == null || amountText.isEmpty() || unit == null || unit.isEmpty()) {
+            return null;
+        }
+        String result = "P";
+        switch (unit) {
+            case "sec":
+                result = result + "T" + amountText + "S";
+                break;
+            case "min":
+                result = result + "T" + amountText + "M";
+                break;
+            case "hours":
+                result = result + "T" + amountText + "H";
+                break;
+            case "days":
+                result = result + amountText + "D";
+                break;
+            default:
+                return null;
+        }
+
+        return Duration.parse(result);
     }
 }
