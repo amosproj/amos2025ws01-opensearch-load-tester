@@ -13,8 +13,10 @@ import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -178,12 +180,9 @@ public class StartController {
         }
 
         outputText.setText(
-                "Starting OpenSearch Loadtester...\n" +
-                        "\n" +
-                        "Please wait until all steps are complete.\n" +
-                        "Once finished, visit your dashboard at http://localhost:3000\n" +
-                        "\n" +
-                        "Please do not close this application while the load test is running.\n\n"
+                "Starting OpenSearch Load Tester...\n\n" +
+                        "Please wait until all steps are complete.\n\n" +
+                        "Do not close this window while the load test is running.\n\n"
         );
         Thread thread = new Thread(() -> {
             String currScenario = scenarioConfig.getValue();
@@ -199,13 +198,17 @@ public class StartController {
                 executeTimed("Step 3: Building Docker images...", this::dockerBuild);
                 executeTimed("Step 4: Running Docker containers...", this::dockerRun);
             } else {
-                executeTimed("Step 2: Ensuring testdata amount...", this::ensureTestdataAmountInOpenSearch);
+                executeTimed("Step 2: Ensuring test-data amount...", this::ensureTestdataAmountInOpenSearch);
                 executeTimed("Step 3: Restarting Docker containers...", this::dockerRestart);
             }
-            Platform.runLater(() -> outputText.appendText("\n" + currScenario + " is running.\n"));
-        });
-        thread.start();
 
+            String scenarioName = currScenario.replace(".yaml", "");
+            Platform.runLater(() -> outputText.appendText("\n" + scenarioName + " is running.\n"));
+
+            // Wait for load test completion and print out result message
+            monitorMetricsReporterCompletion();
+        }, "load-test-runner");
+        thread.start();
     }
 
     @FXML
@@ -530,6 +533,87 @@ public class StartController {
             }
         }
         return selected;
+    }
+
+    private void monitorMetricsReporterCompletion() {
+        Thread monitorThread = new Thread(() -> {
+            Platform.runLater(() -> outputText.appendText("\nWaiting for load test to complete...\n"));
+
+            try {
+                // Wait for the metrics-reporter container to stop
+                ProcessBuilder waitBuilder = new ProcessBuilder(
+                        "sh", "-c", "docker wait metrics-reporter"
+                );
+                waitBuilder.redirectErrorStream(true);
+                Process waitProcess = waitBuilder.start();
+
+                BufferedReader br = new BufferedReader(new InputStreamReader(waitProcess.getInputStream()));
+                String exitCodeStr = br.readLine();
+                waitProcess.waitFor();
+
+                if (exitCodeStr != null) {
+                    int exitCode = Integer.parseInt(exitCodeStr.trim());
+                    displayTestResult(exitCode);
+                } else {
+                    displayTestResult(-1);
+                }
+            } catch (Exception e) {
+                System.err.println("Error monitoring Metrics Reporter: " + e.getMessage());
+                Platform.runLater(() -> {
+                    appendResultSeparator();
+                    outputText.appendText("Could not determine load test result. Please check the logs manually.\n");
+                });
+            }
+        }, "metrics-reporter-monitor");
+        monitorThread.setDaemon(true);
+        monitorThread.start();
+    }
+
+    private void displayTestResult(int exitCode) {
+        Platform.runLater(() -> {
+            appendResultSeparator();
+
+            switch (exitCode) {
+                case 0:
+                    outputText.appendText("✅ SUCCESS\n\n");
+                    outputText.appendText("Load test completed successfully.\n\n");
+                    outputText.appendText("Visit your dashboard at http://localhost:3000 to view the results.\n");
+                    break;
+                case 1:
+                    outputText.appendText("❌ ERROR\n\n");
+                    outputText.appendText("Load test failed.\n\n");
+                    outputText.appendText("An error occurred in the Metrics Reporter.\n");
+                    outputText.appendText("Please check the logs for details.\n\n");
+                    outputText.appendText("To view logs, run: docker logs metrics-reporter\n");
+                    break;
+                case 2:
+                    outputText.appendText("⚠️ WARNING\n\n");
+                    outputText.appendText("The load test has finished, but one or more Load Generators encountered errors. ");
+                    outputText.appendText("The reported metrics may be incomplete and it cannot be guaranteed that the test ran at full load.\n\n");
+                    outputText.appendText("Visit your dashboard at http://localhost:3000 to view the (potentially partial) results.\n\n");
+                    outputText.appendText("To view logs, run: make logs\n");
+                    break;
+                default:
+                    outputText.appendText("❓ UNKNOWN STATUS\n\n");
+                    outputText.appendText("The Metrics Reporter finished with an unexpected exit code: " + exitCode + ".\n");
+                    outputText.appendText("Please check the logs for details.\n\n");
+                    outputText.appendText("To view logs, run: make logs\n");
+                    break;
+            }
+
+            appendResultFooter();
+        });
+    }
+
+    private void appendResultSeparator() {
+        outputText.appendText("\n");
+        outputText.appendText("═══════════════════════════════════════════════════════════\n");
+        outputText.appendText("                      TEST RESULT                          \n");
+        outputText.appendText("═══════════════════════════════════════════════════════════\n\n");
+    }
+
+    private void appendResultFooter() {
+        outputText.appendText("\n═══════════════════════════════════════════════════════════\n");
     }
 
     private boolean validateUserInputs() {

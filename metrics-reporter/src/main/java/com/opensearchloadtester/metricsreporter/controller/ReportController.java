@@ -142,18 +142,18 @@ public class ReportController {
         if (finishedLoadGenerators.size() == expectedLoadGenerators) {
             loadTestFinished = true;
 
-            log.info("All {} Load Generators finished their run. Generating reports...",
-                    finishedLoadGenerators.size());
-
-            List<FinishLoadTestDto> failedLoadGenerators = finishedLoadGenerators.values().stream()
-                    .filter(dto -> !dto.isSuccess())
-                    .toList();
-
-            if (!failedLoadGenerators.isEmpty()) {
-                logFailedLoadGenerators(failedLoadGenerators);
-            }
-
             try {
+                log.info("All {} Load Generators finished their run. Generating reports...",
+                        finishedLoadGenerators.size());
+
+                List<FinishLoadTestDto> failedLoadGenerators = finishedLoadGenerators.values().stream()
+                        .filter(dto -> !dto.isSuccess())
+                        .toList();
+
+                if (!failedLoadGenerators.isEmpty()) {
+                    logFailedLoadGenerators(failedLoadGenerators);
+                }
+
                 StatisticsDto summary = reportService.finalizeReports(reportedLoadGenerators);
 
                 StringBuilder message = new StringBuilder(String.format(
@@ -179,7 +179,7 @@ public class ReportController {
                 request.setAttribute(ShutdownAfterResponseInterceptor.EXIT_CODE, exitCode);
 
                 return ResponseEntity.ok().build();
-            } catch (IOException e) {
+            } catch (Exception e) {
                 log.error("Failed to generate reports. Aborting application.", e);
 
                 request.setAttribute(ShutdownAfterResponseInterceptor.SHUTDOWN_AFTER_RESPONSE, true);
