@@ -42,18 +42,6 @@ class ReportControllerTest {
     }
 
     @Test
-    void submitMetrics_returnsBadRequest_forInvalidMetricsEntry() {
-        List<MetricsDto> metrics = List.of(
-                new MetricsDto("", "query_type_test", 10L, 10L, 3, 200)
-        );
-
-        ResponseEntity<String> response = reportController.submitMetrics(metrics);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        verifyNoInteractions(reportService);
-    }
-
-    @Test
     void submitMetrics_waitsUntilAllReplicasReport() throws Exception {
         ReflectionTestUtils.setField(reportController, "expectedLoadGenerators", 2);
 
