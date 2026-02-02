@@ -55,7 +55,6 @@ class LoadRunnerTests {
                 "test-loadgen",
                 NUMBER_LOAD_GENERATORS,
                 openSearchClient,
-                metricsReporterClient,
                 metricsCollector,
                 objectMapperMock
         );
@@ -305,7 +304,6 @@ class LoadRunnerTests {
                 "test-loadgen",
                 2,
                 openSearchClient,
-                metricsReporterClient,
                 metricsCollector,
                 objectMapperMock
         );

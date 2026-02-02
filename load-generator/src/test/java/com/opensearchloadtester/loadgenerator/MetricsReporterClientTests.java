@@ -36,7 +36,7 @@ class MetricsReporterClientTests {
     @Mock
     private CloseableHttpClient httpClientMock;
 
-    private ObjectMapper objectMapperMock = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
 
     private ArrayList<MetricsDto> getTestMetrics() {
@@ -86,7 +86,7 @@ class MetricsReporterClientTests {
         try (MockedStatic<HttpClients> mocked = Mockito.mockStatic(HttpClients.class)) {
             mocked.when(HttpClients::createDefault).thenReturn(httpClientMock);
             client = new MetricsReporterClient("http://metrics/",
-                    objectMapperMock,
+                    objectMapper,
                     httpClientMock);
 
             assertDoesNotThrow(() -> client.sendMetrics(metrics));
@@ -134,7 +134,7 @@ class MetricsReporterClientTests {
         try (MockedStatic<HttpClients> mocked = Mockito.mockStatic(HttpClients.class)) {
             mocked.when(HttpClients::createDefault).thenReturn(httpClientMock);
             client = new MetricsReporterClient("http://metrics/",
-                    objectMapperMock,
+                    objectMapper,
                     httpClientMock);
 
             assertDoesNotThrow(() -> client.sendMetrics(metrics));
@@ -175,7 +175,7 @@ class MetricsReporterClientTests {
                 });
 
         client = new MetricsReporterClient("http://metrics/",
-                objectMapperMock,
+                objectMapper,
                 httpClientMock);
         ReflectionTestUtils.setField(client, "objectMapper", mapperMock);
 
@@ -224,7 +224,7 @@ class MetricsReporterClientTests {
         try (MockedStatic<HttpClients> mocked = Mockito.mockStatic(HttpClients.class)) {
             mocked.when(HttpClients::createDefault).thenReturn(httpClientMock);
             client = new MetricsReporterClient("http://metrics/",
-                    objectMapperMock,
+                    objectMapper,
                     httpClientMock);
 
             assertThrows(MetricsReporterAccessException.class,
@@ -269,7 +269,7 @@ class MetricsReporterClientTests {
         try (MockedStatic<HttpClients> mocked = Mockito.mockStatic(HttpClients.class)) {
             mocked.when(HttpClients::createDefault).thenReturn(httpClientMock);
             client = new MetricsReporterClient("http://metrics/",
-                    objectMapperMock,
+                    objectMapper,
                     httpClientMock);
 
             assertThrows(MetricsReporterAccessException.class,
@@ -303,7 +303,7 @@ class MetricsReporterClientTests {
                     .thenThrow(new RuntimeException("boom"));
             assertThrows(RuntimeException.class,
                     () -> client = new MetricsReporterClient("http://metrics/",
-                            objectMapperMock,
+                            objectMapper,
                             HttpClients.createDefault()));
         }
     }
