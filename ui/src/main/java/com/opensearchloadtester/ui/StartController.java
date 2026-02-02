@@ -587,7 +587,7 @@ public class StartController {
                     outputText.appendText("To view logs, run: docker logs metrics-reporter\n");
                     break;
                 case 2:
-                    outputText.appendText("⚠️ WARNING\n\n");
+                    outputText.appendText("⚠ WARNING\n\n");
                     outputText.appendText("The load test has finished, but one or more Load Generators encountered errors. ");
                     outputText.appendText("The reported metrics may be incomplete and it cannot be guaranteed that the test ran at full load.\n\n");
                     outputText.appendText("Visit your dashboard at http://localhost:3000 to view the (potentially partial) results.\n\n");
