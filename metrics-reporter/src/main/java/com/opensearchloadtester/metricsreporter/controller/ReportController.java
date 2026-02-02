@@ -6,6 +6,7 @@ import com.opensearchloadtester.metricsreporter.config.ShutdownAfterResponseInte
 import com.opensearchloadtester.metricsreporter.dto.StatisticsDto;
 import com.opensearchloadtester.metricsreporter.service.ReportService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,10 +14,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,21 +39,16 @@ public class ReportController {
     @Value("${load.generator.replicas}")
     private int expectedLoadGenerators;
 
-    @Value("${report.export.json.enabled}")
-    private boolean jsonExportEnabled;
-
     private final ReportService reportService;
     private boolean loadTestFinished = false;
 
     /**
-     * This Post request saves the received metrics to thread-safe storage.
      * Stores incoming metrics batches. Does not finalize the run.
      * Finalization happens only after all replicas call /finish.
-     *
      */
     @PostMapping("/metrics")
-    public synchronized ResponseEntity<String> submitMetrics(@RequestBody List<@Valid MetricsDto> metricsList) {
-        Set<String> loadGeneratorIds = new HashSet<>();
+    public synchronized ResponseEntity<String> submitMetrics(
+            @RequestBody List<@Valid MetricsDto> metricsList) {
 
         // Reject late batches after finalization
         if (loadTestFinished) {
@@ -65,21 +62,16 @@ public class ReportController {
             return ResponseEntity.badRequest().body("Invalid metrics payload\n");
         }
 
-        // Validate metrics entries
-        String payloadLoadGeneratorId = null;
-        for (int i = 0; i < metricsList.size(); i++) {
-            MetricsDto metrics = metricsList.get(i);
-            // Validate that all metrics entries have the same loadGeneratorId
-            if (payloadLoadGeneratorId == null) {
-                payloadLoadGeneratorId = metrics.getLoadGeneratorId();
-            } else if (!payloadLoadGeneratorId.equals(metrics.getLoadGeneratorId())) {
+        // Validate that all metrics entries have the same loadGeneratorId
+        String payloadLoadGeneratorId = metricsList.getFirst().getLoadGeneratorId();
+        for (int i = 1; i < metricsList.size(); i++) {
+            if (!payloadLoadGeneratorId.equals(metricsList.get(i).getLoadGeneratorId())) {
                 log.error("Mixed loadGeneratorId values in one payload (first: {}, current: {}, index: {})",
-                        payloadLoadGeneratorId, metrics.getLoadGeneratorId(), i);
+                        payloadLoadGeneratorId, metricsList.get(i).getLoadGeneratorId(), i);
                 return ResponseEntity.badRequest().body("Invalid metrics payload\n");
             }
         }
 
-        loadGeneratorIds.add(payloadLoadGeneratorId);
         log.info("Received {} metrics entries from load generator: {}", metricsList.size(), payloadLoadGeneratorId);
 
         // Immediately process and persist metrics to avoid unbounded in-memory growth
@@ -92,11 +84,11 @@ public class ReportController {
         }
 
         // Track that this load generator has reported at least one batch
-        reportedLoadGenerators.addAll(loadGeneratorIds);
+        reportedLoadGenerators.add(payloadLoadGeneratorId);
         int reportedCount = reportedLoadGenerators.size();
 
         log.info("Stored metrics from {}. Reported {}/{} replicas. Batch size: {}",
-                loadGeneratorIds,
+                payloadLoadGeneratorId,
                 reportedCount,
                 expectedLoadGenerators,
                 metricsList.size());
@@ -106,6 +98,12 @@ public class ReportController {
                 String.format("Metrics stored successfully. Reported replicas (%d/%d). Waiting for finish signals.\n",
                         reportedCount, expectedLoadGenerators)
         );
+    }
+
+    @ExceptionHandler({MethodArgumentNotValidException.class, HandlerMethodValidationException.class, ConstraintViolationException.class})
+    public ResponseEntity<String> handleValidationErrors(Exception ex) {
+        log.error("Invalid metrics payload: {}", ex.getMessage());
+        return ResponseEntity.badRequest().body("Invalid metrics payload\n");
     }
 
     /**
@@ -153,20 +151,19 @@ public class ReportController {
             try {
                 StatisticsDto summary = reportService.finalizeReports(reportedLoadGenerators);
 
-                StringBuilder message = new StringBuilder(String.format(
+                String message = String.format(
                         "Reports generated successfully!\n" +
                                 "Total Load Generators: %d/%d\n" +
-                                "Total Queries executed: %d\n",
+                                "Total Queries executed: %d\n" +
+                                "Results JSON report: %s\n" +
+                                "Statistics JSON: %s",
                         summary.getLoadGeneratorInstances().size(), expectedLoadGenerators,
-                        summary.getTotalQueries()
-                ));
+                        summary.getTotalQueries(),
+                        reportService.getResultsJsonPath(),
+                        reportService.getStatisticsReportPath()
+                );
 
-                if (jsonExportEnabled) {
-                    message.append("Results JSON report: ").append(reportService.getResultsJsonPath()).append("\n");
-                    message.append("Statistics JSON: ").append(reportService.getStatisticsReportPath());
-                }
-
-                log.info(message.toString());
+                log.info(message);
 
                 // Mark request for application shutdown AFTER response completed
                 request.setAttribute(ShutdownAfterResponseInterceptor.SHUTDOWN_AFTER_RESPONSE, true);
@@ -190,7 +187,7 @@ public class ReportController {
 
         return ResponseEntity.ok().build();
     }
-
+    
     /**
      * Health check endpoint.
      */

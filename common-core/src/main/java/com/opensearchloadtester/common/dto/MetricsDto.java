@@ -1,5 +1,6 @@
 package com.opensearchloadtester.common.dto;
 
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -23,5 +24,8 @@ public class MetricsDto {
     private Long queryDurationMillis;
     @Min(0)
     private Integer totalHits;
+
+    @Min(100)
+    @Max(599)
     private int httpStatusCode;
 }
