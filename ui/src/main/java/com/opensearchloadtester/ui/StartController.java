@@ -547,8 +547,11 @@ public class StartController {
                 waitBuilder.redirectErrorStream(true);
                 Process waitProcess = waitBuilder.start();
 
-                BufferedReader br = new BufferedReader(new InputStreamReader(waitProcess.getInputStream()));
-                String exitCodeStr = br.readLine();
+                String exitCodeStr;
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(waitProcess.getInputStream()))) {
+                    exitCodeStr = br.readLine();
+                }
+
                 waitProcess.waitFor();
 
                 if (exitCodeStr != null) {
@@ -562,6 +565,7 @@ public class StartController {
                 Platform.runLater(() -> {
                     appendResultSeparator();
                     outputText.appendText("Could not determine load test result. Please check the logs manually.\n");
+                    appendResultFooter();
                 });
             }
         }, "metrics-reporter-monitor");
