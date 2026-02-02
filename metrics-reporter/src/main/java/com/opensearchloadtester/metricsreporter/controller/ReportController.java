@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -21,6 +22,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
+@Validated
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
@@ -48,7 +50,7 @@ public class ReportController {
      *
      */
     @PostMapping("/metrics")
-    public synchronized ResponseEntity<String> submitMetrics(@RequestBody List<MetricsDto> metricsList) {
+    public synchronized ResponseEntity<String> submitMetrics(@RequestBody List<@Valid MetricsDto> metricsList) {
         Set<String> loadGeneratorIds = new HashSet<>();
 
         // Reject late batches after finalization
