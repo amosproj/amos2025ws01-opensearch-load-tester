@@ -9,14 +9,16 @@
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.opensearchloadtester.ui.StartController"
             fitToWidth="true"
-            style="-fx-background-color: #F0F2F5;">
+            style="-fx-background-color: #F0F2F5;"
+            onKeyPressed="#onKeyPressed">
     <VBox spacing="25.0">
         <padding>
             <Insets top="30" right="30" bottom="30" left="30"/>
         </padding>
 
         <HBox alignment="CENTER_LEFT" spacing="15">
-            <ImageView fitHeight="120" fitWidth="180" pickOnBounds="true" preserveRatio="true">
+            <ImageView fx:id="logoImage" fitHeight="120" fitWidth="180" pickOnBounds="true" preserveRatio="true"
+                       onMouseClicked="#onLogoClick">
                 <Image url="@loadtester-logo-transparent.png"/>
             </ImageView>
             <Region HBox.hgrow="ALWAYS"/>
@@ -92,7 +94,7 @@
 
         </VBox>
 
-        <HBox alignment="CENTER" spacing="25">
+        <HBox fx:id="buttonBox" alignment="CENTER" spacing="25">
             <Button fx:id="startButton" mnemonicParsing="false" onAction="#onStartLoadTest"
                     onMouseEntered="#onHoverStart" onMouseExited="#onHoverExit"
                     style="-fx-background-color: #3498DB; -fx-background-radius: 12; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14; -fx-cursor: hand;">
