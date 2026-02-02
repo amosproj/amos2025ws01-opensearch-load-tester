@@ -10,6 +10,7 @@ import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
@@ -68,6 +69,10 @@ public class StartController {
     private TextField customQueryResponseTimeoutAmount;
     @FXML
     private ComboBox<String> customQueryResponseTimeoutUnit;
+    @FXML
+    private Button startButton;
+    @FXML
+    private Button killButton;
 
 
     private final Path ENV_PATH = Path.of(".env");
@@ -235,7 +240,29 @@ public class StartController {
 
     @FXML
     protected void onCloseButtonClick() {
+        outputText.setManaged(true);
+        outputText.setVisible(true);
         executeTimed("\nCleaning everything...", this::dockerClean);
+    }
+
+    @FXML
+    public void onHoverStart(MouseEvent event) {
+        startButton.setStyle("-fx-background-color: #5DADE2; -fx-background-radius: 12; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14; -fx-cursor: hand;");
+    }
+
+    @FXML
+    public void onHoverExit(MouseEvent event) {
+        startButton.setStyle("-fx-background-color: #3498DB; -fx-background-radius: 12; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14; -fx-cursor: hand;");
+    }
+    
+    @FXML
+    public void onHoverStartKill(MouseEvent event) {
+        killButton.setStyle("-fx-background-color: #EC7063; -fx-background-radius: 12; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14; -fx-cursor: hand;");
+    }
+
+    @FXML
+    public void onHoverExitKill(MouseEvent event) {
+        killButton.setStyle("-fx-background-color: #E74C3C; -fx-background-radius: 12; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14; -fx-cursor: hand;");
     }
 
     private void writeEnvFile() {
