@@ -612,7 +612,8 @@ public class StartController {
                 case 0:
                     outputText.appendText("✅ SUCCESS\n\n");
                     outputText.appendText("Load test completed successfully.\n\n");
-                    outputText.appendText("Visit your dashboard at http://localhost:3000 to view the results.\n");
+                    outputText.appendText("To view the results visit your dashboard at:\n");
+                    outputText.appendText("http://localhost:3000\n");
                     break;
                 case 1:
                     outputText.appendText("❌ ERROR\n\n");
@@ -625,7 +626,8 @@ public class StartController {
                     outputText.appendText("⚠ WARNING\n\n");
                     outputText.appendText("The load test has finished, but one or more Load Generators encountered errors. ");
                     outputText.appendText("The reported metrics may be incomplete and it cannot be guaranteed that the test ran at full load.\n\n");
-                    outputText.appendText("Visit your dashboard at http://localhost:3000 to view the (potentially partial) results.\n\n");
+                    outputText.appendText("To view the (potentially partial) results visit your dashboard at:\n");
+                    outputText.appendText("http://localhost:3000\n\n");
                     outputText.appendText("To view logs, run: make logs\n");
                     break;
                 default:
