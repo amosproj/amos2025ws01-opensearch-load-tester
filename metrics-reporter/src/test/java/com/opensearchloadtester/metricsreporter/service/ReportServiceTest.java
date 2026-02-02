@@ -105,4 +105,66 @@ class ReportServiceTest {
         assertThat(resultsJson.get(0)).isEqualTo(ndjsonEntry1);
         assertThat(resultsJson.get(1)).isEqualTo(ndjsonEntry2);
     }
+
+    // ==================== Edge Cases ====================
+
+    @Test
+    void finalizeReports_withNoMetrics_createsEmptyResultsArray() throws Exception {
+        // Create empty NDJSON file (simulates initializeReportFiles without any metrics)
+        Path ndjsonPath = tempDir.resolve("tmp_query_results.ndjson");
+        Files.createFile(ndjsonPath);
+
+        StatisticsDto statistics = reportService.finalizeReports(Set.of(LOAD_GENERATOR_ID));
+
+        Path statsPath = tempDir.resolve("statistics.json");
+        Path resultsJsonPath = tempDir.resolve("query_results.json");
+
+        assertThat(Files.exists(statsPath)).isTrue();
+        assertThat(Files.exists(resultsJsonPath)).isTrue();
+
+        // Statistics should show zero queries
+        assertThat(statistics.getTotalQueries()).isEqualTo(0L);
+        assertThat(statistics.getTotalErrors()).isEqualTo(0L);
+        assertThat(statistics.getLoadGeneratorInstances()).containsExactly(LOAD_GENERATOR_ID);
+
+        // Results JSON should be an empty array
+        JsonNode resultsJson = objectMapper.readTree(resultsJsonPath.toFile());
+        assertThat(resultsJson.isArray()).isTrue();
+        assertThat(resultsJson.size()).isEqualTo(0);
+    }
+
+    @Test
+    void processMetrics_multipleCallsAppendToNdjson() throws Exception {
+        // Create NDJSON file first
+        Path ndjsonPath = tempDir.resolve("tmp_query_results.ndjson");
+        Files.createFile(ndjsonPath);
+
+        // First batch
+        reportService.processMetrics(List.of(
+                new MetricsDto(LOAD_GENERATOR_ID, "query_type_1", 100L, 50L, 10, 200)
+        ));
+
+        // Second batch
+        reportService.processMetrics(List.of(
+                new MetricsDto(LOAD_GENERATOR_ID, "query_type_2", 200L, 100L, 20, 200)
+        ));
+
+        List<String> ndjsonLines = Files.readAllLines(ndjsonPath);
+        assertThat(ndjsonLines).hasSize(2);
+
+        JsonNode entry1 = objectMapper.readTree(ndjsonLines.get(0));
+        JsonNode entry2 = objectMapper.readTree(ndjsonLines.get(1));
+
+        assertThat(entry1.get("query_type").asText()).isEqualTo("query_type_1");
+        assertThat(entry2.get("query_type").asText()).isEqualTo("query_type_2");
+
+        // Finalize and verify all entries are in results JSON
+        StatisticsDto statistics = reportService.finalizeReports(Set.of(LOAD_GENERATOR_ID));
+
+        assertThat(statistics.getTotalQueries()).isEqualTo(2L);
+
+        Path resultsJsonPath = tempDir.resolve("query_results.json");
+        JsonNode resultsJson = objectMapper.readTree(resultsJsonPath.toFile());
+        assertThat(resultsJson.size()).isEqualTo(2);
+    }
 }
