@@ -50,7 +50,8 @@ public final class AnoIndex implements Index {
                 )
                 // not found: query.default_field = "custom_all"
                 .numberOfShards(5)
-                .numberOfReplicas(1)
+                // for Single-Node-Cluster we use 0 replica
+                .numberOfReplicas(0)
                 .search(sb -> sb
                         .slowlog(sl -> sl
                                 .threshold(th -> th

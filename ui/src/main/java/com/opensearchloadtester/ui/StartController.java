@@ -37,6 +37,8 @@ public class StartController {
     @FXML
     private ComboBox<String> testdataGenerationMode;
     @FXML
+    private Label persistentModeWarning;
+    @FXML
     private ComboBox<String> testdataGenerationDocumentType;
     @FXML
     private ComboBox<String> scenarioConfig;
@@ -57,11 +59,15 @@ public class StartController {
     @FXML
     private ComboBox<String> customWarmup;
     @FXML
-    private TextField customScheduleDuration;
+    private TextField customScheduleDurationAmount;
+    @FXML
+    private ComboBox<String> customScheduleDurationUnit;
     @FXML
     private TextField customQps;
     @FXML
-    private TextField customQueryResponseTimeout;
+    private TextField customQueryResponseTimeoutAmount;
+    @FXML
+    private ComboBox<String> customQueryResponseTimeoutUnit;
 
 
     private final Path ENV_PATH = Path.of(".env");
@@ -125,8 +131,16 @@ public class StartController {
 
         updateScenarioConfigForDocumentType("ANO");
 
-        testdataGenerationMode.getItems().addAll("DYNAMIC", "PERSISTENT");
-        testdataGenerationMode.valueProperty().addListener(getDefaultListener(testdataGenerationMode));
+        testdataGenerationMode.getItems().addAll("DYNAMIC", "PERSISTENT (Beta)");
+        testdataGenerationMode.valueProperty().addListener((observable, oldValue, newValue) -> {
+            testdataGenerationMode.setStyle("");
+            testdataGenerationMode.setTooltip(null);
+
+            // Show/hide persistent mode warning
+            boolean isPersistent = "PERSISTENT (Beta)".equals(newValue);
+            persistentModeWarning.setVisible(isPersistent);
+            persistentModeWarning.setManaged(isPersistent);
+        });
 
         testdataGenerationCount.textProperty().addListener(getDefaultListener(testdataGenerationCount));
 
@@ -143,12 +157,15 @@ public class StartController {
                 loadGeneratorReplicas.setText("1");
                 metricsBatchSize.setText("100");
 
+                customScenarioConfigurationBox.setManaged(false);
                 customScenarioConfigurationBox.setVisible(false);
                 customScenarioConfigurationBox.setDisable(true);
             } else if (Objects.equals(newValue, "custom-scenario.yaml")) {
+                customScenarioConfigurationBox.setManaged(true);
                 customScenarioConfigurationBox.setVisible(true);
                 customScenarioConfigurationBox.setDisable(false);
             } else {
+                customScenarioConfigurationBox.setManaged(false);
                 customScenarioConfigurationBox.setVisible(false);
                 customScenarioConfigurationBox.setDisable(true);
             }
@@ -157,9 +174,13 @@ public class StartController {
             scenarioConfig.setTooltip(null);
         });
 
-        customScheduleDuration.textProperty().addListener(getDefaultListener(customScheduleDuration));
+        customScheduleDurationAmount.textProperty().addListener(getDefaultListener(customScheduleDurationAmount));
+        customScheduleDurationUnit.getItems().addAll("sec", "min", "hours", "days");
+        customScheduleDurationUnit.setValue("sec");
         customQps.textProperty().addListener(getDefaultListener(customQps));
-        customQueryResponseTimeout.textProperty().addListener(getDefaultListener(customQueryResponseTimeout));
+        customQueryResponseTimeoutAmount.textProperty().addListener(getDefaultListener(customQueryResponseTimeoutAmount));
+        customQueryResponseTimeoutUnit.getItems().addAll("sec", "min", "hours", "days");
+        customQueryResponseTimeoutUnit.setValue("sec");
         customWarmup.getItems().addAll("true", "false");
         customWarmup.valueProperty().addListener(getDefaultListener(customWarmup));
 
@@ -172,6 +193,7 @@ public class StartController {
     @FXML
     protected void onStartLoadTest() {
 
+        outputText.setManaged(true);
         outputText.setVisible(true);
 
         if (!validateUserInputs()) {
@@ -225,10 +247,15 @@ public class StartController {
             return;
         }
 
+        String modeValue = testdataGenerationMode.getValue();
+        if ("PERSISTENT (Beta)".equals(modeValue)) {
+            modeValue = "PERSISTENT";
+        }
+
         content = regexInEnv(
                 content,
                 "TEST_DATA_GENERATION_MODE",
-                testdataGenerationMode.getValue()
+                modeValue
         );
 
         content = regexInEnv(
@@ -475,6 +502,8 @@ public class StartController {
     private void addCheckboxes(List<String> options, int perRow) {
         dynamicCheckboxWrapper.getChildren().clear(); // alte HBoxes entfernen
 
+        if (testdataGenerationDocumentType.getValue() == null) return;
+
         HBox currentHBox = null;
         int count = 0;
 
@@ -507,9 +536,11 @@ public class StartController {
             CustomScenarioConfig config = mapper.readValue(customScenarioFile, CustomScenarioConfig.class);
 
             config.setDocument_type(testdataGenerationDocumentType.getValue());
-            config.setSchedule_duration(Duration.parse(customScheduleDuration.getText()));
+            config.setSchedule_duration(parseDuration(customScheduleDurationAmount.getText(),
+                    customScheduleDurationUnit.getValue()));
             config.setQueries_per_second(Integer.parseInt(customQps.getText()));
-            config.setQuery_response_timeout(Duration.parse(customQueryResponseTimeout.getText()));
+            config.setQuery_response_timeout(parseDuration(customQueryResponseTimeoutAmount.getText(),
+                    customQueryResponseTimeoutUnit.getValue()));
             config.setEnable_warm_up(Boolean.parseBoolean(customWarmup.getValue()));
 
             config.setQuery_mix(getSelectedQueryTypes());
@@ -643,9 +674,11 @@ public class StartController {
 
         boolean valid = true;
 
-        valid &= validateDurationTextfield(customScheduleDuration);
+        valid &= validateNumericTextfield(customScheduleDurationAmount);
+        valid &= validateCombobox(customScheduleDurationUnit);
         valid &= validateNumericTextfield(customQps);
-        valid &= validateDurationTextfield(customQueryResponseTimeout);
+        valid &= validateNumericTextfield(customQueryResponseTimeoutAmount);
+        valid &= validateCombobox(customQueryResponseTimeoutUnit);
         valid &= validateCombobox(customWarmup);
         valid &= validateQueryTypeSelection();
 
@@ -681,27 +714,6 @@ public class StartController {
         return true;
     }
 
-    private boolean validateDurationTextfield(TextField textField) {
-        if (textField.getText() == null
-                || textField.getText().isEmpty()) {
-            markError(textField);
-            return false;
-
-        } else {
-            try {
-                Duration duration = Duration.parse(textField.getText());
-                if (duration.isNegative() || duration.isZero()) {
-                    markError(textField);
-                    return false;
-                }
-            } catch (Exception e) {
-                markError(textField);
-                return false;
-            }
-        }
-        return true;
-    }
-
     private void markError(Control control) {
         control.setStyle("-fx-border-color: red; -fx-border-width: 2;");
         control.requestFocus();
@@ -717,5 +729,30 @@ public class StartController {
             return false;
         }
         return true;
+    }
+
+    private Duration parseDuration(String amountText, String unit) {
+        if (amountText == null || amountText.isEmpty() || unit == null || unit.isEmpty()) {
+            return null;
+        }
+        String result = "P";
+        switch (unit) {
+            case "sec":
+                result = result + "T" + amountText + "S";
+                break;
+            case "min":
+                result = result + "T" + amountText + "M";
+                break;
+            case "hours":
+                result = result + "T" + amountText + "H";
+                break;
+            case "days":
+                result = result + amountText + "D";
+                break;
+            default:
+                return null;
+        }
+
+        return Duration.parse(result);
     }
 }

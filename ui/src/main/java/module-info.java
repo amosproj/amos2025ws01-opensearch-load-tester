@@ -6,6 +6,7 @@ module com.opensearchloadtester.ui {
     requires com.fasterxml.jackson.databind;
     requires com.fasterxml.jackson.dataformat.yaml;
     requires com.fasterxml.jackson.datatype.jsr310;
+    requires java.desktop;
 
     opens com.opensearchloadtester.ui to javafx.fxml;
     opens com.opensearchloadtester.ui.config to com.fasterxml.jackson.databind;

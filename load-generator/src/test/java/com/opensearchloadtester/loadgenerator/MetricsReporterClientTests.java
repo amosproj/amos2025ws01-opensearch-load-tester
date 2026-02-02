@@ -41,7 +41,7 @@ class MetricsReporterClientTests {
 
     private ArrayList<MetricsDto> getTestMetrics() {
         ArrayList<MetricsDto> metrics = new ArrayList<>();
-        metrics.add(new MetricsDto());
+        metrics.add(new MetricsDto("lg-1", "test-query", 10, 1L, 10, 200));
         return metrics;
     }
 
