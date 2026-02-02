@@ -33,8 +33,6 @@ import java.util.stream.Stream;
 public class StartController {
 
     @FXML
-    private ScrollPane root;
-    @FXML
     private ComboBox<String> testdataGenerationMode;
     @FXML
     private Label persistentModeWarning;
@@ -246,10 +244,15 @@ public class StartController {
             return;
         }
 
+        String modeValue = testdataGenerationMode.getValue();
+        if ("PERSISTENT (Beta)".equals(modeValue)) {
+            modeValue = "PERSISTENT";
+        }
+
         content = regexInEnv(
                 content,
                 "TEST_DATA_GENERATION_MODE",
-                testdataGenerationMode.getValue()
+                modeValue
         );
 
         content = regexInEnv(
