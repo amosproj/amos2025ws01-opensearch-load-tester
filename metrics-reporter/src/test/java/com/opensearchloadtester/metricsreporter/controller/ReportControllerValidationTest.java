@@ -8,6 +8,8 @@ import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 import java.util.Set;
 
@@ -37,19 +39,10 @@ class ReportControllerValidationTest {
 
     // ==================== MetricsDto Validation Tests ====================
 
-    @Test
-    void metricsDto_isInvalid_forEmptyLoadGeneratorId() {
-        MetricsDto dto = new MetricsDto("", "query_type_test", 10L, 10L, 3, 200);
-
-        Set<ConstraintViolation<MetricsDto>> violations = validator.validate(dto);
-
-        assertThat(violations).isNotEmpty();
-        assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("loadGeneratorId"));
-    }
-
-    @Test
-    void metricsDto_isInvalid_forNullLoadGeneratorId() {
-        MetricsDto dto = new MetricsDto(null, "query_type_test", 10L, 10L, 3, 200);
+    @ParameterizedTest
+    @NullAndEmptySource
+    void metricsDto_isInvalid_forNullOrEmptyLoadGeneratorId(String loadGeneratorId) {
+        MetricsDto dto = new MetricsDto(loadGeneratorId, "query_type_test", 10L, 10L, 3, 200);
 
         Set<ConstraintViolation<MetricsDto>> violations = validator.validate(dto);
 
@@ -138,19 +131,10 @@ class ReportControllerValidationTest {
 
     // ==================== FinishLoadTestDto Validation Tests ====================
 
-    @Test
-    void finishLoadTestDto_isInvalid_forEmptyLoadGeneratorId() {
-        FinishLoadTestDto dto = new FinishLoadTestDto("", true, null);
-
-        Set<ConstraintViolation<FinishLoadTestDto>> violations = validator.validate(dto);
-
-        assertThat(violations).isNotEmpty();
-        assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("loadGeneratorId"));
-    }
-
-    @Test
-    void finishLoadTestDto_isInvalid_forNullLoadGeneratorId() {
-        FinishLoadTestDto dto = new FinishLoadTestDto(null, true, null);
+    @ParameterizedTest
+    @NullAndEmptySource
+    void finishLoadTestDto_isInvalid_forNullOrEmptyLoadGeneratorId(String loadGeneratorId) {
+        FinishLoadTestDto dto = new FinishLoadTestDto(loadGeneratorId, true, null);
 
         Set<ConstraintViolation<FinishLoadTestDto>> violations = validator.validate(dto);
 

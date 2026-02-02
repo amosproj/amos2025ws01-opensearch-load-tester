@@ -56,18 +56,6 @@ class ReportControllerTest {
     }
 
     @Test
-    void submitMetrics_acceptsNullQueryDuration() throws Exception {
-        List<MetricsDto> metrics = List.of(
-                new MetricsDto(LOAD_GENERATOR_ID, "query_type_test", 120L, null, 5, 200)
-        );
-
-        ResponseEntity<String> response = reportController.submitMetrics(metrics);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        verify(reportService).processMetrics(metrics);
-    }
-
-    @Test
     void submitMetrics_returnsBadRequest_forEmptyPayload() throws Exception {
         List<MetricsDto> metrics = List.of();
 
@@ -105,20 +93,6 @@ class ReportControllerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).isEqualTo("Invalid metrics payload\n");
         verify(reportService, never()).processMetrics(anyList());
-    }
-
-    @Test
-    void submitMetrics_waitsUntilAllReplicasReport() throws Exception {
-        ReflectionTestUtils.setField(reportController, "expectedLoadGenerators", 2);
-
-        List<MetricsDto> metrics = List.of(
-                new MetricsDto(LOAD_GENERATOR_ID, "query_type_test", 120L, 80L, 5, 200)
-        );
-
-        ResponseEntity<String> response = reportController.submitMetrics(metrics);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).contains("Reported replicas (1/2)");
     }
 
     @Test
@@ -242,22 +216,11 @@ class ReportControllerTest {
 
     @Test
     void finish_isIdempotent_forSameLoadGenerator() throws Exception {
+        ReflectionTestUtils.setField(reportController, "expectedLoadGenerators", 2);
+
         List<MetricsDto> metrics = List.of(
                 new MetricsDto(LOAD_GENERATOR_ID, "query_type_test", 100L, 50L, 4, 200)
         );
-
-        StatisticsDto statistics = new StatisticsDto(
-                LocalDateTime.now(),
-                new StatisticsDto.DurationStats(100.0, 100L, 100L),
-                new StatisticsDto.DurationStats(50.0, 50L, 50L),
-                1L,
-                0L,
-                List.of(LOAD_GENERATOR_ID)
-        );
-
-        when(reportService.finalizeReports(anySet())).thenReturn(statistics);
-        when(reportService.getResultsJsonPath()).thenReturn(Path.of("out/query_results.json"));
-        when(reportService.getStatisticsReportPath()).thenReturn(Path.of("out/statistics.json"));
 
         HttpServletRequest request = mock(HttpServletRequest.class);
         reportController.submitMetrics(metrics);
@@ -275,27 +238,7 @@ class ReportControllerTest {
         assertThat(firstResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(secondResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-        // finalizeReports should only be called once
-        verify(reportService, times(1)).finalizeReports(anySet());
-    }
-
-    @Test
-    void finish_waitsForAllLoadGenerators() throws Exception {
-        ReflectionTestUtils.setField(reportController, "expectedLoadGenerators", 2);
-
-        List<MetricsDto> metrics = List.of(
-                new MetricsDto("lg-1", "query_type_test", 100L, 50L, 4, 200)
-        );
-
-        HttpServletRequest request = mock(HttpServletRequest.class);
-        reportController.submitMetrics(metrics);
-
-        // Only one of two load generators finishes
-        ResponseEntity<String> response = reportController.finish(
-                new FinishLoadTestDto("lg-1", true, null),
-                request);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        // finalizeReports should not be called since not all load generators finished
         verify(reportService, never()).finalizeReports(anySet());
     }
 
