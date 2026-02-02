@@ -67,11 +67,6 @@ public class ReportController {
         String payloadLoadGeneratorId = null;
         for (int i = 0; i < metricsList.size(); i++) {
             MetricsDto metrics = metricsList.get(i);
-            String validationError = validateMetrics(metrics);
-            if (validationError != null) {
-                log.error("Invalid metrics entry at index {}: {}", i, validationError);
-                return ResponseEntity.badRequest().body("Invalid metrics payload\n");
-            }
             // Validate that all metrics entries have the same loadGeneratorId
             if (payloadLoadGeneratorId == null) {
                 payloadLoadGeneratorId = metrics.getLoadGeneratorId();
@@ -200,30 +195,6 @@ public class ReportController {
     @GetMapping("/health")
     public ResponseEntity<String> health() {
         return ResponseEntity.ok("Report Controller is running!\n");
-    }
-
-    // Validate a single metrics entry
-    // Returns a string with the validation error, or null if the metrics entry is valid
-    private String validateMetrics(MetricsDto metrics) {
-        if (metrics == null) {
-            return "metrics entry is null";
-        }
-        if (metrics.getLoadGeneratorId() == null || metrics.getLoadGeneratorId().isBlank()) {
-            return "loadGeneratorId is missing";
-        }
-        if (metrics.getQueryType() == null || metrics.getQueryType().isBlank()) {
-            return "queryType is missing";
-        }
-        if (metrics.getRequestDurationMillis() != null && metrics.getRequestDurationMillis() < 0) {
-            return "requestDurationMillis is negative";
-        }
-        if (metrics.getQueryDurationMillis() != null && metrics.getQueryDurationMillis() < 0) {
-            return "queryDurationMillis is negative";
-        }
-        if (metrics.getHttpStatusCode() < 100 || metrics.getHttpStatusCode() > 599) {
-            return "httpStatusCode is out of range";
-        }
-        return null;
     }
 
     private void logFailedLoadGenerators(List<FinishLoadTestDto> failedLoadGenerators) {
