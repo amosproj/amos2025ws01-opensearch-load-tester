@@ -30,16 +30,16 @@ class StatsAccumulatorTest {
     }
 
     @Test
-    void update_handlesNullDurations() {
+    void update_handlesNullQueryDuration() {
         StatsAccumulator accumulator = new StatsAccumulator();
 
         accumulator.update(List.of(
-                new MetricsDto("lg-1", "match_all", null, null, 10, 200)
+                new MetricsDto("lg-1", "match_all", 100L, null, 10, 200)
         ));
 
         assertThat(accumulator.getTotalQueries()).isEqualTo(1L);
-        assertThat(accumulator.getRequestDurationCount()).isEqualTo(0L);
-        assertThat(accumulator.getQueryDurationCount()).isEqualTo(0L);
+        assertThat(accumulator.getRequestDurationCount()).isEqualTo(1L);  // primitive long, always counted
+        assertThat(accumulator.getQueryDurationCount()).isEqualTo(0L);    // null Long, not counted
     }
 
     @Test
