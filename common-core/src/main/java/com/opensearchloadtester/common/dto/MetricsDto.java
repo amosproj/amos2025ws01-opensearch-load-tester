@@ -16,16 +16,13 @@ public class MetricsDto {
 
     @NotBlank
     private String loadGeneratorId;
-
     @NotBlank
     private String queryType;
-
     @Min(0)
-    private Long requestDurationMillis;
-
+    private long requestDurationMillis;
     @Min(0)
     private Long queryDurationMillis;
-
+    @Min(0)
     private Integer totalHits;
 
     @Min(100)
