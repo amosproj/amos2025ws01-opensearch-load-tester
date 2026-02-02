@@ -37,7 +37,8 @@ cd amos2025ws01-opensearch-load-tester
 To start load testing, you can use the UI by running the following command:
 
 ```bash
-bash ./start-ui.sh <rebuild>
+bash ./start-ui.sh         # Normal start
+bash ./start-ui.sh rebuild # With full rebuild
 ```
 
 The `rebuild` flag triggers a complete rebuild of all components.
@@ -53,17 +54,18 @@ You can view the results in Grafana:
 >
 > Path: Dashboards → Load Testing → OpenSearch Load Test
 
-### Start the Load Testing via CLI 🧑‍💻
+### Start the Load Testing via CLI
 
-For convenient operation, Makefile targets are provided to deploy the load-generator on systems without GUI 🖥️❌.
+For convenient operation, Makefile targets are provided to deploy the load-generator on systems without GUI.
 
 #### Interactive Loadtest Setup via CLI
 
 - `make loadtest`  
-  Interactive setup for load tests 🛠️. Prompts for:
-    - `LOAD_GENERATOR_REPLICAS` (default: `3`)
-    - `TEST_DATA_GENERATION_COUNT` (default: `1000`)
-    - `TEST_DATA_GENERATION_DOCUMENT_TYPE` (default: `ANO`)
+  Interactive setup for load tests. Prompts for:
+
+  - `LOAD_GENERATOR_REPLICAS` (default: `3`)
+  - `TEST_DATA_GENERATION_COUNT` (default: `1000`)
+  - `TEST_DATA_GENERATION_DOCUMENT_TYPE` (default: `ANO`)
 
   updates the value in `.env` and then runs `make clean`, `make build`, `make run` and `make curl` to open shell to start loadtest 🚀.
 
@@ -102,10 +104,10 @@ docker-compose down --volumes --rmi local --remove-orphans
 
 ## Further Documentation
 
-- [User documentation](https://github.com/amosproj/amos2025ws01-opensearch-load-tester/wiki/User-Documentation) 🔗
-- [Build documentation](https://github.com/amosproj/amos2025ws01-opensearch-load-tester/wiki/Build-Documentation) 🔗
-- [Design documentation](https://github.com/amosproj/amos2025ws01-opensearch-load-tester/wiki/Design-Documentation) 🔗
-- [Developer documentation](https://github.com/amosproj/amos2025ws01-opensearch-load-tester/wiki/Developer-Documentation) 🔗
+- [User documentation](https://github.com/amosproj/amos2025ws01-opensearch-load-tester/wiki/User-Documentation)
+- [Build documentation](https://github.com/amosproj/amos2025ws01-opensearch-load-tester/wiki/Build-Documentation)
+- [Design documentation](https://github.com/amosproj/amos2025ws01-opensearch-load-tester/wiki/Design-Documentation)
+- [Developer documentation](https://github.com/amosproj/amos2025ws01-opensearch-load-tester/wiki/Developer-Documentation)
 
 ---
 
