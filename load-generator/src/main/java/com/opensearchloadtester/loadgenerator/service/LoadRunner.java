@@ -1,8 +1,6 @@
 package com.opensearchloadtester.loadgenerator.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.opensearchloadtester.loadgenerator.client.MetricsReporterClient;
-import com.opensearchloadtester.loadgenerator.model.QueryType;
 import com.opensearchloadtester.loadgenerator.model.ScenarioConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.opensearch.generic.OpenSearchGenericClient;
@@ -19,7 +17,6 @@ public class LoadRunner {
     private final String loadGeneratorId;
     private final int numberLoadGenerators;
     private final OpenSearchGenericClient openSearchClient;
-    private final MetricsReporterClient metricsReporterClient;
     private final MetricsCollector metricsCollector;
     private final ObjectMapper objectMapper;
 
@@ -27,14 +24,12 @@ public class LoadRunner {
             @Value("${HOSTNAME}") String loadGeneratorId,
             @Value("${load.generator.replicas}") int numberLoadGenerators,
             OpenSearchGenericClient openSearchClient,
-            MetricsReporterClient metricsReporterClient,
             MetricsCollector metricsCollector,
             ObjectMapper objectMapper
     ) {
         this.loadGeneratorId = loadGeneratorId;
         this.numberLoadGenerators = numberLoadGenerators;
         this.openSearchClient = openSearchClient;
-        this.metricsReporterClient = metricsReporterClient;
         this.metricsCollector = metricsCollector;
         this.objectMapper = objectMapper;
     }

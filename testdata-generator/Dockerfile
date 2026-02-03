@@ -5,10 +5,18 @@ WORKDIR /app
 
 # Copy parent POM + module POM
 COPY pom.xml pom.xml
+COPY common-core/pom.xml common-core/pom.xml
 COPY testdata-generator/pom.xml testdata-generator/pom.xml
 
 # Install parent POM into local repo so Maven can resolve it later
 RUN mvn -f pom.xml -N install -DskipTests
+
+# Pre-fetch deps for common-core
+RUN mvn -f common-core/pom.xml dependency:go-offline -B
+
+# Copy shared DTO sources and build/install it locally
+COPY common-core/src common-core/src
+RUN mvn -f common-core/pom.xml clean install -DskipTests
 
 # Pre-fetch deps for testdata-generator
 RUN mvn -f testdata-generator/pom.xml dependency:go-offline -B

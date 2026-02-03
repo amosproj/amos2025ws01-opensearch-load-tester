@@ -4,12 +4,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.opensearchloadtester.ui.config.CustomScenarioConfig;
+import javafx.animation.RotateTransition;
+import javafx.animation.TranslateTransition;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
@@ -25,9 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -68,6 +72,14 @@ public class StartController {
     private TextField customQueryResponseTimeoutAmount;
     @FXML
     private ComboBox<String> customQueryResponseTimeoutUnit;
+    @FXML
+    private Button startButton;
+    @FXML
+    private Button killButton;
+    @FXML
+    private ImageView logoImage;
+    @FXML
+    private HBox buttonBox;
 
 
     private final Path ENV_PATH = Path.of(".env");
@@ -201,6 +213,13 @@ public class StartController {
             return;
         }
 
+        // Easter egg
+        try {
+            checkLoadMonster(Integer.parseInt(testdataGenerationCount.getText()));
+        } catch (Exception e) {
+            // ignore
+        }
+
         outputText.setText(
                 "Starting OpenSearch Load Tester...\n\n" +
                         "Please wait until all steps are complete.\n\n" +
@@ -235,7 +254,40 @@ public class StartController {
 
     @FXML
     protected void onCloseButtonClick() {
+        outputText.setManaged(true);
+        outputText.setVisible(true);
         executeTimed("\nCleaning everything...", this::dockerClean);
+    }
+
+    @FXML
+    public void onHoverStart(MouseEvent event) {
+        startButton.setStyle("-fx-background-color: #5DADE2; -fx-background-radius: 12; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14; -fx-cursor: hand;");
+    }
+
+    @FXML
+    public void onHoverExit(MouseEvent event) {
+        startButton.setStyle("-fx-background-color: #3498DB; -fx-background-radius: 12; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14; -fx-cursor: hand;");
+    }
+
+    @FXML
+    public void onHoverStartKill(MouseEvent event) {
+        killButton.setStyle("-fx-background-color: #EC7063; -fx-background-radius: 12; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14; -fx-cursor: hand;");
+    }
+
+    @FXML
+    public void onHoverExitKill(MouseEvent event) {
+        killButton.setStyle("-fx-background-color: #E74C3C; -fx-background-radius: 12; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14; -fx-cursor: hand;");
+    }
+
+    @FXML
+    public void onLogoClick() {
+        RotateTransition rt = new RotateTransition(javafx.util.Duration.millis(100), logoImage);
+        rt.setFromAngle(-10);
+        rt.setToAngle(10);
+        rt.setCycleCount(6);
+        rt.setAutoReverse(true);
+        rt.setOnFinished(e -> logoImage.setRotate(0));
+        rt.play();
     }
 
     private void writeEnvFile() {
@@ -756,5 +808,44 @@ public class StartController {
         }
 
         return Duration.parse(result);
+    }
+
+    private final List<KeyCode> konamiCode = Arrays.asList(
+            KeyCode.UP, KeyCode.UP, KeyCode.DOWN, KeyCode.DOWN,
+            KeyCode.LEFT, KeyCode.RIGHT, KeyCode.LEFT, KeyCode.RIGHT,
+            KeyCode.B, KeyCode.A
+    );
+    private final LinkedList<KeyCode> inputBuffer = new LinkedList<>();
+
+    @FXML
+    public void onKeyPressed(KeyEvent event) {
+        inputBuffer.add(event.getCode());
+        if (inputBuffer.size() > konamiCode.size()) inputBuffer.removeFirst();
+        if (inputBuffer.equals(konamiCode)) showKonamiMessage();
+    }
+
+    private void showKonamiMessage() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("🎉 Secret Found!");
+        alert.setHeaderText(null);
+        alert.setContentText("You unlocked the hidden Loadtester easter egg!");
+        alert.show();
+    }
+
+    @FXML
+    // Easter egg: show monster if loading more than 150'000 documents
+    private void checkLoadMonster(int documentCount) {
+        if (documentCount > 150000) {
+            Label monster = new Label("👾");
+            monster.setStyle("-fx-font-size: 30;");
+            buttonBox.getChildren().add(monster);
+
+            TranslateTransition tt = new TranslateTransition(javafx.util.Duration.seconds(1), monster);
+            tt.setByX(50);
+            tt.setAutoReverse(true);
+            tt.setCycleCount(2);
+            tt.setOnFinished(e -> buttonBox.getChildren().remove(monster));
+            tt.play();
+        }
     }
 }
