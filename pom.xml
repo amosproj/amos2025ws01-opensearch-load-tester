@@ -21,6 +21,8 @@
 
     <properties>
         <java.version>25</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <opensearch-java.version>3.3.0</opensearch-java.version>
         <httpclient5.version>5.5.1</httpclient5.version>
         <datafaker.version>2.5.3</datafaker.version>
