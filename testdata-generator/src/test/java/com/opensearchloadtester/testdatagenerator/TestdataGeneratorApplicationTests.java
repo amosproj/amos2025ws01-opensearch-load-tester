@@ -1,8 +1,11 @@
 package com.opensearchloadtester.testdatagenerator;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.opensearchloadtester.testdatagenerator.model.Document;
 import com.opensearchloadtester.testdatagenerator.model.DocumentType;
 import com.opensearchloadtester.testdatagenerator.model.ano.AnoDocument;
-import com.opensearchloadtester.testdatagenerator.model.Document;
 import com.opensearchloadtester.testdatagenerator.service.DynamicDataGenerator;
 import com.opensearchloadtester.testdatagenerator.service.FileStorageService;
 import com.opensearchloadtester.testdatagenerator.service.PersistentDataGenerator;
@@ -10,14 +13,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.List;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.io.IOException;
+import java.util.List;
 
 @SpringBootTest
 class TestdataGeneratorApplicationTests {
+
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
     @BeforeEach
     void setup() throws IOException {
@@ -49,7 +56,7 @@ class TestdataGeneratorApplicationTests {
          * Here there is no distinction, whether there already exists data or not.
          */
         PersistentDataGenerator persistentGen = new PersistentDataGenerator(
-                new FileStorageService("data/testdata.json"),
+                new FileStorageService("data/testdata.json", objectMapper),
                 new DynamicDataGenerator());
         int numData = 10;
         List<Document> list = persistentGen.generateData(DocumentType.ANO, numData);
