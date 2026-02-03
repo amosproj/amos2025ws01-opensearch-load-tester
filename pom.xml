@@ -21,6 +21,8 @@
 
     <properties>
         <java.version>25</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <opensearch-java.version>3.3.0</opensearch-java.version>
         <httpclient5.version>5.5.1</httpclient5.version>
         <datafaker.version>2.5.3</datafaker.version>
@@ -33,6 +35,8 @@
         <module>common-core</module>
         <module>load-generator</module>
         <module>ui</module>
+        <module>metrics-reporter</module>
+        <module>testdata-generator</module>
     </modules>
 
     <dependencyManagement>
@@ -41,6 +45,12 @@
             <dependency>
                 <groupId>com.opensearchloadtester</groupId>
                 <artifactId>common-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.opensearchloadtester</groupId>
+                <artifactId>load-generator</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
