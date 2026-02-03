@@ -12,7 +12,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>loadgenerator</artifactId>
+    <artifactId>load-generator</artifactId>
     <name>load-generator</name>
 
     <dependencies>

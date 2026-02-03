@@ -48,7 +48,7 @@
 
             <dependency>
                 <groupId>com.opensearchloadtester</groupId>
-                <artifactId>loadgenerator</artifactId>
+                <artifactId>load-generator</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
