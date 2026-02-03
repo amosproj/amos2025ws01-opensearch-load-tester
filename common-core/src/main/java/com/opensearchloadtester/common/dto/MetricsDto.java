@@ -14,18 +14,19 @@ import lombok.Setter;
 @AllArgsConstructor
 public class MetricsDto {
 
-    @NotBlank
-    private String loadGeneratorId;
-    @NotBlank
-    private String queryType;
-    @Min(0)
-    private long requestDurationMillis;
-    @Min(0)
-    private Long queryDurationMillis;
-    @Min(0)
-    private Integer totalHits;
+  @NotBlank private String loadGeneratorId;
+  @NotBlank private String queryType;
 
-    @Min(100)
-    @Max(599)
-    private int httpStatusCode;
+  @Min(0)
+  private long requestDurationMillis;
+
+  @Min(0)
+  private Long queryDurationMillis;
+
+  @Min(0)
+  private Integer totalHits;
+
+  @Min(100)
+  @Max(599)
+  private int httpStatusCode;
 }

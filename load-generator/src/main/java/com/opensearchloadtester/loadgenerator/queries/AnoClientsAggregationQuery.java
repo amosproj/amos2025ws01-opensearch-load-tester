@@ -5,11 +5,12 @@ import java.util.Map;
 
 public class AnoClientsAggregationQuery extends AbstractQuery {
 
-    private AnoClientsAggregationQuery(Map<String, String> queryParams, String queryTemplatePath) {
-        super(queryParams, queryTemplatePath);
-    }
+  private AnoClientsAggregationQuery(Map<String, String> queryParams, String queryTemplatePath) {
+    super(queryParams, queryTemplatePath);
+  }
 
-    public static AnoClientsAggregationQuery random() {
-        return new AnoClientsAggregationQuery(new HashMap<>(), "query-templates/q5_ano_clients_aggregation.json");
-    }
+  public static AnoClientsAggregationQuery random() {
+    return new AnoClientsAggregationQuery(
+        new HashMap<>(), "query-templates/q5_ano_clients_aggregation.json");
+  }
 }

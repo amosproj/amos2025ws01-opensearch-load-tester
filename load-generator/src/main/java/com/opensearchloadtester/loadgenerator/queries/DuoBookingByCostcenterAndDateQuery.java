@@ -4,21 +4,22 @@ import java.util.Map;
 
 public class DuoBookingByCostcenterAndDateQuery extends AbstractQuery {
 
-    private DuoBookingByCostcenterAndDateQuery(Map<String, String> queryParams, String queryTemplatePath) {
-        super(queryParams, queryTemplatePath);
-    }
+  private DuoBookingByCostcenterAndDateQuery(
+      Map<String, String> queryParams, String queryTemplatePath) {
+    super(queryParams, queryTemplatePath);
+  }
 
-    public static DuoBookingByCostcenterAndDateQuery random() {
+  public static DuoBookingByCostcenterAndDateQuery random() {
 
-        String fromYear = getRandomYear();
-        String toYear = getRandomYearAfter(fromYear);
+    String fromYear = getRandomYear();
+    String toYear = getRandomYearAfter(fromYear);
 
-        Map<String, String> queryParams = Map.of(
-                "date_from", fromYear,
-                "date_to", toYear
-        );
+    Map<String, String> queryParams =
+        Map.of(
+            "date_from", fromYear,
+            "date_to", toYear);
 
-        return new DuoBookingByCostcenterAndDateQuery(queryParams,
-                "query-templates/q10_duo_booking_by_costcenter_and_date.json");
-    }
+    return new DuoBookingByCostcenterAndDateQuery(
+        queryParams, "query-templates/q10_duo_booking_by_costcenter_and_date.json");
+  }
 }

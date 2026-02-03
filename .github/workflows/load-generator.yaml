@@ -3,26 +3,26 @@ name: Test & Build Load Generator
 on:
   push:
     paths:
-      - 'load-generator/**'
+      - "load-generator/**"
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
     inputs:
       LOAD_GENERATOR_REPLICAS:
-        description: 'LOAD_GENERATOR_REPLICAS'
+        description: "LOAD_GENERATOR_REPLICAS"
         required: false
-        default: '2'
+        default: "2"
       logging_level:
-        description: 'LOGGING_LEVEL_LOAD_GENERATOR'
+        description: "LOGGING_LEVEL_LOAD_GENERATOR"
         required: false
-        default: 'INFO'
+        default: "INFO"
 
 jobs:
   load-generator:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3

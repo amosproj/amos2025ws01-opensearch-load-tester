@@ -1,28 +1,28 @@
 name: Intregration Test
 
 on:
-## Does not work for now bc spring boot doesn't closes exits yet
-#  push:
-#    branches: [ main ]
-#  pull_request:
-#    branches: [ main ]
+  ## Does not work for now bc spring boot doesn't closes exits yet
+  #  push:
+  #    branches: [ main ]
+  #  pull_request:
+  #    branches: [ main ]
   workflow_dispatch:
     inputs:
       replicas:
-        description: 'Number of load generator replicas'
+        description: "Number of load generator replicas"
         required: false
-        default: '3'
+        default: "3"
       records:
-        description: 'Number of test data records'
+        description: "Number of test data records"
         required: false
-        default: '1000'
+        default: "1000"
 
 jobs:
   integration-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -67,8 +67,6 @@ jobs:
         with:
           name: integration-test-container.log
           path: integration-test-container.log
-
 #####
 # No workflow to tag and push images to Docker Hub or GitHub Container Registry yet
 #####
-     

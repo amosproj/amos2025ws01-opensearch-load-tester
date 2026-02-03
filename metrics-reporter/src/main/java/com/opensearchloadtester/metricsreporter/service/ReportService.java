@@ -6,13 +6,6 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.opensearchloadtester.common.dto.MetricsDto;
 import com.opensearchloadtester.metricsreporter.dto.StatisticsDto;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Service;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -24,178 +17,197 @@ import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Service;
 
 /**
- * Service responsible for creating and exporting test run reports.
- * Supports JSON export formats for raw query data.
+ * Service responsible for creating and exporting test run reports. Supports JSON export formats for
+ * raw query data.
  */
 @Slf4j
 @Service
 public class ReportService {
 
-    private final ObjectMapper objectMapper;
-    private final ObjectWriter ndjsonWriter;
+  private final ObjectMapper objectMapper;
+  private final ObjectWriter ndjsonWriter;
 
-    @Value("${report.output.directory}")
-    private String outputDirectory;
+  @Value("${report.output.directory}")
+  private String outputDirectory;
 
-    @Value("${report.stats.filename:statistics.json}")
-    private String statsFilename;
-    @Value("${report.ndjson.filename:tmp_query_results.ndjson}")
-    private String ndjsonFilename;
-    @Value("${report.resultsjson.filename}")
-    private String resultsJsonFilename;
+  @Value("${report.stats.filename:statistics.json}")
+  private String statsFilename;
 
-    private final StatsAccumulator stats = new StatsAccumulator();
+  @Value("${report.ndjson.filename:tmp_query_results.ndjson}")
+  private String ndjsonFilename;
 
-    public ReportService(@Qualifier("prettyJsonObjectMapper") ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-        this.ndjsonWriter = this.objectMapper.writer().without(SerializationFeature.INDENT_OUTPUT);
+  @Value("${report.resultsjson.filename}")
+  private String resultsJsonFilename;
+
+  private final StatsAccumulator stats = new StatsAccumulator();
+
+  public ReportService(@Qualifier("prettyJsonObjectMapper") ObjectMapper objectMapper) {
+    this.objectMapper = objectMapper;
+    this.ndjsonWriter = this.objectMapper.writer().without(SerializationFeature.INDENT_OUTPUT);
+  }
+
+  /**
+   * Processes incoming metrics in a streaming fashion: - flattens the MetricsDto list into entries
+   * - appends to NDJSON - updates aggregated statistics in memory
+   */
+  public synchronized void processMetrics(List<MetricsDto> metricsList) throws IOException {
+    // metricsList is already validated in the controller, so we can skip the validation here
+    appendToNdjsonReport(metricsList);
+    stats.update(metricsList);
+  }
+
+  @EventListener(ApplicationReadyEvent.class)
+  public void initializeReportsAtStartup() {
+    try {
+      initializeReportFiles();
+    } catch (IOException e) {
+      log.error("Failed to initialize report files on startup", e);
+      throw new IllegalStateException("Failed to initialize report files on startup", e);
+    }
+  }
+
+  /**
+   * Initializes the report directory, deletes any previous run outputs, and creates the NDJSON
+   * placeholder file. Intended to run once at startup.
+   */
+  private synchronized void initializeReportFiles() throws IOException {
+    Path dirPath = Paths.get(outputDirectory);
+
+    Files.createDirectories(dirPath);
+    log.info("Report output directory ready: {}", dirPath.toAbsolutePath());
+
+    Path ndjsonPath = dirPath.resolve(ndjsonFilename);
+    Path statsPath = dirPath.resolve(statsFilename);
+    Path resultsJsonPath = dirPath.resolve(resultsJsonFilename);
+
+    // Start a fresh run: remove leftover report files from a previous runs (e.g., when reports are
+    // volume-mounted).
+    deleteReportFileIfExists(ndjsonPath);
+    deleteReportFileIfExists(statsPath);
+    deleteReportFileIfExists(resultsJsonPath);
+
+    // Create NDJSON file placeholder
+    Files.createFile(ndjsonPath);
+    log.info("Created NDJSON report file: {}", ndjsonPath.toAbsolutePath());
+  }
+
+  private void deleteReportFileIfExists(Path path) {
+    try {
+      if (Files.deleteIfExists(path)) {
+        log.info("Deleted previous report file {}", path.toAbsolutePath());
+      }
+    } catch (IOException e) {
+      log.warn(
+          "Failed to delete previous report file {}: {}", path.toAbsolutePath(), e.getMessage());
+    }
+  }
+
+  private void appendToNdjsonReport(List<MetricsDto> metricsList) throws IOException {
+    Path ndjsonPath = resolveReportPath(ndjsonFilename);
+
+    try (BufferedWriter writer =
+        Files.newBufferedWriter(
+            ndjsonPath,
+            StandardCharsets.UTF_8,
+            StandardOpenOption.CREATE,
+            StandardOpenOption.APPEND)) {
+      for (MetricsDto metrics : metricsList) {
+        writer.write(ndjsonWriter.writeValueAsString(metrics));
+        writer.write("\n");
+      }
     }
 
-    /**
-     * Processes incoming metrics in a streaming fashion:
-     * - flattens the MetricsDto list into entries
-     * - appends to NDJSON
-     * - updates aggregated statistics in memory
-     */
-    public synchronized void processMetrics(List<MetricsDto> metricsList) throws IOException {
-        // metricsList is already validated in the controller, so we can skip the validation here
-        appendToNdjsonReport(metricsList);
-        stats.update(metricsList);
+    log.info("Appended {} metrics entries to NDJSON report", metricsList.size());
+  }
+
+  /**
+   * Returns the absolute path to the JSON statistics report file.
+   *
+   * @return Path to JSON statistics report file
+   */
+  public Path getStatisticsReportPath() {
+    return resolveReportPath(statsFilename);
+  }
+
+  /** Returns the absolute path to the results JSON report file containing all query results. */
+  public Path getResultsJsonPath() {
+    return resolveReportPath(resultsJsonFilename);
+  }
+
+  private Path resolveReportPath(String fileName) {
+    return Paths.get(outputDirectory, fileName).toAbsolutePath();
+  }
+
+  /**
+   * Finalizes reports by writing the aggregated statistics JSON and building the full query results
+   * JSON without loading all query results into memory.
+   */
+  public synchronized StatisticsDto finalizeReports(Set<String> loadGeneratorInstances)
+      throws IOException {
+    StatisticsDto statistics = stats.toStatistics(LocalDateTime.now(), loadGeneratorInstances);
+
+    Path statsPath = resolveReportPath(statsFilename);
+    objectMapper.writeValue(statsPath.toFile(), statistics);
+    Path ndjsonPath = resolveReportPath(ndjsonFilename);
+    Path resultsJsonPath = resolveReportPath(resultsJsonFilename);
+    writeResultsJsonReport(ndjsonPath, resultsJsonPath);
+
+    log.info(
+        "Statistics written: queries={}, errors={}, instances={}",
+        statistics.getTotalQueries(),
+        statistics.getTotalErrors(),
+        statistics.getLoadGeneratorInstances().size());
+    log.info(
+        "Request duration stats: avg={}ms min={}ms max={}ms | Query duration stats: avg={}ms min={}ms max={}ms",
+        String.format("%.2f", statistics.getRequestDurationMs().getAverage()),
+        statistics.getRequestDurationMs().getMin(),
+        statistics.getRequestDurationMs().getMax(),
+        String.format("%.2f", statistics.getQueryDurationMs().getAverage()),
+        statistics.getQueryDurationMs().getMin(),
+        statistics.getQueryDurationMs().getMax());
+
+    return statistics;
+  }
+
+  /** Builds a valid JSON array file from the NDJSON stream so tools like Grafana can import it. */
+  private void writeResultsJsonReport(Path ndjsonPath, Path resultsJsonPath) throws IOException {
+    if (!Files.exists(ndjsonPath)) {
+      log.warn(
+          "NDJSON report file {} not found; skipping results JSON export",
+          ndjsonPath.toAbsolutePath());
+      return;
     }
 
-    @EventListener(ApplicationReadyEvent.class)
-    public void initializeReportsAtStartup() {
-        try {
-            initializeReportFiles();
-        } catch (IOException e) {
-            log.error("Failed to initialize report files on startup", e);
-            throw new IllegalStateException("Failed to initialize report files on startup", e);
+    try (BufferedReader reader = Files.newBufferedReader(ndjsonPath, StandardCharsets.UTF_8);
+        BufferedWriter writer = Files.newBufferedWriter(resultsJsonPath, StandardCharsets.UTF_8)) {
+      JsonGenerator generator = objectMapper.getFactory().createGenerator(writer);
+      generator.useDefaultPrettyPrinter();
+      generator.writeStartArray();
+
+      String line;
+      int count = 0;
+      while ((line = reader.readLine()) != null) {
+        if (line.isBlank()) {
+          continue;
         }
+        generator.writeTree(objectMapper.readTree(line));
+        count++;
+      }
+
+      generator.writeEndArray();
+      generator.flush();
+      log.info(
+          "Results JSON report written to {} with {} metrics entries",
+          resultsJsonPath.toAbsolutePath(),
+          count);
     }
-
-    /**
-     * Initializes the report directory, deletes any previous run outputs,
-     * and creates the NDJSON placeholder file. Intended to run once at startup.
-     */
-    private synchronized void initializeReportFiles() throws IOException {
-        Path dirPath = Paths.get(outputDirectory);
-
-        Files.createDirectories(dirPath);
-        log.info("Report output directory ready: {}", dirPath.toAbsolutePath());
-
-        Path ndjsonPath = dirPath.resolve(ndjsonFilename);
-        Path statsPath = dirPath.resolve(statsFilename);
-        Path resultsJsonPath = dirPath.resolve(resultsJsonFilename);
-
-        // Start a fresh run: remove leftover report files from a previous runs (e.g., when reports are volume-mounted).
-        deleteReportFileIfExists(ndjsonPath);
-        deleteReportFileIfExists(statsPath);
-        deleteReportFileIfExists(resultsJsonPath);
-
-        // Create NDJSON file placeholder
-        Files.createFile(ndjsonPath);
-        log.info("Created NDJSON report file: {}", ndjsonPath.toAbsolutePath());
-    }
-
-    private void deleteReportFileIfExists(Path path) {
-        try {
-            if (Files.deleteIfExists(path)) {
-                log.info("Deleted previous report file {}", path.toAbsolutePath());
-            }
-        } catch (IOException e) {
-            log.warn("Failed to delete previous report file {}: {}", path.toAbsolutePath(), e.getMessage());
-        }
-    }
-
-    private void appendToNdjsonReport(List<MetricsDto> metricsList) throws IOException {
-        Path ndjsonPath = resolveReportPath(ndjsonFilename);
-
-        try (BufferedWriter writer = Files.newBufferedWriter(ndjsonPath, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND)) {
-            for (MetricsDto metrics : metricsList) {
-                writer.write(ndjsonWriter.writeValueAsString(metrics));
-                writer.write("\n");
-            }
-        }
-
-        log.info("Appended {} metrics entries to NDJSON report", metricsList.size());
-    }
-
-    /**
-     * Returns the absolute path to the JSON statistics report file.
-     *
-     * @return Path to JSON statistics report file
-     */
-    public Path getStatisticsReportPath() {
-        return resolveReportPath(statsFilename);
-    }
-
-    /**
-     * Returns the absolute path to the results JSON report file containing all query results.
-     */
-    public Path getResultsJsonPath() {
-        return resolveReportPath(resultsJsonFilename);
-    }
-
-    private Path resolveReportPath(String fileName) {
-        return Paths.get(outputDirectory, fileName).toAbsolutePath();
-    }
-
-    /**
-     * Finalizes reports by writing the aggregated statistics JSON and building the full query results JSON
-     * without loading all query results into memory.
-     */
-    public synchronized StatisticsDto finalizeReports(Set<String> loadGeneratorInstances) throws IOException {
-        StatisticsDto statistics = stats.toStatistics(LocalDateTime.now(), loadGeneratorInstances);
-
-        Path statsPath = resolveReportPath(statsFilename);
-        objectMapper.writeValue(statsPath.toFile(), statistics);
-        Path ndjsonPath = resolveReportPath(ndjsonFilename);
-        Path resultsJsonPath = resolveReportPath(resultsJsonFilename);
-        writeResultsJsonReport(ndjsonPath, resultsJsonPath);
-
-        log.info("Statistics written: queries={}, errors={}, instances={}", statistics.getTotalQueries(), statistics.getTotalErrors(), statistics.getLoadGeneratorInstances().size());
-        log.info("Request duration stats: avg={}ms min={}ms max={}ms | Query duration stats: avg={}ms min={}ms max={}ms",
-                String.format("%.2f", statistics.getRequestDurationMs().getAverage()),
-                statistics.getRequestDurationMs().getMin(),
-                statistics.getRequestDurationMs().getMax(),
-                String.format("%.2f", statistics.getQueryDurationMs().getAverage()),
-                statistics.getQueryDurationMs().getMin(),
-                statistics.getQueryDurationMs().getMax());
-
-        return statistics;
-    }
-
-    /**
-     * Builds a valid JSON array file from the NDJSON stream so tools like Grafana can import it.
-     */
-    private void writeResultsJsonReport(Path ndjsonPath, Path resultsJsonPath) throws IOException {
-        if (!Files.exists(ndjsonPath)) {
-            log.warn("NDJSON report file {} not found; skipping results JSON export", ndjsonPath.toAbsolutePath());
-            return;
-        }
-
-        try (BufferedReader reader = Files.newBufferedReader(ndjsonPath, StandardCharsets.UTF_8);
-             BufferedWriter writer = Files.newBufferedWriter(resultsJsonPath, StandardCharsets.UTF_8)) {
-            JsonGenerator generator = objectMapper.getFactory().createGenerator(writer);
-            generator.useDefaultPrettyPrinter();
-            generator.writeStartArray();
-
-            String line;
-            int count = 0;
-            while ((line = reader.readLine()) != null) {
-                if (line.isBlank()) {
-                    continue;
-                }
-                generator.writeTree(objectMapper.readTree(line));
-                count++;
-            }
-
-            generator.writeEndArray();
-            generator.flush();
-            log.info("Results JSON report written to {} with {} metrics entries", resultsJsonPath.toAbsolutePath(), count);
-        }
-    }
-
+  }
 }

@@ -3,34 +3,34 @@ name: Test & Build Testdata Generator
 on:
   push:
     paths:
-      - 'testdata-generator/**'
+      - "testdata-generator/**"
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
     inputs:
       data_mode:
-        description: 'DATA_GENERATION_MODE'
+        description: "DATA_GENERATION_MODE"
         required: false
-        default: 'PERSISTENT'
+        default: "PERSISTENT"
       data_count:
-        description: 'DATA_GENERATION_COUNT'
+        description: "DATA_GENERATION_COUNT"
         required: false
-        default: '10'
+        default: "10"
       data_type:
-        description: 'DATA_GENERATION_DOCUMENT_TYPE'
+        description: "DATA_GENERATION_DOCUMENT_TYPE"
         required: false
-        default: 'ANO'
+        default: "ANO"
       logging_level:
-        description: 'LOGGING_LEVEL_TESTADATA_GENERATOR'
+        description: "LOGGING_LEVEL_TESTADATA_GENERATOR"
         required: false
-        default: 'INFO'
+        default: "INFO"
 
 jobs:
   testdata-generator:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -41,7 +41,7 @@ jobs:
       - name: start opensearch container
         run: |
           docker compose -f docker-compose.yaml up --wait -d test-target-opensearch
-      
+
       - name: Build testdata-generator image from Build Stage
         run: docker build --target build -t testdata-generator-build -f testdata-generator/Dockerfile .
 
