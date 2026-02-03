@@ -2,6 +2,8 @@ package com.opensearchloadtester.metricsreporter.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.opensearchloadtester.common.dto.MetricsDto;
 import com.opensearchloadtester.metricsreporter.dto.StatisticsDto;
@@ -25,11 +27,16 @@ class ReportServiceTest {
     Path tempDir;
 
     private ReportService reportService;
-    private ObjectMapper objectMapper;
+    private ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .enable(SerializationFeature.INDENT_OUTPUT)
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
+    ;
 
     @BeforeEach
     void setUp() {
-        reportService = new ReportService();
+        reportService = new ReportService(objectMapper);
         ReflectionTestUtils.setField(reportService, "outputDirectory", tempDir.toString());
         ReflectionTestUtils.setField(reportService, "statsFilename", "statistics.json");
         ReflectionTestUtils.setField(reportService, "ndjsonFilename", "tmp_query_results.ndjson");

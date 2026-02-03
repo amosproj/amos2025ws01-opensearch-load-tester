@@ -1,9 +1,7 @@
 package com.opensearchloadtester.testdatagenerator.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.type.CollectionType;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.opensearchloadtester.testdatagenerator.exception.FileStorageException;
 import com.opensearchloadtester.testdatagenerator.model.Document;
 import lombok.RequiredArgsConstructor;
@@ -19,10 +17,7 @@ import java.util.List;
 public class FileStorageService {
 
     private final String outputPath;
-
-    private final ObjectMapper objectMapper = new ObjectMapper()
-            .registerModule(new JavaTimeModule()) // Java-Time-Support
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS); // ISO-strings instead of Timestamps
+    private final ObjectMapper objectMapper;
 
     /**
      * Saves a list of Document objects to a file.
