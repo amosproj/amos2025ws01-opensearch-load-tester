@@ -77,7 +77,7 @@ class StatsAccumulatorTest {
     }
 
     @Test
-    void update_countsErrorsForStatusCodesAbove400() {
+    void update_countsErrorsForStatusCodes400AndAbove() {
         StatsAccumulator accumulator = new StatsAccumulator();
 
         accumulator.update(List.of(
