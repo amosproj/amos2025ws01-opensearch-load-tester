@@ -4,6 +4,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.opensearchloadtester.ui.config.CustomScenarioConfig;
+import javafx.animation.RotateTransition;
+import javafx.animation.TranslateTransition;
+import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.fxml.FXML;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -20,44 +35,51 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
-import javafx.animation.RotateTransition;
-import javafx.animation.TranslateTransition;
-import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.fxml.FXML;
-import javafx.geometry.Pos;
-import javafx.scene.Node;
-import javafx.scene.control.*;
-import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 
 public class StartController {
 
-  @FXML private ComboBox<String> testdataGenerationMode;
-  @FXML private Label persistentModeWarning;
-  @FXML private ComboBox<String> testdataGenerationDocumentType;
-  @FXML private ComboBox<String> scenarioConfig;
-  @FXML private TextField testdataGenerationCount;
-  @FXML private TextField testdataGenerationBatchSize;
-  @FXML private TextField loadGeneratorReplicas;
-  @FXML private TextField metricsBatchSize;
-  @FXML private VBox customScenarioConfigurationBox;
-  @FXML private VBox dynamicCheckboxWrapper;
-  @FXML private TextArea outputText;
-  @FXML private ComboBox<String> customWarmup;
-  @FXML private TextField customScheduleDurationAmount;
-  @FXML private ComboBox<String> customScheduleDurationUnit;
-  @FXML private TextField customQps;
-  @FXML private TextField customQueryResponseTimeoutAmount;
-  @FXML private ComboBox<String> customQueryResponseTimeoutUnit;
-  @FXML private Button startButton;
-  @FXML private Button killButton;
-  @FXML private ImageView logoImage;
-  @FXML private HBox buttonBox;
+  @FXML
+  private ComboBox<String> testdataGenerationMode;
+  @FXML
+  private Label persistentModeWarning;
+  @FXML
+  private ComboBox<String> testdataGenerationDocumentType;
+  @FXML
+  private ComboBox<String> scenarioConfig;
+  @FXML
+  private TextField testdataGenerationCount;
+  @FXML
+  private TextField testdataGenerationBatchSize;
+  @FXML
+  private TextField loadGeneratorReplicas;
+  @FXML
+  private TextField metricsBatchSize;
+  @FXML
+  private VBox customScenarioConfigurationBox;
+  @FXML
+  private VBox dynamicCheckboxWrapper;
+  @FXML
+  private TextArea outputText;
+  @FXML
+  private ComboBox<String> customWarmup;
+  @FXML
+  private TextField customScheduleDurationAmount;
+  @FXML
+  private ComboBox<String> customScheduleDurationUnit;
+  @FXML
+  private TextField customQps;
+  @FXML
+  private TextField customQueryResponseTimeoutAmount;
+  @FXML
+  private ComboBox<String> customQueryResponseTimeoutUnit;
+  @FXML
+  private Button startButton;
+  @FXML
+  private Button killButton;
+  @FXML
+  private ImageView logoImage;
+  @FXML
+  private HBox buttonBox;
 
   private final Path ENV_PATH = Path.of(".env");
   private final Path CUSTOM_SCENARIO_PATH =
@@ -109,7 +131,6 @@ public class StartController {
             (obs, oldValue, newValue) -> {
               if (Objects.equals(newValue, "ANO")
                   && Objects.equals(scenarioConfig.getValue(), "default-scenario.yaml")) {
-                testdataGenerationDocumentType.setStyle("");
                 testdataGenerationDocumentType.setTooltip(null);
                 addCheckboxes(QUERY_TYPES, 3);
                 return;
@@ -117,8 +138,6 @@ public class StartController {
 
               updateScenarioConfigForDocumentType(newValue);
               addCheckboxes(QUERY_TYPES, 3);
-
-              testdataGenerationDocumentType.setStyle("");
               testdataGenerationDocumentType.setTooltip(null);
             });
 
@@ -129,7 +148,6 @@ public class StartController {
         .valueProperty()
         .addListener(
             (observable, oldValue, newValue) -> {
-              testdataGenerationMode.setStyle("");
               testdataGenerationMode.setTooltip(null);
 
               // Show/hide persistent mode warning
@@ -170,7 +188,6 @@ public class StartController {
                 customScenarioConfigurationBox.setDisable(true);
               }
 
-              scenarioConfig.setStyle("");
               scenarioConfig.setTooltip(null);
             });
 
@@ -524,7 +541,6 @@ public class StartController {
 
   private ChangeListener<String> getDefaultListener(Control control) {
     return (observable, oldValue, newValue) -> {
-      control.setStyle("");
       control.setTooltip(null);
     };
   }
@@ -625,7 +641,7 @@ public class StartController {
 
                 String exitCodeStr;
                 try (BufferedReader br =
-                    new BufferedReader(new InputStreamReader(waitProcess.getInputStream()))) {
+                         new BufferedReader(new InputStreamReader(waitProcess.getInputStream()))) {
                   exitCodeStr = br.readLine();
                 }
 
