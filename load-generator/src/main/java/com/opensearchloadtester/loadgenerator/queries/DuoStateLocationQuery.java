@@ -5,22 +5,22 @@ import java.util.Map;
 
 public class DuoStateLocationQuery extends AbstractQuery {
 
-    private DuoStateLocationQuery(Map<String, String> queryParams, String queryTemplatePath) {
-        super(queryParams, queryTemplatePath);
-    }
+  private DuoStateLocationQuery(Map<String, String> queryParams, String queryTemplatePath) {
+    super(queryParams, queryTemplatePath);
+  }
 
-    public static DuoStateLocationQuery random() {
-        List<String> appStates = List.of("APPROVED", "NOT_RELEVANT", "UNDISPATCHED");
-        String documentApprovalState = appStates.get(faker().random().nextInt(appStates.size()));
+  public static DuoStateLocationQuery random() {
+    List<String> appStates = List.of("APPROVED", "NOT_RELEVANT", "UNDISPATCHED");
+    String documentApprovalState = appStates.get(faker().random().nextInt(appStates.size()));
 
-        List<String> loc = List.of("BELEGE", "BELEGFREIGABE");
-        String location = loc.get(faker().random().nextInt(loc.size()));
+    List<String> loc = List.of("BELEGE", "BELEGFREIGABE");
+    String location = loc.get(faker().random().nextInt(loc.size()));
 
-        Map<String, String> queryParams = Map.of(
-                "approval_state", documentApprovalState,
-                "location", location
-        );
+    Map<String, String> queryParams =
+        Map.of(
+            "approval_state", documentApprovalState,
+            "location", location);
 
-        return new DuoStateLocationQuery(queryParams, "query-templates/q3_duo_state_location.json");
-    }
+    return new DuoStateLocationQuery(queryParams, "query-templates/q3_duo_state_location.json");
+  }
 }

@@ -6,8 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class LoadGeneratorApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(LoadGeneratorApplication.class, args);
-	}
-
+  public static void main(String[] args) {
+    SpringApplication.run(LoadGeneratorApplication.class, args);
+  }
 }

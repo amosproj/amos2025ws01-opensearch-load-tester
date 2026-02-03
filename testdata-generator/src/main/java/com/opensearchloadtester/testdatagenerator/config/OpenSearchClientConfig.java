@@ -1,5 +1,6 @@
 package com.opensearchloadtester.testdatagenerator.config;
 
+import java.net.URI;
 import org.apache.hc.core5.http.HttpHost;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.transport.OpenSearchTransport;
@@ -9,24 +10,20 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
-import java.net.URI;
-
 @Configuration
 public class OpenSearchClientConfig {
 
-    @Value("${opensearch.url}")
-    private String openSearchUrl;
+  @Value("${opensearch.url}")
+  private String openSearchUrl;
 
-    @Bean
-    @Primary
-    public OpenSearchClient openSearchClient() {
-        URI uri = URI.create(openSearchUrl);
-        HttpHost host = new HttpHost(uri.getScheme(), uri.getHost(), uri.getPort());
+  @Bean
+  @Primary
+  public OpenSearchClient openSearchClient() {
+    URI uri = URI.create(openSearchUrl);
+    HttpHost host = new HttpHost(uri.getScheme(), uri.getHost(), uri.getPort());
 
-        OpenSearchTransport transport = ApacheHttpClient5TransportBuilder
-                .builder(host)
-                .build();
+    OpenSearchTransport transport = ApacheHttpClient5TransportBuilder.builder(host).build();
 
-        return new OpenSearchClient(transport);
-    }
+    return new OpenSearchClient(transport);
+  }
 }

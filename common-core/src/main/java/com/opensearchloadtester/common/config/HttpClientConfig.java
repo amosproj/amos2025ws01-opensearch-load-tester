@@ -8,9 +8,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class HttpClientConfig {
 
-    @Bean
-    public CloseableHttpClient httpClient() {
-        return HttpClients.createDefault();
-    }
-
+  @Bean
+  public CloseableHttpClient httpClient() {
+    return HttpClients.createDefault();
+  }
 }

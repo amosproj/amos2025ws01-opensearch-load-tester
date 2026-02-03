@@ -5,22 +5,17 @@ import java.util.Map;
 
 public class DuoInvoiceCategoryQuery extends AbstractQuery {
 
-    private DuoInvoiceCategoryQuery(Map<String, String> queryParams, String queryTemplatePath) {
-        super(queryParams, queryTemplatePath);
-    }
+  private DuoInvoiceCategoryQuery(Map<String, String> queryParams, String queryTemplatePath) {
+    super(queryParams, queryTemplatePath);
+  }
 
-    public static DuoInvoiceCategoryQuery random() {
-        List<String> documentCategoryTypes = List.of("SUPPLIER_INVOICE", "OTHER", "SALES_INVOICE");
-        String documentCategory = documentCategoryTypes.get(faker().random().nextInt(documentCategoryTypes.size()));
+  public static DuoInvoiceCategoryQuery random() {
+    List<String> documentCategoryTypes = List.of("SUPPLIER_INVOICE", "OTHER", "SALES_INVOICE");
+    String documentCategory =
+        documentCategoryTypes.get(faker().random().nextInt(documentCategoryTypes.size()));
 
-        Map<String, String> queryParams = Map.of(
-                "category", documentCategory
-        );
+    Map<String, String> queryParams = Map.of("category", documentCategory);
 
-        return new DuoInvoiceCategoryQuery(queryParams, "query-templates/q2_duo_invoice_category.json");
-    }
+    return new DuoInvoiceCategoryQuery(queryParams, "query-templates/q2_duo_invoice_category.json");
+  }
 }
-
-
-
-

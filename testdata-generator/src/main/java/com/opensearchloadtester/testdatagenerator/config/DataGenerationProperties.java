@@ -12,11 +12,13 @@ import org.springframework.validation.annotation.Validated;
 @Data
 public class DataGenerationProperties {
 
-    private DataGenerationMode mode;
-    private DocumentType documentType;
-    private String outputPath;
-    @Min(1)
-    private int count;
-    @Min(1)
-    private int batchSize;
+  private DataGenerationMode mode;
+  private DocumentType documentType;
+  private String outputPath;
+
+  @Min(1)
+  private int count;
+
+  @Min(1)
+  private int batchSize;
 }

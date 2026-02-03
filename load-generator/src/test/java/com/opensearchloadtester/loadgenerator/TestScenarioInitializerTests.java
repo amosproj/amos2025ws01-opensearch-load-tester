@@ -1,5 +1,7 @@
 package com.opensearchloadtester.loadgenerator;
 
+import static org.mockito.Mockito.*;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opensearchloadtester.loadgenerator.client.LoadTestStartSyncClient;
 import com.opensearchloadtester.loadgenerator.client.MetricsReporterClient;
@@ -12,67 +14,59 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.opensearch.client.opensearch.generic.OpenSearchGenericClient;
 
-import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 public class TestScenarioInitializerTests {
 
-    @Mock
-    private ScenarioConfig scenarioConfig;
-    @Mock
-    private LoadRunner loadRunner;
-    @Mock
-    private OpenSearchGenericClient openSearchClient;
-    @Mock
-    private LoadTestStartSyncClient loadTestStartSyncClient;
-    @Mock
-    private MetricsReporterClient metricsReporterClient;
-    @Mock
-    private ObjectMapper objectMapperMock;
+  @Mock private ScenarioConfig scenarioConfig;
+  @Mock private LoadRunner loadRunner;
+  @Mock private OpenSearchGenericClient openSearchClient;
+  @Mock private LoadTestStartSyncClient loadTestStartSyncClient;
+  @Mock private MetricsReporterClient metricsReporterClient;
+  @Mock private ObjectMapper objectMapperMock;
 
-    @Test
-    void run_warmupDisabled_singleReplica_executesScenario_withoutSync() {
-        when(scenarioConfig.getName()).thenReturn("test-scenario");
-        when(scenarioConfig.getWarmUpEnabled()).thenReturn(false);
+  @Test
+  void run_warmupDisabled_singleReplica_executesScenario_withoutSync() {
+    when(scenarioConfig.getName()).thenReturn("test-scenario");
+    when(scenarioConfig.getWarmUpEnabled()).thenReturn(false);
 
-        TestScenarioInitializer initializer = new TestScenarioInitializer(
-                "lg-1",
-                1,
-                scenarioConfig,
-                loadRunner,
-                openSearchClient,
-                loadTestStartSyncClient,
-                metricsReporterClient,
-                objectMapperMock
-        );
+    TestScenarioInitializer initializer =
+        new TestScenarioInitializer(
+            "lg-1",
+            1,
+            scenarioConfig,
+            loadRunner,
+            openSearchClient,
+            loadTestStartSyncClient,
+            metricsReporterClient,
+            objectMapperMock);
 
-        initializer.run();
+    initializer.run();
 
-        verify(loadRunner, times(1)).executeScenario(scenarioConfig);
-        verifyNoInteractions(loadTestStartSyncClient);
-    }
+    verify(loadRunner, times(1)).executeScenario(scenarioConfig);
+    verifyNoInteractions(loadTestStartSyncClient);
+  }
 
-    @Test
-    void run_warmupDisabled_multipleReplicas_syncsThenExecutesScenario_inOrder() {
-        when(scenarioConfig.getName()).thenReturn("test-scenario");
-        when(scenarioConfig.getWarmUpEnabled()).thenReturn(false);
+  @Test
+  void run_warmupDisabled_multipleReplicas_syncsThenExecutesScenario_inOrder() {
+    when(scenarioConfig.getName()).thenReturn("test-scenario");
+    when(scenarioConfig.getWarmUpEnabled()).thenReturn(false);
 
-        TestScenarioInitializer initializer = new TestScenarioInitializer(
-                "lg-1",
-                3,
-                scenarioConfig,
-                loadRunner,
-                openSearchClient,
-                loadTestStartSyncClient,
-                metricsReporterClient,
-                objectMapperMock
-        );
+    TestScenarioInitializer initializer =
+        new TestScenarioInitializer(
+            "lg-1",
+            3,
+            scenarioConfig,
+            loadRunner,
+            openSearchClient,
+            loadTestStartSyncClient,
+            metricsReporterClient,
+            objectMapperMock);
 
-        initializer.run();
+    initializer.run();
 
-        InOrder inOrder = inOrder(loadTestStartSyncClient, loadRunner);
-        inOrder.verify(loadTestStartSyncClient).registerReady("lg-1");
-        inOrder.verify(loadTestStartSyncClient).awaitStartPermission();
-        inOrder.verify(loadRunner).executeScenario(scenarioConfig);
-    }
+    InOrder inOrder = inOrder(loadTestStartSyncClient, loadRunner);
+    inOrder.verify(loadTestStartSyncClient).registerReady("lg-1");
+    inOrder.verify(loadTestStartSyncClient).awaitStartPermission();
+    inOrder.verify(loadRunner).executeScenario(scenarioConfig);
+  }
 }

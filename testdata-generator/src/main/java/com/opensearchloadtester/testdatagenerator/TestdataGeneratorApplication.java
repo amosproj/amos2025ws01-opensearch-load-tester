@@ -9,8 +9,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 @SpringBootApplication
 public class TestdataGeneratorApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(TestdataGeneratorApplication.class, args);
-    }
-
+  public static void main(String[] args) {
+    SpringApplication.run(TestdataGeneratorApplication.class, args);
+  }
 }

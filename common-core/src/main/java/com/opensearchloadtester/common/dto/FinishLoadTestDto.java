@@ -12,8 +12,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class FinishLoadTestDto {
 
-    @NotBlank
-    private String loadGeneratorId;
-    private boolean success;
-    private String errorMessage;
+  @NotBlank private String loadGeneratorId;
+  private boolean success;
+  private String errorMessage;
 }
