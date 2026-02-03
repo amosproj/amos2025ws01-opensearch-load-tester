@@ -33,6 +33,8 @@
         <module>common-core</module>
         <module>load-generator</module>
         <module>ui</module>
+        <module>metrics-reporter</module>
+        <module>testdata-generator</module>
     </modules>
 
     <dependencyManagement>
