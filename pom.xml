@@ -21,6 +21,8 @@
 
     <properties>
         <java.version>25</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <spotless.version>2.44.0</spotless.version>
         <google-java-format.version>1.33.0</google-java-format.version>
         <opensearch-java.version>3.3.0</opensearch-java.version>
@@ -35,6 +37,8 @@
         <module>common-core</module>
         <module>load-generator</module>
         <module>ui</module>
+        <module>metrics-reporter</module>
+        <module>testdata-generator</module>
     </modules>
 
     <dependencyManagement>
@@ -43,6 +47,12 @@
             <dependency>
                 <groupId>com.opensearchloadtester</groupId>
                 <artifactId>common-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.opensearchloadtester</groupId>
+                <artifactId>load-generator</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

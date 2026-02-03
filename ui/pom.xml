@@ -15,7 +15,6 @@
     <name>ui</name>
 
     <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <junit.version>5.12.1</junit.version>
     </properties>
 
@@ -51,8 +50,7 @@
 
         <dependency>
             <groupId>com.opensearchloadtester</groupId>
-            <artifactId>loadgenerator</artifactId>
-            <version>6.0.0</version>
+            <artifactId>load-generator</artifactId>
         </dependency>
 
     </dependencies>
@@ -62,11 +60,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.13.0</version>
-                <configuration>
-                    <source>25</source>
-                    <target>25</target>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.openjfx</groupId>

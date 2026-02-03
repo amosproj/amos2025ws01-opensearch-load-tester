@@ -38,6 +38,9 @@ bin/
 # Maven/Java build
 target/
 
+# jlink runtime image (UI build output)
+LoadTesterUI/
+
 # MacOS
 .DS_Store
 

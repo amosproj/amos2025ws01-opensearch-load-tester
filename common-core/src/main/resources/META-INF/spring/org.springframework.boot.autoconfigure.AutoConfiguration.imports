@@ -1,0 +1,2 @@
+com.opensearchloadtester.common.config.ObjectMapperConfig
+com.opensearchloadtester.common.config.HttpClientConfig
