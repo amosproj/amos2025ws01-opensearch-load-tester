@@ -7,27 +7,39 @@ import org.springframework.core.io.ClassPathResource;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public abstract class AbstractQuery implements Query {
+public abstract class AbstractQuery {
 
     protected static final ThreadLocal<Faker> FAKER =
             ThreadLocal.withInitial(() -> new Faker(Locale.GERMAN));
 
-    protected Map<String, String> queryParams;
-    protected String queryTemplatePath;
+    protected final Map<String, String> queryParams;
+    protected final String queryTemplatePath;
 
     protected AbstractQuery(Map<String, String> queryParams, String queryTemplatePath) {
         this.queryParams = queryParams;
         this.queryTemplatePath = queryTemplatePath;
     }
 
-    @Override
     public String toJsonString() {
-        String queryTemplate = loadQueryTemplate(queryTemplatePath);
-        return applyQueryParams(queryTemplate, queryParams);
+        return applyQueryParams(getQueryTemplate(), queryParams);
+    }
+
+    // Cache the loaded template to avoid repeated I/O
+    private volatile String cachedTemplate;
+
+    protected String getQueryTemplate() {
+        if (cachedTemplate == null) {
+            cachedTemplate = loadQueryTemplate(queryTemplatePath);
+        }
+        return cachedTemplate;
     }
 
     protected String loadQueryTemplate(String path) {
@@ -53,5 +65,16 @@ public abstract class AbstractQuery implements Query {
 
     protected static Faker faker() {
         return FAKER.get();
+    }
+
+    // Generate a random year within the last 10 years
+    protected static String getRandomYear() {
+        Instant i = Date.from(faker().timeAndDate().past(3650, TimeUnit.DAYS)).toInstant();
+        java.time.ZonedDateTime zdt = i.atZone(java.time.ZoneId.systemDefault());
+        return String.valueOf(zdt.getYear());
+    }
+
+    protected static String getRandomYearAfter(String fromYear) {
+        return String.valueOf(faker().number().numberBetween(Integer.parseInt(fromYear), LocalDate.now().getYear()));
     }
 }

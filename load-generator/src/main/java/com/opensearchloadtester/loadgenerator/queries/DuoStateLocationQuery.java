@@ -21,6 +21,6 @@ public class DuoStateLocationQuery extends AbstractQuery {
                 "location", location
         );
 
-        return new DuoStateLocationQuery(queryParams, "queries/q3_duo_state_location.json");
+        return new DuoStateLocationQuery(queryParams, "query-templates/q3_duo_state_location.json");
     }
 }

@@ -2,13 +2,12 @@ package com.opensearchloadtester.loadgenerator.client;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.opensearchloadtester.common.dto.FinishLoadTestDto;
 import com.opensearchloadtester.common.dto.MetricsDto;
 import com.opensearchloadtester.loadgenerator.exception.MetricsReporterAccessException;
-import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.io.entity.StringEntity;
@@ -24,17 +23,15 @@ public class MetricsReporterClient {
 
     private final String metricsEndpointUrl;
     private final CloseableHttpClient httpClient;
-    private final ObjectMapper objectMapper = new ObjectMapper();
-    private final String finishEndpointBaseUrl;
+    private final ObjectMapper objectMapper;
+    private final String finishEndpointUrl;
 
-    public MetricsReporterClient(@Value("${metrics-reporter.url}") String metricsReporterBaseUrl) {
+    public MetricsReporterClient(@Value("${metrics-reporter.url}") String metricsReporterBaseUrl,
+                                 ObjectMapper objectMapper, CloseableHttpClient httpClient) {
         this.metricsEndpointUrl = metricsReporterBaseUrl + "/metrics";
-        this.finishEndpointBaseUrl = metricsReporterBaseUrl + "/finish";
-        try {
-            this.httpClient = HttpClients.createDefault();
-        } catch (RuntimeException e) {
-            throw new MetricsReporterAccessException(e.getMessage());
-        }
+        this.finishEndpointUrl = metricsReporterBaseUrl + "/finish";
+        this.objectMapper = objectMapper;
+        this.httpClient = httpClient;
     }
 
     /**
@@ -91,28 +88,28 @@ public class MetricsReporterClient {
         }
     }
 
-    @PreDestroy
-    private void close() {
+    public void finish(String loadGeneratorId, boolean success, String errorMessage) {
+        FinishLoadTestDto finishDto = new FinishLoadTestDto(loadGeneratorId, success, errorMessage);
+
+        String jsonBody;
         try {
-            httpClient.close();
-        } catch (IOException e) {
-            log.warn("Failed to close HTTP client", e);
+            jsonBody = objectMapper.writeValueAsString(finishDto);
+        } catch (JsonProcessingException e) {
+            throw new MetricsReporterAccessException("Failed to serialize finish signal to JSON", e);
         }
-    }
 
-    public void finish(String loadGeneratorId) {
-        String url = finishEndpointBaseUrl + "/" + loadGeneratorId;
-        HttpPost postRequest = new HttpPost(url);
+        HttpPost postRequest = new HttpPost(finishEndpointUrl);
+        postRequest.setEntity(new StringEntity(jsonBody, ContentType.APPLICATION_JSON));
 
-        log.info("Sending finish signal to Metrics Reporter at '{}'", url);
+        log.info("Sending finish signal to Metrics Reporter at '{}'", finishEndpointUrl);
 
         try {
             int status = httpClient.execute(postRequest, HttpResponse::getCode);
-            if (status < 200 || status >= 300) {
+            if (status >= 400) {
                 throw new MetricsReporterAccessException("Finish call failed (HTTP: " + status + ")");
             }
         } catch (IOException e) {
-            throw new MetricsReporterAccessException("Failed to call finish endpoint", e);
+            throw new MetricsReporterAccessException("I/O error while sending finish signal", e);
         }
     }
 

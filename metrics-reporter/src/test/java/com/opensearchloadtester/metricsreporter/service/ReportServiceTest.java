@@ -63,11 +63,10 @@ class ReportServiceTest {
 
         assertThat(Files.exists(statsPath)).isTrue();
         assertThat(Files.exists(resultsJsonPath)).isTrue();
-//        assertThat(Files.exists(ndjsonPath)).isFalse();
 
         StatisticsDto writtenStats = objectMapper.readValue(statsPath.toFile(), StatisticsDto.class);
-        assertThat(writtenStats.getTotalQueries()).isEqualTo(2);
-        assertThat(writtenStats.getTotalErrors()).isEqualTo(1);
+        assertThat(writtenStats.getTotalQueries()).isEqualTo(2L);
+        assertThat(writtenStats.getTotalErrors()).isEqualTo(1L);
         assertThat(writtenStats.getLoadGeneratorInstances()).containsExactly(LOAD_GENERATOR_ID);
 
         assertThat(writtenStats.getRequestDurationMs().getAverage()).isEqualTo(200.0);
@@ -78,8 +77,8 @@ class ReportServiceTest {
         assertThat(writtenStats.getQueryDurationMs().getMin()).isEqualTo(50L);
         assertThat(writtenStats.getQueryDurationMs().getMax()).isEqualTo(150L);
 
-        assertThat(statistics.getTotalQueries()).isEqualTo(2);
-        assertThat(statistics.getTotalErrors()).isEqualTo(1);
+        assertThat(statistics.getTotalQueries()).isEqualTo(2L);
+        assertThat(statistics.getTotalErrors()).isEqualTo(1L);
 
         JsonNode resultsJson = objectMapper.readTree(resultsJsonPath.toFile());
         assertThat(resultsJson.isArray()).isTrue();

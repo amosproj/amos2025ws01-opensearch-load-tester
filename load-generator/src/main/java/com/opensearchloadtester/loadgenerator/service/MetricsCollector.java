@@ -1,7 +1,8 @@
 package com.opensearchloadtester.loadgenerator.service;
 
-import com.opensearchloadtester.loadgenerator.client.MetricsReporterClient;
 import com.opensearchloadtester.common.dto.MetricsDto;
+import com.opensearchloadtester.loadgenerator.client.MetricsReporterClient;
+import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,7 +17,7 @@ public class MetricsCollector {
 
     private final MetricsReporterClient metricsReporterClient;
     private final int batchSize;
-    private final boolean enabled;
+    private final boolean recording;
 
     private final List<MetricsDto> buffer = new ArrayList<>();
 
@@ -27,18 +28,18 @@ public class MetricsCollector {
     ) {
         this.metricsReporterClient = metricsReporterClient;
         this.batchSize = batchSize;
-        this.enabled = true;
+        this.recording = true;
     }
 
     // Extra constructor for warm-up, enabled configurable
-    public MetricsCollector(MetricsReporterClient metricsReporterClient, int batchSize, boolean enabled) {
+    public MetricsCollector(MetricsReporterClient metricsReporterClient, boolean enabled) {
         this.metricsReporterClient = metricsReporterClient;
-        this.batchSize = batchSize;
-        this.enabled = enabled;
+        this.batchSize = 1;
+        this.recording = enabled;
     }
 
-    public void appendMetrics(MetricsDto metricsDto) {
-        if (!enabled) return;
+    public void appendMetrics(@NotNull MetricsDto metricsDto) {
+        if (!recording) return;
 
         List<MetricsDto> toSend = null;
 
@@ -56,7 +57,7 @@ public class MetricsCollector {
     }
 
     public void flush() {
-        if (!enabled) return;
+        if (!recording) return;
 
         List<MetricsDto> toSend;
 
@@ -69,7 +70,7 @@ public class MetricsCollector {
         sendBatchSafely(toSend);
     }
 
-    private void sendBatchSafely(List<MetricsDto> batch) {
+    private void sendBatchSafely(@NotNull List<MetricsDto> batch) {
         try {
             metricsReporterClient.sendMetrics(batch);
             log.debug("Sent metrics batch size={}", batch.size());

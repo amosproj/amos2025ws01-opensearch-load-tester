@@ -1,0 +1,19 @@
+{
+  "track_total_hits": true,
+  "query": {
+    "bool": {
+      "should": [
+        { "prefix": { "dssCustomMetadataDuo.invoiceNumber.raw": "{{inv_prefix_1}}" } },
+        { "prefix": { "dssCustomMetadataDuo.invoiceNumber.raw": "{{inv_prefix_2}}" } },
+        { "prefix": { "dssCustomMetadataDuo.invoiceBusinessPartner.raw": "{{partner_prefix}}" } },
+        { "prefix": { "dssCustomMetadataDuo.customerNumber.raw": "{{customer_prefix}}" } }
+      ],
+      "minimum_should_match": 1
+    }
+  },
+  "sort": [
+    { "dssLastModifiedDatetime": "desc" },
+    { "dssDocumentName.sort": "asc" }
+  ]
+}
+

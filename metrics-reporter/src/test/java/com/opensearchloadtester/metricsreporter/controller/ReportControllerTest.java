@@ -1,5 +1,6 @@
 package com.opensearchloadtester.metricsreporter.controller;
 
+import com.opensearchloadtester.common.dto.FinishLoadTestDto;
 import com.opensearchloadtester.common.dto.MetricsDto;
 import com.opensearchloadtester.metricsreporter.config.ShutdownAfterResponseInterceptor;
 import com.opensearchloadtester.metricsreporter.dto.StatisticsDto;
@@ -36,25 +37,15 @@ class ReportControllerTest {
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(reportController, "expectedReplicas", 1);
-        ReflectionTestUtils.setField(reportController, "jsonExportEnabled", false);
+        ReflectionTestUtils.setField(reportController, "expectedLoadGenerators", 1);
     }
 
-    @Test
-    void submitMetrics_returnsBadRequest_forInvalidMetricsEntry() {
-        List<MetricsDto> metrics = List.of(
-                new MetricsDto("", "query_type_test", 10L, 10L, 3, 200)
-        );
-
-        ResponseEntity<String> response = reportController.submitMetrics(metrics);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        verifyNoInteractions(reportService);
-    }
+    // Note: Bean Validation tests (e.g., @NotBlank on loadGeneratorId) require
+    // Spring context (@WebMvcTest) and are covered by integration tests.
 
     @Test
     void submitMetrics_waitsUntilAllReplicasReport() throws Exception {
-        ReflectionTestUtils.setField(reportController, "expectedReplicas", 2);
+        ReflectionTestUtils.setField(reportController, "expectedLoadGenerators", 2);
 
         List<MetricsDto> metrics = List.of(
                 new MetricsDto(LOAD_GENERATOR_ID, "query_type_test", 120L, 80L, 5, 200)
@@ -67,8 +58,7 @@ class ReportControllerTest {
 
     @Test
     void finish_generatesReports_whenAllReplicasFinished() throws Exception {
-        ReflectionTestUtils.setField(reportController, "expectedReplicas", 1);
-        ReflectionTestUtils.setField(reportController, "jsonExportEnabled", true);
+        ReflectionTestUtils.setField(reportController, "expectedLoadGenerators", 1);
 
         List<MetricsDto> metrics = List.of(
                 new MetricsDto(LOAD_GENERATOR_ID, "query_type_test", 100L, 50L, 4, 200),
@@ -79,8 +69,8 @@ class ReportControllerTest {
                 LocalDateTime.now(),
                 new StatisticsDto.DurationStats(140.0, 100L, 180L),
                 new StatisticsDto.DurationStats(70.0, 50L, 90L),
-                2,
-                1,
+                2L,
+                1L,
                 List.of(LOAD_GENERATOR_ID)
         );
 
@@ -90,8 +80,9 @@ class ReportControllerTest {
 
         HttpServletRequest request = mock(HttpServletRequest.class);
         ResponseEntity<String> submitResponse = reportController.submitMetrics(metrics);
-        ResponseEntity<String> finishResponse = reportController.finish(LOAD_GENERATOR_ID, request);
-
+        ResponseEntity<String> finishResponse = reportController.finish(
+                new FinishLoadTestDto(LOAD_GENERATOR_ID, true, null),
+                request);
         assertThat(submitResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(finishResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
 

@@ -24,6 +24,6 @@ public class DuoBookingByAmountRangeQuery extends AbstractQuery {
         );
 
         return new DuoBookingByAmountRangeQuery(queryParams,
-                "queries/q11_duo_booking_by_amount_range.json");
+                "query-templates/q11_duo_booking_by_amount_range.json");
     }
 }
