@@ -52,7 +52,6 @@
         <dependency>
             <groupId>com.opensearchloadtester</groupId>
             <artifactId>loadgenerator</artifactId>
-            <version>6.0.0</version>
         </dependency>
 
     </dependencies>

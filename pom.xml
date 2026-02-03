@@ -47,6 +47,12 @@
             </dependency>
 
             <dependency>
+                <groupId>com.opensearchloadtester</groupId>
+                <artifactId>loadgenerator</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.opensearch.client</groupId>
                 <artifactId>opensearch-java</artifactId>
                 <version>${opensearch-java.version}</version>
