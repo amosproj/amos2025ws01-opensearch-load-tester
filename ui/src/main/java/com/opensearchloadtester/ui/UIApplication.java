@@ -12,6 +12,7 @@ import javafx.stage.Stage;
 import java.awt.*;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Objects;
 
 public class UIApplication extends Application {
     @Override
@@ -29,10 +30,13 @@ public class UIApplication extends Application {
         stage.setMaxWidth(screenBounds.getWidth());
         stage.setMaxHeight(screenBounds.getHeight());
 
-        stage.setWidth(Math.min(1000, screenBounds.getWidth()));
-        stage.setHeight(Math.min(600, screenBounds.getHeight()));
+        stage.setMinWidth(800);
+        stage.setMinHeight(500);
 
-        stage.getIcons().add(new Image(UIApplication.class.getResourceAsStream("loadtester-logo.png")));
+        stage.setWidth(Math.min(800, screenBounds.getWidth()));
+        stage.setHeight(screenBounds.getHeight());
+
+        stage.getIcons().add(new Image(Objects.requireNonNull(UIApplication.class.getResourceAsStream("loadtester-logo.png"))));
 
         if (Taskbar.isTaskbarSupported()) {
             Taskbar taskbar = Taskbar.getTaskbar();
@@ -43,7 +47,6 @@ public class UIApplication extends Application {
             }
         }
 
-        stage.sizeToScene();
 
         stage.show();
     }
