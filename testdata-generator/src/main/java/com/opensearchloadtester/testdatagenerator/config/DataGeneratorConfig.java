@@ -13,17 +13,18 @@ import org.springframework.context.annotation.Primary;
 @Configuration
 public class DataGeneratorConfig {
 
-    @Bean
-    @Primary
-    public DataGenerator dataGenerator(DataGenerationProperties dataGenerationProperties,
-                                       @Qualifier("timeJsonObjectMapper") ObjectMapper objectMapper) {
+  @Bean
+  @Primary
+  public DataGenerator dataGenerator(
+      DataGenerationProperties dataGenerationProperties,
+      @Qualifier("timeJsonObjectMapper") ObjectMapper objectMapper) {
 
-        return switch (dataGenerationProperties.getMode()) {
-            case DYNAMIC -> new DynamicDataGenerator();
-            case PERSISTENT -> new PersistentDataGenerator(
-                    new FileStorageService(dataGenerationProperties.getOutputPath(), objectMapper),
-                    new DynamicDataGenerator()
-            );
-        };
-    }
+    return switch (dataGenerationProperties.getMode()) {
+      case DYNAMIC -> new DynamicDataGenerator();
+      case PERSISTENT ->
+          new PersistentDataGenerator(
+              new FileStorageService(dataGenerationProperties.getOutputPath(), objectMapper),
+              new DynamicDataGenerator());
+    };
+  }
 }

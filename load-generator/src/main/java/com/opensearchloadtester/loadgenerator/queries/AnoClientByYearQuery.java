@@ -4,19 +4,19 @@ import java.util.Map;
 
 public class AnoClientByYearQuery extends AbstractQuery {
 
-    private AnoClientByYearQuery(Map<String, String> queryParams, String queryTemplatePath) {
-        super(queryParams, queryTemplatePath);
-    }
+  private AnoClientByYearQuery(Map<String, String> queryParams, String queryTemplatePath) {
+    super(queryParams, queryTemplatePath);
+  }
 
-    public static AnoClientByYearQuery random() {
-        String clientName = faker().name().fullName();
-        String year = getRandomYear();
+  public static AnoClientByYearQuery random() {
+    String clientName = faker().name().fullName();
+    String year = getRandomYear();
 
-        Map<String, String> queryParams = Map.of(
-                "client_name", clientName,
-                "year", year
-        );
+    Map<String, String> queryParams =
+        Map.of(
+            "client_name", clientName,
+            "year", year);
 
-        return new AnoClientByYearQuery(queryParams, "query-templates/q6_ano_client_by_year.json");
-    }
+    return new AnoClientByYearQuery(queryParams, "query-templates/q6_ano_client_by_year.json");
+  }
 }

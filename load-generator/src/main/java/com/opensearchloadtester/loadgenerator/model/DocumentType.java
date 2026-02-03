@@ -6,8 +6,8 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum DocumentType {
-    ANO("ano-index"),
-    DUO("duo-index");
+  ANO("ano-index"),
+  DUO("duo-index");
 
-    private final String index;
+  private final String index;
 }

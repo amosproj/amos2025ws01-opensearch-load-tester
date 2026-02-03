@@ -11,8 +11,8 @@ import lombok.Setter;
 @AllArgsConstructor
 public class LoadTestStartSyncStatusDto {
 
-    private int expectedLoadGenerators;
-    private int readyLoadGenerators;
-    private boolean isStartAllowed;
-    private Long plannedStartTimeMillis;
+  private int expectedLoadGenerators;
+  private int readyLoadGenerators;
+  private boolean isStartAllowed;
+  private Long plannedStartTimeMillis;
 }

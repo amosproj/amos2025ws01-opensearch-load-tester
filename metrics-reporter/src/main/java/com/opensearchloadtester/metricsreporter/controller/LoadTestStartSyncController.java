@@ -8,13 +8,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * REST controller for synchronizing the global load test start
- * across multiple Load Generators.
+ * REST controller for synchronizing the global load test start across multiple Load Generators.
  *
- * <p>
- * Allows Load Generators to report readiness and fetch the current
- * start synchronization status.
- * </p>
+ * <p>Allows Load Generators to report readiness and fetch the current start synchronization status.
  */
 @Slf4j
 @RestController
@@ -22,17 +18,17 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class LoadTestStartSyncController {
 
-    private final LoadTestStartSyncService syncService;
+  private final LoadTestStartSyncService syncService;
 
-    @PostMapping("/ready/{loadGeneratorId}")
-    public ResponseEntity<Void> markReady(@PathVariable String loadGeneratorId) {
-        syncService.markReady(loadGeneratorId);
-        return ResponseEntity.accepted().build();
-    }
+  @PostMapping("/ready/{loadGeneratorId}")
+  public ResponseEntity<Void> markReady(@PathVariable String loadGeneratorId) {
+    syncService.markReady(loadGeneratorId);
+    return ResponseEntity.accepted().build();
+  }
 
-    @GetMapping("/status")
-    public ResponseEntity<LoadTestStartSyncStatusDto> status() {
-        LoadTestStartSyncStatusDto status = syncService.getStatus();
-        return ResponseEntity.ok(status);
-    }
+  @GetMapping("/status")
+  public ResponseEntity<LoadTestStartSyncStatusDto> status() {
+    LoadTestStartSyncStatusDto status = syncService.getStatus();
+    return ResponseEntity.ok(status);
+  }
 }
