@@ -13,9 +13,11 @@ public class DuoBookingByCostcenterAndDateQuery extends AbstractQuery {
 
     String fromYear = getRandomYear();
     String toYear = getRandomYearAfter(fromYear);
+    String costCenter1 = "cc-" + faker().number().numberBetween(0, 10_000);
 
     Map<String, String> queryParams =
         Map.of(
+            "cost_center_1", costCenter1,
             "date_from", fromYear,
             "date_to", toYear);
 
