@@ -213,8 +213,8 @@ public class DuoDocument extends AbstractDocument {
               : null;
 
       List<Position> pos = new ArrayList<>();
-      // From examples always 0 positions
-      int numPos = RANDOM.nextInt(0, 1);
+      // Ensure positions exist so position-based queries return hits
+      int numPos = RANDOM.nextInt(1, 4);
       for (int i = 0; i < numPos; i++) {
         pos.add(Position.random());
       }
