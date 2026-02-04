@@ -109,7 +109,6 @@ public class StartController {
             (obs, oldValue, newValue) -> {
               if (Objects.equals(newValue, "ANO")
                   && Objects.equals(scenarioConfig.getValue(), "default-scenario.yaml")) {
-                testdataGenerationDocumentType.setStyle("");
                 testdataGenerationDocumentType.setTooltip(null);
                 addCheckboxes(QUERY_TYPES, 3);
                 return;
@@ -117,8 +116,6 @@ public class StartController {
 
               updateScenarioConfigForDocumentType(newValue);
               addCheckboxes(QUERY_TYPES, 3);
-
-              testdataGenerationDocumentType.setStyle("");
               testdataGenerationDocumentType.setTooltip(null);
             });
 
@@ -129,7 +126,6 @@ public class StartController {
         .valueProperty()
         .addListener(
             (observable, oldValue, newValue) -> {
-              testdataGenerationMode.setStyle("");
               testdataGenerationMode.setTooltip(null);
 
               // Show/hide persistent mode warning
@@ -170,7 +166,6 @@ public class StartController {
                 customScenarioConfigurationBox.setDisable(true);
               }
 
-              scenarioConfig.setStyle("");
               scenarioConfig.setTooltip(null);
             });
 
@@ -524,7 +519,6 @@ public class StartController {
 
   private ChangeListener<String> getDefaultListener(Control control) {
     return (observable, oldValue, newValue) -> {
-      control.setStyle("");
       control.setTooltip(null);
     };
   }
