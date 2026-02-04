@@ -1,0 +1,367 @@
+{
+  "version": 2,
+  "description": "OpenSearch Benchmark workload mirroring the AMOS OpenSearch Load Tester scenarios and queries.",
+  "operations": [
+    {
+      "name": "ano-default-search",
+      "operation-type": "search",
+      "param-source": "mixed-search",
+      "index": "ano-index",
+      "mix": ["ANO_PAYROLL_RANGE"],
+      "detailed-results": true
+    },
+    {
+      "name": "ano-custom-search",
+      "operation-type": "search",
+      "param-source": "mixed-search",
+      "index": "ano-index",
+      "mix": ["ANO_PAYROLL_RANGE"],
+      "detailed-results": true
+    },
+    {
+      "name": "ano-low-search",
+      "operation-type": "search",
+      "param-source": "mixed-search",
+      "index": "ano-index",
+      "mix": [
+        "ANO_PAYROLL_RANGE",
+        "ANO_CLIENTS_AGGREGATION",
+        "ANO_CLIENT_BY_YEAR",
+        "ANO_PAYROLL_TYPE_LANGUAGE"
+      ],
+      "detailed-results": true
+    },
+    {
+      "name": "ano-medium-search",
+      "operation-type": "search",
+      "param-source": "mixed-search",
+      "index": "ano-index",
+      "mix": [
+        { "type": "ANO_PAYROLL_RANGE", "weight": 20 },
+        { "type": "ANO_CLIENTS_AGGREGATION", "weight": 10 },
+        { "type": "ANO_CLIENT_BY_YEAR", "weight": 5 },
+        { "type": "ANO_PAYROLL_TYPE_LANGUAGE", "weight": 5 },
+        { "type": "ANO_MULTI_REGEX", "weight": 30 },
+        { "type": "DOCNAME_REGEX", "weight": 30 }
+      ],
+      "detailed-results": true
+    },
+    {
+      "name": "ano-high-search",
+      "operation-type": "search",
+      "param-source": "mixed-search",
+      "index": "ano-index",
+      "mix": [
+        { "type": "ANO_MULTI_REGEX", "weight": 80 },
+        { "type": "DOCNAME_REGEX", "weight": 20 }
+      ],
+      "detailed-results": true
+    },
+    {
+      "name": "ano-multi-regex-search",
+      "operation-type": "search",
+      "param-source": "mixed-search",
+      "index": "ano-index",
+      "mix": [
+        "ANO_MULTI_REGEX"
+      ],
+      "detailed-results": true
+    },
+    {
+      "name": "ano-long-search",
+      "operation-type": "search",
+      "param-source": "mixed-search",
+      "index": "ano-index",
+      "mix": [
+        "ANO_PAYROLL_RANGE",
+        "ANO_CLIENTS_AGGREGATION",
+        "ANO_CLIENT_BY_YEAR",
+        "ANO_PAYROLL_TYPE_LANGUAGE",
+        "ANO_MULTI_REGEX",
+        "DOCNAME_REGEX"
+      ],
+      "detailed-results": true
+    },
+    {
+      "name": "ano-full-search",
+      "operation-type": "search",
+      "param-source": "mixed-search",
+      "index": "ano-index",
+      "mix": [
+        "ANO_PAYROLL_RANGE",
+        "ANO_CLIENTS_AGGREGATION",
+        "ANO_CLIENT_BY_YEAR",
+        "ANO_PAYROLL_TYPE_LANGUAGE",
+        "ANO_MULTI_REGEX",
+        "DOCNAME_REGEX",
+        "ANO_DIS_MAX",
+        "ANO_DIS_MAX_EXPENSIVE",
+        "ANO_PREFIX_RANGE",
+        "ANO_PREFIX_MATCH",
+        "ANO_SPAN_NEAR",
+        "ANO_MORE_LIKE_THIS"
+      ],
+      "detailed-results": true
+    },
+    {
+      "name": "duo-low-search",
+      "operation-type": "search",
+      "param-source": "mixed-search",
+      "index": "duo-index",
+      "mix": [
+        "DUO_INVOICE_CATEGORY",
+        "DUO_STATE_LOCATION",
+        "DUO_BOOKING_BY_CLIENT_AND_STATE",
+        "DUO_CLIENT_BY_CUSTOMER_NUMBER",
+        "DUO_CLIENT_BY_NAME_AND_STATE",
+        "DUO_BOOKING_BY_COSTCENTER_AND_DATE",
+        "DUO_BOOKING_BY_AMOUNT_RANGE"
+      ],
+      "detailed-results": true
+    },
+    {
+      "name": "duo-medium-search",
+      "operation-type": "search",
+      "param-source": "mixed-search",
+      "index": "duo-index",
+      "mix": [
+        "DUO_INVOICE_CATEGORY",
+        "DUO_STATE_LOCATION",
+        "DUO_BOOKING_BY_CLIENT_AND_STATE",
+        "DUO_CLIENT_BY_CUSTOMER_NUMBER",
+        "DUO_CLIENT_BY_NAME_AND_STATE",
+        "DUO_BOOKING_BY_COSTCENTER_AND_DATE",
+        "DUO_BOOKING_BY_AMOUNT_RANGE",
+        "DUO_COMPLEX",
+        "DUO_MULTI_REGEX",
+        "DOCNAME_REGEX"
+      ],
+      "detailed-results": true
+    },
+    {
+      "name": "duo-high-search",
+      "operation-type": "search",
+      "param-source": "mixed-search",
+      "index": "duo-index",
+      "mix": [
+        "DUO_COMPLEX",
+        "DUO_MULTI_REGEX",
+        "DOCNAME_REGEX"
+      ],
+      "detailed-results": true
+    },
+    {
+      "name": "duo-long-search",
+      "operation-type": "search",
+      "param-source": "mixed-search",
+      "index": "duo-index",
+      "mix": [
+        "DUO_INVOICE_CATEGORY",
+        "DUO_STATE_LOCATION",
+        "DUO_BOOKING_BY_CLIENT_AND_STATE",
+        "DUO_CLIENT_BY_CUSTOMER_NUMBER",
+        "DUO_CLIENT_BY_NAME_AND_STATE",
+        "DUO_BOOKING_BY_COSTCENTER_AND_DATE",
+        "DUO_BOOKING_BY_AMOUNT_RANGE",
+        "DUO_COMPLEX",
+        "DUO_MULTI_REGEX",
+        "DOCNAME_REGEX"
+      ],
+      "detailed-results": true
+    },
+    {
+      "name": "duo-full-search",
+      "operation-type": "search",
+      "param-source": "mixed-search",
+      "index": "duo-index",
+      "mix": [
+        "DUO_INVOICE_CATEGORY",
+        "DUO_STATE_LOCATION",
+        "DUO_BOOKING_BY_CLIENT_AND_STATE",
+        "DUO_CLIENT_BY_CUSTOMER_NUMBER",
+        "DUO_CLIENT_BY_NAME_AND_STATE",
+        "DUO_BOOKING_BY_COSTCENTER_AND_DATE",
+        "DUO_BOOKING_BY_AMOUNT_RANGE",
+        "DUO_COMPLEX",
+        "DUO_MULTI_REGEX",
+        "DOCNAME_REGEX",
+        "DUO_INVOICE_DIS_MAX",
+        "DUO_INVOICE_DIS_MAX_EXPENSIVE",
+        "DUO_MULTI_PREFIX_SORT",
+        "DUO_DATE_RANGE",
+        "DUO_SPAN_NEAR",
+        "DUO_MORE_LIKE_THIS"
+      ],
+      "detailed-results": true
+    }
+  ],
+  "test_procedures": [
+    {
+      "name": "default",
+      "default": true,
+      "description": "Default scenario (ANO).",
+      "schedule": [
+        {
+          "operation": "ano-default-search",
+          "clients": {{clients | default(1)}},
+          "warmup-time-period": 10,
+          "time-period": 10,
+          "target-throughput": {{default_target_throughput | default(30)}}
+        }
+      ]
+    },
+    {
+      "name": "custom",
+      "description": "Custom scenario (ANO).",
+      "schedule": [
+        {
+          "operation": "ano-custom-search",
+          "clients": {{clients | default(1)}},
+          "time-period": 30,
+          "target-throughput": {{custom_target_throughput | default(20)}}
+        }
+      ]
+    },
+    {
+      "name": "ano-low",
+      "description": "ANO low scenario.",
+      "schedule": [
+        {
+          "operation": "ano-low-search",
+          "clients": {{clients | default(1)}},
+          "warmup-time-period": 10,
+          "time-period": 10,
+          "target-throughput": {{ano_low_target_throughput | default(100)}}
+        }
+      ]
+    },
+    {
+      "name": "ano-medium",
+      "description": "ANO medium scenario.",
+      "schedule": [
+        {
+          "operation": "ano-medium-search",
+          "clients": {{clients | default(1)}},
+          "warmup-time-period": 10,
+          "time-period": 30,
+          "target-throughput": {{ano_medium_target_throughput | default(200)}}
+        }
+      ]
+    },
+    {
+      "name": "ano-high",
+      "description": "ANO high scenario.",
+      "schedule": [
+        {
+          "operation": "ano-high-search",
+          "clients": {{clients | default(1)}},
+          "warmup-time-period": 10,
+          "time-period": 60,
+          "target-throughput": {{ano_high_target_throughput | default(20)}}
+        }
+      ]
+    },
+    {
+      "name": "ano-multi-regex",
+      "description": "ANO multi-regex only scenario.",
+      "schedule": [
+        {
+          "operation": "ano-multi-regex-search",
+          "clients": {{clients | default(1)}},
+          "warmup-time-period": 10,
+          "time-period": 10,
+          "target-throughput": {{ano_multi_regex_target_throughput | default(30)}}
+        }
+      ]
+    },
+    {
+      "name": "ano-long",
+      "description": "ANO long scenario.",
+      "schedule": [
+        {
+          "operation": "ano-long-search",
+          "clients": {{clients | default(1)}},
+          "time-period": 300,
+          "target-throughput": {{ano_long_target_throughput | default(5)}}
+        }
+      ]
+    },
+    {
+      "name": "ano-full",
+      "description": "ANO scenario covering all query types.",
+      "schedule": [
+        {
+          "operation": "ano-full-search",
+          "clients": {{clients | default(1)}},
+          "warmup-time-period": 10,
+          "time-period": 60,
+          "target-throughput": {{ano_full_target_throughput | default(20)}}
+        }
+      ]
+    },
+    {
+      "name": "duo-low",
+      "description": "DUO low scenario.",
+      "schedule": [
+        {
+          "operation": "duo-low-search",
+          "clients": {{clients | default(1)}},
+          "warmup-time-period": 10,
+          "time-period": 10,
+          "target-throughput": {{duo_low_target_throughput | default(100)}}
+        }
+      ]
+    },
+    {
+      "name": "duo-medium",
+      "description": "DUO medium scenario.",
+      "schedule": [
+        {
+          "operation": "duo-medium-search",
+          "clients": {{clients | default(1)}},
+          "warmup-time-period": 10,
+          "time-period": 30,
+          "target-throughput": {{duo_medium_target_throughput | default(200)}}
+        }
+      ]
+    },
+    {
+      "name": "duo-high",
+      "description": "DUO high scenario.",
+      "schedule": [
+        {
+          "operation": "duo-high-search",
+          "clients": {{clients | default(1)}},
+          "warmup-time-period": 10,
+          "time-period": 60,
+          "target-throughput": {{duo_high_target_throughput | default(20)}}
+        }
+      ]
+    },
+    {
+      "name": "duo-long",
+      "description": "DUO long scenario.",
+      "schedule": [
+        {
+          "operation": "duo-long-search",
+          "clients": {{clients | default(1)}},
+          "time-period": 300,
+          "target-throughput": {{duo_long_target_throughput | default(5)}}
+        }
+      ]
+    },
+    {
+      "name": "duo-full",
+      "description": "DUO scenario covering all query types.",
+      "schedule": [
+        {
+          "operation": "duo-full-search",
+          "clients": {{clients | default(1)}},
+          "warmup-time-period": 10,
+          "time-period": 60,
+          "target-throughput": {{duo_full_target_throughput | default(20)}}
+        }
+      ]
+    }
+  ]
+}

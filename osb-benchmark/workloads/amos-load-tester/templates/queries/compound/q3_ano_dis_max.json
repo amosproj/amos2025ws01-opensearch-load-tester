@@ -1,0 +1,34 @@
+{
+  "size": 50,
+  "query": {
+    "dis_max": {
+      "tie_breaker": 0.1,
+      "queries": [
+        {
+          "term": {
+            "dssCustomMetadataPayrollInfo.payrollType": "{{payroll_type}}"
+          }
+        },
+        {
+          "term": {
+            "dssCustomMetadataPayrollInfo.language": "{{language}}"
+          }
+        },
+        {
+          "match": {
+            "customAll": "{{search_terms}}"
+          }
+        }
+      ]
+    }
+  },
+  "_source": [
+    "dssDocumentName",
+    "dssOriginalFilename",
+    "dssCreationUserDisplayName",
+    "dssCustomMetadataPayrollInfo.payrollType",
+    "dssCustomMetadataPayrollInfo.language",
+    "dssCustomMetadataPayrollInfo.accountingYear",
+    "dssCustomMetadataPayrollInfo.accountingMonth"
+  ]
+}

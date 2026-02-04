@@ -1,0 +1,28 @@
+{
+  "from": 0,
+  "size": 10,
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match_all": {}
+        }
+      ],
+      "filter": [
+        {
+          "range": {
+            "dssCustomMetadataPayrollInfo.accountingYear": {
+              "gte": "{{from_year}}",
+              "lte": "{{to_year}}"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "_source": [
+    "dssDocumentName",
+    "dssCustomMetadataPayrollInfo.accountingYear",
+    "dssCustomMetadataPayrollInfo.accountingMonth"
+  ]
+}

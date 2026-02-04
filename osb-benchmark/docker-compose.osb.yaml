@@ -1,0 +1,27 @@
+services:
+  osb-benchmark:
+    image: opensearchproject/opensearch-benchmark:latest
+    container_name: osb-benchmark
+    user: "0:0"
+    environment:
+      - OSB_WORKLOAD_PATH=/workloads/workloads/amos-load-tester
+      - OSB_TEST_PROCEDURE=default
+      - OSB_TARGET_HOSTS=http://test-target-opensearch:9200
+      - OPENSEARCH_URL=${OPENSEARCH_URL:-http://test-target-opensearch:9200}
+      - OSB_SEED_VALUES_PATH=/reports/osb_seed_values.json
+      - OSB_RESULTS_CSV=/reports/osb_summary.csv
+      - OSB_RESULTS_FORMAT=csv
+    entrypoint: ["/workloads/scripts/run-osb.sh"]
+    volumes:
+      - ./osb-benchmark:/workloads:ro
+      - reports:/reports
+    networks:
+      - opensearch-loadtester-network
+
+networks:
+  opensearch-loadtester-network:
+    driver: bridge
+
+volumes:
+  reports:
+    driver: local

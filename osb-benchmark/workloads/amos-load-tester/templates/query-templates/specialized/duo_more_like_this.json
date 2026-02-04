@@ -1,0 +1,29 @@
+{
+  "size": 50,
+  "query": {
+    "more_like_this": {
+      "fields": [
+        "ocrFulltext",
+        "customAll"
+      ],
+      "like": [
+        "{{material}} {{product}} RECHNUNG"
+      ],
+      "min_term_freq": 1,
+      "min_doc_freq": 2,
+      "max_query_terms": 20,
+      "minimum_should_match": "40%",
+      "stop_words": [
+        "rechnung",
+        "eur",
+        "stk",
+        "netto",
+        "mwst",
+        "gesamt",
+        "bank",
+        "iban",
+        "bic"
+      ]
+    }
+  }
+}

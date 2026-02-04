@@ -1,0 +1,20 @@
+{
+  "query": {
+    "span_near": {
+      "clauses": [
+        {
+          "span_term": {
+            "customAll": "{{material}}"
+          }
+        },
+        {
+          "span_term": {
+            "customAll": "{{product}}"
+          }
+        }
+      ],
+      "slop": 0,
+      "in_order": true
+    }
+  }
+}

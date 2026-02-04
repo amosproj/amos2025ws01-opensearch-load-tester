@@ -1,0 +1,17 @@
+{
+  "size": 50,
+  "query": {
+    "more_like_this": {
+      "fields": [
+        "customAll"
+      ],
+      "like": [
+        "Brutto Netto Abrechnung {{year}} Gehalt"
+      ],
+      "min_term_freq": 1,
+      "min_doc_freq": 2,
+      "max_query_terms": 20,
+      "minimum_should_match": "40%"
+    }
+  }
+}

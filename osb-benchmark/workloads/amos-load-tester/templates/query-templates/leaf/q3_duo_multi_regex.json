@@ -1,0 +1,49 @@
+{
+  "size": 50,
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "regexp": {
+            "dssDocumentName.sort": {
+              "value": ".*re.*ch.*nu.*ng.*+(G.*m.*b.*H.*|A.*G.*|O.*H.*G.*|K.*G.*).*\\.pdf",
+              "max_determinized_states": 10000
+            }
+          }
+        },
+        {
+          "regexp": {
+            "customAll": {
+              "value": "(.*uhr.*|.*jacke.*|.*hose.*|.*holz.*)",
+              "max_determinized_states": 10000
+            }
+          }
+        },
+        {
+          "regexp": {
+            "dssCustomMetadataDuo.invoiceNumber.raw": {
+              "value": ".*(.{1,50}.{1,50}.{1,50})/\\d{1,4}.*",
+              "max_determinized_states": 10000
+            }
+          }
+        },
+        {
+          "regexp": {
+            "dssCustomMetadataDuo.invoiceBusinessPartner.raw": {
+              "value": ".*(G.*m.*b.*H.*|A.*G.*|O.*H.*G.*|K.*G.*).*",
+              "max_determinized_states": 10000
+            }
+          }
+        },
+        {
+          "regexp": {
+            "dssCustomMetadataDuo.customerNumber.raw": {
+              "value": ".*(([0-9].*){3,6}|n.*u.*l.*l).*",
+              "max_determinized_states": 10000
+            }
+          }
+        }
+      ]
+    }
+  }
+}
