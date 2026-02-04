@@ -1,0 +1,45 @@
+Title	URL	Assignees	Status	Estimated size	Real size	Labels
+Update/Extend Documentation	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/183		Product Backlog	5		documentation
+SBOM Update	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/165		Product Backlog	3		documentation
+Demo Day Video Creation	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/230		Product Backlog			
+Create custom scenario	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/231		Product Backlog			
+Code Cleanup	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/155		Product Backlog			
+Container Termination	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/206		Product Backlog			
+Tweak Grafana Dashboard	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/214		Product Backlog			
+Query Refactoring	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/117		Product Backlog			
+Research Open Search regarding performance	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/177		Product Backlog			
+Add Linting to CI/CD Pipeline	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/103		Product Backlog			
+Test success indicator	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/172	BeEugen, SeboKnt	Sprint Backlog			
+Simple UI for loadtest start	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/218	Leolingio, SeboKnt	In Progress	5		enhancement, ui
+Expensive Queries	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/147	BeEugen, Carlit0, Leolingio, SaraBelz, SeboKnt	In Progress	2		enhancement
+Metrics Reporter Error Behavior	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/204	BeEugen, Carlit0, Leolingio	In Progress	2		enhancement
+Remove CSV output format	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/213	Carlit0	Awaiting Review	1		refactoring
+Suppress Noisy Logs	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/208	Leolingio	Awaiting Review	3		bug
+Architecture (Diagram) Refactoring	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/118	Carlit0, Leolingio, SeboKnt	Awaiting Review	3		documentation
+Double check metrics reporter cean behavior (output files, memory)	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/220	Carlit0	Awaiting Review			bug, refactoring
+Configurable Query Type Distribution	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/215	SaraBelz	Awaiting Review	3		enhancement
+Load Generator add handling big data	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/184	Carlit0, SaraBelz	Feature Archive	5	8	
+Grafana: Dashboard creation	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/193	SeboKnt	Feature Archive	3	3	
+Execution of Multiple Test Runs	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/207	BeEugen, Leolingio, SaraBelz	Feature Archive	5	2	
+Fix Queries getting lost without warning	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/180	Carlit0, Leolingio	Feature Archive	3	5	
+Query Timeout Handling	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/169	BeEugen, Carlit0, Leolingio	Feature Archive	3	8	
+Research: Look into queuing (OpenSearch)	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/181	BeEugen, Carlit0, Leolingio	Feature Archive	2	2	
+Extend Test Coverage (Unit Tests)	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/115	BeEugen, Carlit0, Leolingio, SaraBelz, SeboKnt	Feature Archive	5	5	
+Setup Grafana Dev Container	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/178	SeboKnt	Feature Archive	2	1	
+Shutdown Metrics Reporter After Report Generation	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/152	BeEugen	Feature Archive	1	2	
+Bug: Duration/QPS division by 0 exception	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/182	SaraBelz	Feature Archive	1	1	
+Compound Queries	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/145	Carlit0, Leolingio	Feature Archive	2	1	
+Leaf Queries: specialized/span queries	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/146	Carlit0, Leolingio	Feature Archive	2	3	
+loki setup/research	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/185	SeboKnt	Feature Archive	2	1	
+loki interaction	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/186	SeboKnt	Feature Archive	3	2	
+Grafana Data Input Research (Loki)	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/179	BeEugen, SeboKnt	Feature Archive	3	1	
+Introduce parent POM for centralized dependency & plugin management	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/188	BeEugen	Feature Archive	2	2	
+Merge Open PRs	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/156	BeEugen, Carlit0, Leolingio, SaraBelz, SeboKnt	Feature Archive	2	2	
+Global Load Test Start Synchronization	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/100	BeEugen	Feature Archive	3	5	
+Load Generator Query Type Mix	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/104	BeEugen, SeboKnt	Feature Archive	3	2	
+Test ending wait mechanism	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/136	Carlit0, Leolingio	Feature Archive	2	3	
+Complex Queries	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/120	Carlit0	Feature Archive	2	5	
+Implementation of Batch Processing for Data Pre-Loading	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/79	SaraBelz	Feature Archive	3	3	
+Refactoring: Include DTO changes in Metrics Reporter 	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/133	Carlit0	Feature Archive	2	2	
+Extend Ano and Duo Index Mapping and Settings	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/137	Leolingio	Feature Archive	3	3	
+Query Parameter Randomization	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/122	BeEugen, Carlit0, Leolingio, SaraBelz, SeboKnt	Feature Archive	5	3	
