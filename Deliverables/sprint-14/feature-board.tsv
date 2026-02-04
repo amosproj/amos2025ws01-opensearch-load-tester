@@ -1,0 +1,39 @@
+Title	URL	Assignees	Status	Estimated size	Real size	Labels
+Demo Day Preparation	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/247	BeEugen, Carlit0, Leolingio, SaraBelz, SeboKnt	Sprint Backlog	3		
+Homework: Final Project Release	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/248	BeEugen, Carlit0, engelharddirk, LeaBuchner, Leolingio, SaraBelz, SeboKnt	Sprint Backlog	3		
+Update/Extend Documentation	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/183	BeEugen, Carlit0, Leolingio, SaraBelz, SeboKnt	In Progress	5		documentation
+SBOM Update	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/165	SaraBelz	In Progress	3		documentation
+Create Project Report	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/249	engelharddirk, Hydraneut, LeaBuchner	In Progress	2		
+Enable Batch Size Configuration for Data Generation via UI	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/267	BeEugen	Awaiting Review	2		ui
+Refactor Shared Library	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/244	BeEugen	Awaiting Review	2		
+Refactor Metrics Reporter	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/242	Carlit0	Awaiting Review	3		
+Code Cleanup	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/155	BeEugen, Carlit0, Leolingio, SaraBelz, SeboKnt	Awaiting Review	5		
+Bug: OpenSearch restart fails with OpenSearch unhealthy	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/268	Leolingio, SeboKnt	Awaiting Review			bug
+Test Success Indicator	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/172	BeEugen, SeboKnt	Awaiting Review	2		
+check POM	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/265	Carlit0	Awaiting Review			
+Linting	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/239	Carlit0	Awaiting Review			
+Metrics Reporter Error Behavior	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/204	BeEugen, Carlit0, Leolingio	Feature Archive	2	3	enhancement
+Bug UI validation	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/261	Leolingio	Feature Archive		2	bug
+Demo Day Video Script Creation	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/230	SaraBelz	Feature Archive	2	2	
+Refactor Load Generator Module	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/241	Leolingio, SeboKnt	Feature Archive	5	5	
+demo day slides	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/237	SaraBelz	Feature Archive		1	
+Refactor Test Data Generator	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/243	BeEugen, SaraBelz	Feature Archive	5	5	
+Metrics Reporter Abort Report Creation On IOException	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/251	BeEugen	Feature Archive	1	1	bug
+Expensive Queries	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/147	BeEugen, Carlit0, Leolingio, SaraBelz, SeboKnt	Feature Archive	2	2	enhancement
+Simple UI for loadtest start	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/218	Leolingio, SeboKnt	Feature Archive	5	8	enhancement, ui
+Create custom scenario	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/231		Feature Archive	3	3	
+Configurable Query Type Distribution	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/215	SaraBelz	Feature Archive	3	3	enhancement
+Suppress Noisy Logs	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/208	Leolingio	Feature Archive	3	1	bug
+Double check metrics reporter clean behavior (output files, memory)	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/220	Carlit0	Feature Archive		1	bug, refactoring
+Architecture (Diagram) Refactoring	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/118	Carlit0, Leolingio, SeboKnt	Feature Archive	3	3	documentation
+Remove CSV output format	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/213	Carlit0	Feature Archive	1	1	refactoring
+Load Generator add handling big data	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/184	Carlit0, SaraBelz	Feature Archive	5	8	
+Grafana: Dashboard creation	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/193	SeboKnt	Feature Archive	3	3	
+Execution of Multiple Test Runs	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/207	BeEugen, Leolingio, SaraBelz	Feature Archive	5	2	
+Fix Queries getting lost without warning	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/180	Carlit0, Leolingio	Feature Archive	3	5	
+Query Timeout Handling	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/169	BeEugen, Carlit0, Leolingio	Feature Archive	3	8	
+Research: Look into queuing (OpenSearch)	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/181	BeEugen, Carlit0, Leolingio	Feature Archive	2	2	
+Extend Test Coverage (Unit Tests)	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/115	BeEugen, Carlit0, Leolingio, SaraBelz, SeboKnt	Feature Archive	5	5	
+Setup Grafana Dev Container	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/178	SeboKnt	Feature Archive	2	1	
+Shutdown Metrics Reporter After Report Generation	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/152	BeEugen	Feature Archive	1	2	
+Bug: Duration/QPS division by 0 exception	https://github.com/amosproj/amos2025ws01-opensearch-load-tester/issues/182	SaraBelz	Feature Archive	1	1	
